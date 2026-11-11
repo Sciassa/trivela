@@ -13,7 +13,7 @@ TRIVELA è un quiz calcistico arcade 1v1 multi-dispositivo. **`SPEC.md` è la fo
 Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
 1. **Nessun fatto non verificato.** Un campo del grafo è usabile in una domanda solo se è `concordant` (≥ 2 famiglie di fonti indipendenti, SPEC §8.3). Wikipedia e Wikidata sono **una sola** famiglia.
-2. **Nessun LLM a runtime per produrre fatti o testi mostrati ai giocatori.** L'LLM è ammesso solo nella pipeline redazionale offline (estrazione con citazioni) e, nel servizio `topic`, per **scegliere tra ID candidati** del nostro indice con output validato.
+2. **Nessun LLM** (vincolo "tutto gratis", SPEC §0.1): né in gioco né nella pipeline. Testi e Copioni nascono da template sui fatti dell'istanza.
 3. **Niente contestazioni.** Non aggiungere pulsanti "contesta", "segnala errore", override tra giocatori o alias appresi dagli utenti. Gli alias arrivano solo da fonti.
 4. **Aiuto ortografico a zero informazione** (SPEC §10.3): correttore e non completatore, funzione pura di (testo digitato, indice globale). Non passargli mai la domanda, il gioco, il contesto o il filtro anno. Il test di proprietà in CI non va mai indebolito né saltato.
 5. **Le soluzioni non arrivano mai alla vista `screen` prima della rivelazione.** Le viste sono filtrate per ruolo nel server; anche la Prima Pagina riceve solo segnaposto a fasce.
@@ -25,16 +25,18 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
 ## Struttura
 
-Vedi SPEC §15. In breve: `apps/web` (PWA), `apps/realtime` (Worker + Durable Objects), `packages/{engine,matcher,ui-arcade,audio,protocol}`, `data/` (Python: ingest, graph, generators, packs, notebooks), `services/topic`, `content/` (YAML redazionali), `tools/review`.
+- `apps/web`: PWA React (schermo singolo, Schermo/Regia/Pulsantiere, torneo). UI arcade in `src/components`, giochi in `src/games/GameView.tsx`.
+- `apps/realtime`: `room.ts` (logica stanza indipendente dalla piattaforma) + `node-server.ts` (server LAN gratuito).
+- `packages/protocol` (tipi condivisi), `packages/engine` (14 giochi, sorteggio, argomento libero, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica e effetti sintetizzati).
+- `data/trivela_data`: `fetch` (scarica), `build` (collega e verifica, produce `build/graph.json`), `generate` (pacchetti). `content/`: archivio redazionale YAML.
 
 ## Comandi
 
-Lo scaffolding nasce in M0: quando un comando esiste davvero, aggiorna questa sezione.
-
-- JS (pnpm workspaces): `pnpm install` · `pnpm dev` · `pnpm lint` · `pnpm typecheck` · `pnpm test`
-- E2E Playwright: `pnpm e2e -- --trace off` (attiva le trace solo per diagnosticare un test che fallisce)
-- Python (`uv`): `uv sync` · `uv run pytest` · `uv run ruff check`
-- Contenuti: `pnpm content:validate` (validatore YAML + controlli sulle fonti)
+- JS (pnpm workspaces): `pnpm install` · `pnpm dev` (app su Vite) · `pnpm typecheck` · `pnpm test` · `pnpm build`
+- Server stanze in rete locale: `pnpm build && pnpm server` (porta 8787, serve anche l'app)
+- Dati (Python 3.12+, solo libreria standard): `cd data && python3 -m trivela_data.fetch` → `python3 -m trivela_data.build` → `python3 -m trivela_data.generate` (oppure `pnpm data:build`). I pacchetti finiscono in `apps/web/public/packs/` e vanno committati.
+- Test dati: `cd data && uv run pytest`
+- Wikipedia/Wikidata limitano le richieste: il client HTTP della pipeline ha cache su disco (`data/cache/`, non versionata), ritmo lento e rispetta `Retry-After`. Non abbassare gli intervalli.
 
 ## Convenzioni di sviluppo
 

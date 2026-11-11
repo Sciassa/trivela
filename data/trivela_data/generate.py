@@ -21,6 +21,7 @@ from .italian import NATIONS, POSITIONS, WEEKDAYS, date_it, round_it
 from .openfootball import load_matches
 from .paths import BUILD, PACKS_OUT, WC_YEARS
 from .text import norm, strip_disambiguation
+from .validate_content import load_published
 from .wiki import parse_squads
 
 HOSTS = {
@@ -1002,6 +1003,18 @@ def main() -> None:
         "mappamondo": gen_mappamondo(g),
         "maglia": gen_maglia(g),
     }
+    for q in load_published():
+        common = {"id": q["id"], "generator": "redazione", "yearMin": q["year_min"], "yearMax": q["year_max"],
+                  "difficulty": q["difficulty"], "fame": q.get("fame", 30), "entities": q.get("entities", []),
+                  "sources": [{"family": src["family"], "label": src.get("label", src["family"]), "url": src["url"]}
+                              for c in q["claims"] for src in c["sources"]],
+                  "script": q["script"]}
+        if "tiro_secco" in q["game"] and "options" in q:
+            packs["tiro_secco"].append({**common, "question": q["question"], "options": q["options"],
+                                        "correct": q["correct"], "archetype": q["archetype"]})
+        if "cassaforte" in q["game"]:
+            packs["cassaforte"].append({**common, "id": q["id"] + "-cf", "level": q["difficulty"], "question": q["question"],
+                                        "parts": [{"kind": "text", "accepted": q.get("accepted", []), "display": q["answer"]}]})
     # every instance must cite at least two families
     for game, items in packs.items():
         bad = [it["id"] for it in items if len({s["family"] for s in it["sources"]}) < 2]

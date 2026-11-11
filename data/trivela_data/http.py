@@ -45,7 +45,10 @@ def get(url: str, params: dict | None = None, *, data: dict | None = None, min_i
                 text = resp.read().decode("utf-8")
         except urllib.error.HTTPError as e:
             if e.code in (429, 500, 502, 503, 504):
-                time.sleep(delay)
+                retry_after = e.headers.get("Retry-After") if e.headers else None
+                wait_s = float(retry_after) + 1 if retry_after and retry_after.isdigit() else delay
+                print(f"[http] {e.code} from {host}, waiting {wait_s:.0f}s", flush=True)
+                time.sleep(min(wait_s, 1800))
                 delay = min(delay * 1.7, 120)
                 continue
             raise
@@ -136,21 +139,32 @@ def _sparql_titles(titles: list[str], lang: str) -> dict[str, str]:
     return out
 
 
+def wp_summary_qid(title: str, lang: str = "en") -> str | None:
+    """QID via the REST summary endpoint (follows redirects)."""
+    t = urllib.parse.quote(canonical_title(title).replace(" ", "_"), safe="")
+    try:
+        d = json.loads(get(f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{t}", min_interval=0.3, retries=4))
+    except (urllib.error.HTTPError, RuntimeError):
+        return None
+    return d.get("wikibase_item")
+
+
 def wp_qids(titles: list[str], lang: str = "en") -> dict[str, str]:
-    """Map Wikipedia titles to Wikidata QIDs (redirects followed via raw wikitext)."""
+    """Map Wikipedia titles to Wikidata QIDs: SPARQL on sitelinks, REST summary for redirects."""
     uniq = sorted({t for t in titles if t})
     canon = {t: canonical_title(t) for t in uniq}
     found = _sparql_titles(sorted(set(canon.values())), lang)
-    missing = [t for t in uniq if canon[t] not in found]
-    targets = {}
-    for t in missing:
-        tgt = wp_redirect_target(canon[t], lang)
-        if tgt and tgt != canon[t]:
-            targets[t] = tgt
-    found2 = _sparql_titles(sorted(set(targets.values())), lang)
     out = {}
+    missing = []
     for t in uniq:
-        q = found.get(canon[t]) or found2.get(targets.get(t, ""))
+        q = found.get(canon[t])
+        if q:
+            out[t] = q
+        else:
+            missing.append(t)
+    print(f"[qids] {len(out)} via SPARQL, {len(missing)} via REST", flush=True)
+    for t in missing:
+        q = wp_summary_qid(t, lang)
         if q:
             out[t] = q
     return out
@@ -160,7 +174,7 @@ def wp_qids(titles: list[str], lang: str = "en") -> dict[str, str]:
 
 def sparql(query: str) -> list[dict]:
     d = json.loads(get("https://query.wikidata.org/sparql", data={"query": query, "format": "json"},
-                       min_interval=2.0))
+                       min_interval=3.0, retries=20))
     rows = []
     for b in d["results"]["bindings"]:
         rows.append({k: v["value"] for k, v in b.items()})
