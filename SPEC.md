@@ -43,6 +43,30 @@ Queste decisioni prevalgono sul resto del documento dove c'è contrasto.
 | Database | Niente Postgres: la pipeline produce `data/build/graph.json` e i pacchetti statici in `apps/web/public/packs/`. |
 | Più dispositivi | **Server Node gratuito in rete locale** (`pnpm server`) che serve app e stanze WebSocket sulla stessa porta. L'adattatore Cloudflare Durable Objects è rimandato. |
 
+## 0.2 Contenuti della v1 (snapshot 2026-11-11)
+
+Verifica incrociata sulle fasi finali dei Mondiali 1930–2026: 1002 risultati concordanti, 906 partite con marcatori concordanti (723 anche nei minuti), 1185 formazioni titolari concordanti, 9606 voci di rosa verificate, 8410 giocatori arricchiti da Wikidata (6654 con data di nascita referenziata). I dati in disaccordo tra le fonti sono esclusi.
+
+| Gioco | Istanze |
+|---|---|
+| Tiro Secco | 6397 |
+| Prima Pagina | 550 |
+| Il Mercato | 0 |
+| La Decina | 22 |
+| Dal Dischetto | 2 |
+| La Formazione | 37 |
+| La Cassaforte | 1929 |
+| Il Giramondo | 98 |
+| Il Frame | 279 |
+| L'Intruso | 87 |
+| L'Asta | 143 |
+| Il Filo Rosso | 81 |
+| Il Mappamondo | 421 |
+| La Maglia | 2500 |
+| **Totale** | **12546** |
+
+Limiti noti: Il Mercato è vuoto (nessuna fonte gratuita verificabile per le cifre); Dal Dischetto e La Formazione hanno poche istanze perché richiedono dati completi su un intero perimetro; circa 940 titoli Wikipedia non sono stati risolti in Wikidata per i limiti di richieste (restano con un identificativo Wikipedia e senza etichetta italiana).
+
 ---
 
 ## 1. Glossario
