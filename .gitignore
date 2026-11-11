@@ -1,0 +1,15 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.vite/
+.wrangler/
+coverage/
+test-results/
+playwright-report/
+# data pipeline
+data/.venv/
+data/cache/
+data/build/
+__pycache__/
+*.pyc
+.DS_Store
