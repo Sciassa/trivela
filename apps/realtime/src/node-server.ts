@@ -9,6 +9,7 @@ import { networkInterfaces } from "node:os";
 import { extname, join, normalize, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { randomUUID } from "node:crypto";
+import { gzipSync } from "node:zlib";
 import { WebSocketServer, type WebSocket } from "ws";
 import { buildIndex } from "@trivela/matcher";
 import { emptyPackItems, GAME_IDS, type GameId, type Packs } from "@trivela/protocol";
@@ -65,8 +66,10 @@ async function main() {
     }
     try {
       const body = await readFile(file);
-      res.writeHead(200, { "content-type": TYPES[extname(file)] ?? "application/octet-stream" });
-      res.end(body);
+      const type = TYPES[extname(file)] ?? "application/octet-stream";
+      const gz = /gzip/.test(String(req.headers["accept-encoding"] ?? "")) && /json|javascript|css|html/.test(type);
+      res.writeHead(200, { "content-type": type, ...(gz ? { "content-encoding": "gzip" } : {}) });
+      res.end(gz ? gzipSync(body) : body);
     } catch {
       res.writeHead(404).end("Build the web app first: pnpm build");
     }

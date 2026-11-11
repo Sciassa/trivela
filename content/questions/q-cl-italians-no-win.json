@@ -1,0 +1,31 @@
+{
+  "id": "q-cl-italians-no-win",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "I 10 italiani con più presenze in Champions League senza averla mai vinta",
+  "answer": "Buffon, Bonucci, Verratti…",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "Buffon, Bonucci, Verratti…",
+  "claims": [
+    {
+      "text": "Buffon, Bonucci, Verratti…",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "Buffon, Bonucci, Verratti…"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "Il dataset copre le presenze solo dal 2012/13."
+}

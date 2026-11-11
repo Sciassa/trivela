@@ -1,0 +1,31 @@
+{
+  "id": "q-derossi-barthez",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "Cosa disse De Rossi a Barthez dopo il rigore nella finale del 2006?",
+  "answer": "Buttaci i guanti",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "Buttaci i guanti",
+  "claims": [
+    {
+      "text": "Buttaci i guanti",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "Buttaci i guanti"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "Nessuna fonte trovata."
+}

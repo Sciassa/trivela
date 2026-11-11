@@ -1,0 +1,31 @@
+{
+  "id": "q-gasperini-mourinho",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "Quali due allenatori nati lo stesso giorno (26 gennaio) si sono affrontati in Champions League?",
+  "answer": "Gasperini e Mourinho",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "Gasperini e Mourinho",
+  "claims": [
+    {
+      "text": "Gasperini e Mourinho",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "Gasperini e Mourinho"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "Non ho trovato fonti che confermino una sfida di Champions League tra i due."
+}

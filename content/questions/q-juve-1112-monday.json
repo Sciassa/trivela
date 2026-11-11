@@ -1,0 +1,31 @@
+{
+  "id": "q-juve-1112-monday",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "Quale fu l'unica partita del campionato 2011/12 che la Juventus giocò di lunedì?",
+  "answer": "Roma-Juventus 1-1",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "Roma-Juventus 1-1",
+  "claims": [
+    {
+      "text": "Roma-Juventus 1-1",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "Roma-Juventus 1-1"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "La stagione 2011/12 non è coperta né da openfootball (it.1) né dal dataset Transfermarkt."
+}

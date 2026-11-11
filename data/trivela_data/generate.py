@@ -36,6 +36,11 @@ FAMILY_LABELS = {
     "openfootball": ("openfootball (World Cup)", "https://github.com/openfootball/worldcup.json", "Public Domain (CC0)"),
     "wikimedia": ("Wikipedia (en) e Wikidata", "https://www.wikipedia.org", "CC BY-SA 4.0 / CC0"),
     "statsbomb": ("StatsBomb Open Data", "https://github.com/statsbomb/open-data", "StatsBomb Open Data licence (attribuzione)"),
+    "transfermarkt": ("Transfermarkt (dataset dcaribou/transfermarkt-datasets, storico fino a luglio 2026)",
+                      "https://github.com/dcaribou/transfermarkt-datasets", "Dati © Transfermarkt; dataset CC0"),
+    "martj42": ("International football results 1872– (martj42)", "https://github.com/martj42/international_results", "CC0"),
+    "open-matchday": ("open-matchday (stagione 2026/27, aggiornato ogni giorno)", "https://github.com/oladeeayo/open-matchday",
+                      "Uso non commerciale con attribuzione"),
 }
 
 rng = random.Random(20261111)
@@ -1095,17 +1100,35 @@ def main() -> None:
         if "cassaforte" in q["game"]:
             packs["cassaforte"].append({**common, "id": q["id"] + "-cf", "level": q["difficulty"], "question": q["question"],
                                         "parts": [{"kind": "text", "accepted": q.get("accepted", []), "display": q["answer"]}]})
-    # every instance must cite at least two families
+    # ---- Transfermarkt history, national teams, 2026/27 delta (SPEC §0.3: single authoritative source)
+    from .gen_tm import generate_all as tm_generate
+    from .intl import delta_all, intl_entities
+    tm_packs, tm_ents, tm_graph, tm_topic_nb = tm_generate()
+    for src_packs in (tm_packs, delta_all()):
+        for game, items in src_packs.items():
+            packs.setdefault(game, []).extend(items)
+    # every instance must cite at least one source
     for game, items in packs.items():
-        bad = [it["id"] for it in items if len({s["family"] for s in it["sources"]}) < 2]
+        bad = [it["id"] for it in items if not it["sources"]]
         if bad:
-            raise SystemExit(f"{game}: {len(bad)} instances without two source families")
+            raise SystemExit(f"{game}: {len(bad)} instances without a source")
         ids = [it["id"] for it in items]
         if len(ids) != len(set(ids)):
             seen = set()
             packs[game] = [it for it in items if not (it["id"] in seen or seen.add(it["id"]))]
     used = {e for items in packs.values() for it in items for e in it["entities"]}
     entities, topics = build_entities(g, used)
+    known = {e["id"] for e in entities}
+    for e in tm_ents + intl_entities():
+        if e["id"] in known:
+            continue
+        known.add(e["id"])
+        entities.append(e)
+    for k, v in tm_topic_nb.items():
+        topics["neighbors"][k] = sorted(set(topics["neighbors"].get(k, [])) | set(v))
+    tm["groups"].update(tm_graph["groups"])
+    for p, gs in tm_graph["byPerson"].items():
+        tm["byPerson"].setdefault(p, []).extend(gs)
     PACKS_OUT.mkdir(parents=True, exist_ok=True)
     for game, items in packs.items():
         (PACKS_OUT / f"{game}.json").write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

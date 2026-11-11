@@ -1,0 +1,37 @@
+{
+  "id": "q-elkjaer-vodka",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "published",
+  "difficulty": 2,
+  "question": "Accusato dal suo allenatore di aver passato la notte in un locale con una bottiglia di whisky e una donna, quale attaccante danese rispose che era una bugia: era vodka, e le donne erano due?",
+  "answer": "Preben Elkjær",
+  "year_min": 1977,
+  "year_max": 1977,
+  "entities": [],
+  "script": "Preben Elkjær rispose che non era vero: era una bottiglia di vodka, e le donne erano due.",
+  "claims": [
+    {
+      "text": "Preben Elkjær rispose che non era vero: era una bottiglia di vodka, e le donne erano due.",
+      "sources": [
+        {
+          "family": "wikimedia",
+          "label": "Wikipedia (en): Preben Elkjær",
+          "url": "https://en.wikipedia.org/wiki/Preben_Elkjær",
+          "quote": "in fact it was a bottle of [[vodka]] and ''two'' ladies"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "Preben Elkjær",
+    "Michael Laudrup",
+    "Allan Simonsen",
+    "Jon Dahl Tomasson"
+  ],
+  "correct": 0
+}

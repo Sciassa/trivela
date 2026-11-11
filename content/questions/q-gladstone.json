@@ -1,0 +1,38 @@
+{
+  "id": "q-gladstone",
+  "game": [
+    "tiro_secco",
+    "cassaforte"
+  ],
+  "archetype": 3,
+  "status": "published",
+  "difficulty": 3,
+  "question": "Quale difensore brasiliano, arrivato alla Juventus in prestito, giocò solo pochi minuti in Coppa Italia il 10 gennaio 2006 prima di essere girato al Verona?",
+  "answer": "Gladstone",
+  "year_min": 2006,
+  "year_max": 2006,
+  "entities": [],
+  "script": "Gladstone giocò pochi minuti in Coppa Italia contro la Fiorentina il 10 gennaio 2006, poi passò in prestito all'Hellas Verona.",
+  "claims": [
+    {
+      "text": "Gladstone giocò pochi minuti in Coppa Italia contro la Fiorentina il 10 gennaio 2006, poi passò in prestito all'Hellas Verona.",
+      "sources": [
+        {
+          "family": "wikimedia",
+          "label": "Wikipedia (it): Gladstone Pereira della Valentina",
+          "url": "https://it.wikipedia.org/wiki/Gladstone_Pereira_della_Valentina",
+          "quote": "Gioca pochi minuti in [[Coppa Italia 2005-2006|Coppa Italia]] il 10 gennaio [[2006]]"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "Gladstone",
+    "Lúcio",
+    "Felipe Melo",
+    "Diego"
+  ],
+  "correct": 0
+}

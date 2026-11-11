@@ -1,0 +1,37 @@
+{
+  "id": "q-bday-elshaarawy",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 1,
+  "status": "published",
+  "difficulty": 2,
+  "question": "Quale di questi giocatori ha segnato in Serie A nel giorno del suo 20° compleanno?",
+  "answer": "Stephan El Shaarawy",
+  "year_min": 2012,
+  "year_max": 2012,
+  "entities": [],
+  "script": "Stephan El Shaarawy segnò al 77' di AC Milan-Genoa CFC 1-0 il 27/10/2012, giorno del suo 20° compleanno.",
+  "claims": [
+    {
+      "text": "Stephan El Shaarawy segnò al 77' di AC Milan-Genoa CFC 1-0 il 27/10/2012, giorno del suo 20° compleanno.",
+      "sources": [
+        {
+          "family": "transfermarkt",
+          "label": "Transfermarkt: tabellino AC Milan-Genoa CFC",
+          "url": "https://www.transfermarkt.co.uk/ac-milan_genoa-cfc/index/spielbericht/2251346",
+          "quote": "Stephan El Shaarawy 77'"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "Nicolò Casale",
+    "Oumar Solet",
+    "Stephan El Shaarawy",
+    "Strahinja Pavlović"
+  ],
+  "correct": 2
+}

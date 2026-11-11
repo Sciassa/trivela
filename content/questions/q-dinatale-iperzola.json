@@ -1,0 +1,38 @@
+{
+  "id": "q-dinatale-iperzola",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 3,
+  "status": "published",
+  "difficulty": 2,
+  "question": "In quale piccolo club di Serie C2 Antonio Di Natale giocò in prestito nella stagione 1997-98, segnando i suoi primi gol da professionista?",
+  "answer": "Iperzola",
+  "year_min": 1997,
+  "year_max": 1997,
+  "entities": [],
+  "script": "Nella stagione 1997-98 Di Natale giocò in prestito all'Iperzola: 37 presenze e 6 gol.",
+  "claims": [
+    {
+      "text": "Nella stagione 1997-98 Di Natale giocò in prestito all'Iperzola: 37 presenze e 6 gol.",
+      "sources": [
+        {
+          "family": "wikimedia",
+          "label": "Wikipedia (it): Antonio Di Natale",
+          "url": "https://it.wikipedia.org/wiki/Antonio_Di_Natale",
+          "quote": "1997-1998| → Iperzola|37 (6)"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "Iperzola",
+    "Viareggio",
+    "Sangiovannese",
+    "Castel di Sangro"
+  ],
+  "correct": 0,
+  "note": "Distrattore 'Viareggio' è il club della stagione successiva (verificabile sulla stessa pagina)."
+}

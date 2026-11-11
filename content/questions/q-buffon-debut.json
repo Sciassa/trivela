@@ -1,0 +1,31 @@
+{
+  "id": "q-buffon-debut",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "Cosa accadde a Buffon nella sua prima partita in Nazionale (Russia-Italia 1997)?",
+  "answer": "Subì un autogol di Cannavaro",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "Subì un autogol di Cannavaro",
+  "claims": [
+    {
+      "text": "Subì un autogol di Cannavaro",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "Subì un autogol di Cannavaro"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "La fonte consultata non riporta il dettaglio."
+}

@@ -12,7 +12,7 @@ TRIVELA è un quiz calcistico arcade 1v1 multi-dispositivo. **`SPEC.md` è la fo
 
 Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
-1. **Nessun fatto non verificato.** Un campo del grafo è usabile in una domanda solo se è `concordant` (≥ 2 famiglie di fonti indipendenti, SPEC §8.3). Wikipedia e Wikidata sono **una sola** famiglia.
+1. **Nessun fatto non verificato.** Ogni fatto viene da **una fonte autorevole per il suo dominio** (SPEC §0.3: Transfermarkt per mercato/tabellini/presenze, martj42 per le nazionali, open-matchday per il 2026/27, Wikidata per etichette e luoghi). Si scartano i record con campi mancanti o incoerenti. Classifiche e insiemi dichiarano sempre competizione e stagioni coperte. Le domande scritte a mano entrano solo se la verifica automatica (`build_content`) le conferma sulla fonte citata.
 2. **Nessun LLM** (vincolo "tutto gratis", SPEC §0.1): né in gioco né nella pipeline. Testi e Copioni nascono da template sui fatti dell'istanza.
 3. **Niente contestazioni.** Non aggiungere pulsanti "contesta", "segnala errore", override tra giocatori o alias appresi dagli utenti. Gli alias arrivano solo da fonti.
 4. **Aiuto ortografico a zero informazione** (SPEC §10.3): correttore e non completatore, funzione pura di (testo digitato, indice globale). Non passargli mai la domanda, il gioco, il contesto o il filtro anno. Il test di proprietà in CI non va mai indebolito né saltato.
@@ -20,7 +20,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 6. **Filtro anno** secondo la tabella SPEC §3.3: elenchi/classifiche (`decina`, `dischetto`, `asta`) e argomento libero (`prima_pagina`, `cassaforte`) lo ignorano.
 7. **Argomento libero davvero libero**: niente menu o liste di argomenti. Si rifiuta solo un testo che non corrisponde ad alcuna entità calcistica.
 8. **Identità originale**: nessun nome, logo o voce di trasmissioni, conduttori o persone reali usati come branding; nessuna testata giornalistica reale (la Prima Pagina usa una testata di fantasia). Nessun box "pagelle".
-9. **Fonti nel rispetto dei termini**: mai scraper massivi di siti che lo vietano (Transfermarkt, Sky Sport, FBref, UEFA.com, ecc. sono fonti di **verifica puntuale**, livello C). Ogni connettore documenta la licenza in `data/ingest/<fonte>/LICENSE.md`.
+9. **Fonti nel rispetto dei termini**: mai scraper verso siti che lo vietano. I dati Transfermarkt arrivano solo dal dataset pubblicato (`dcaribou/transfermarkt-datasets`), mai dal sito. open-matchday è solo per uso non commerciale. Ogni connettore documenta la licenza in `data/ingest/<fonte>/LICENSE.md`.
 10. **Motore deterministico**: `packages/engine` è TypeScript puro, senza accesso a orologio, rete, DOM o `Math.random` (usa l'RNG con seme). Lo stesso motore gira nel browser (B1 offline) e nel Durable Object.
 
 ## Struttura
@@ -34,7 +34,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
 - JS (pnpm workspaces): `pnpm install` · `pnpm dev` (app su Vite) · `pnpm typecheck` · `pnpm test` · `pnpm build`
 - Server stanze in rete locale: `pnpm build && pnpm server` (porta 8787, serve anche l'app)
-- Dati (Python 3.12+, solo libreria standard): `cd data && python3 -m trivela_data.fetch` → `python3 -m trivela_data.build` → `python3 -m trivela_data.generate` (oppure `pnpm data:build`). I pacchetti finiscono in `apps/web/public/packs/` e vanno committati.
+- Dati (Python 3.12+ con `uv`, dipendenza: `duckdb`): aggiornamento settimanale `pnpm data:sync`; ricostruzione completa `pnpm data:build` (fetch → build Mondiali → build_content → generate). I pacchetti in `apps/web/public/packs/` e `data/build/graph.json` vanno committati.
 - Test dati: `cd data && uv run pytest`
 - Wikipedia/Wikidata limitano le richieste: il client HTTP della pipeline ha cache su disco (`data/cache/`, non versionata), ritmo lento e rispetta `Retry-After`. Non abbassare gli intervalli.
 

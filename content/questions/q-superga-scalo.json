@@ -1,0 +1,38 @@
+{
+  "id": "q-superga-scalo",
+  "game": [
+    "tiro_secco",
+    "cassaforte"
+  ],
+  "archetype": 6,
+  "status": "published",
+  "difficulty": 2,
+  "question": "Da quale città europea decollò per l'ultima volta l'aereo del Grande Torino il 4 maggio 1949?",
+  "answer": "Barcellona",
+  "year_min": 1949,
+  "year_max": 1949,
+  "entities": [],
+  "script": "Il volo partì da Lisbona, ma fece scalo a Barcellona: da lì l'ultimo decollo verso Torino.",
+  "claims": [
+    {
+      "text": "Il volo partì da Lisbona, ma fece scalo a Barcellona: da lì l'ultimo decollo verso Torino.",
+      "sources": [
+        {
+          "family": "wikimedia",
+          "label": "Wikipedia (it): Tragedia di Superga",
+          "url": "https://it.wikipedia.org/wiki/Tragedia_di_Superga",
+          "quote": "Scalo_intermedio = [[Aeroporto di Barcellona]]"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "Lisbona",
+    "Barcellona",
+    "Madrid",
+    "Marsiglia"
+  ],
+  "correct": 1
+}

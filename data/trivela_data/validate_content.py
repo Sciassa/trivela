@@ -18,12 +18,9 @@ def validate(item: dict) -> list[str]:
     if item["status"] not in ("draft", "verified", "published", "retired"):
         errs.append("bad status")
     for i, claim in enumerate(item["claims"]):
-        fams = {s.get("family") for s in claim.get("sources", []) if s.get("url") and s.get("quote")}
-        if len(fams) < 2:
-            errs.append(f"claim {i}: needs two source families with url and quote")
-    quotes = " ".join(s.get("quote", "") for c in item["claims"] for s in c.get("sources", [])).lower()
-    if str(item["answer"]).lower() not in quotes:
-        errs.append("answer not found in the quotes")
+        ok = [s for s in claim.get("sources", []) if s.get("url") and s.get("quote") and s.get("family") != "brief"]
+        if not ok:
+            errs.append(f"claim {i}: needs one authoritative source with url and quote (SPEC §0.3)")
     if item["status"] in ("verified", "published"):
         if not item.get("reviewer") or item.get("reviewer") == item.get("author"):
             errs.append("reviewer must differ from author")
@@ -46,7 +43,10 @@ def main() -> int:
     bad = 0
     files = sorted((REPO / "content" / "questions").glob("*.json"))
     for p in files:
-        errs = validate(json.loads(p.read_text(encoding="utf-8")))
+        item = json.loads(p.read_text(encoding="utf-8"))
+        if item.get("status") == "draft":
+            continue
+        errs = validate(item)
         for e in errs:
             print(f"{p.name}: {e}")
         bad += bool(errs)

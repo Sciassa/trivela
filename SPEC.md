@@ -67,6 +67,45 @@ Verifica incrociata sulle fasi finali dei Mondiali 1930–2026: 1002 risultati c
 
 Limiti noti: Il Mercato è vuoto (nessuna fonte gratuita verificabile per le cifre); Dal Dischetto e La Formazione hanno poche istanze perché richiedono dati completi su un intero perimetro; circa 940 titoli Wikipedia non sono stati risolti in Wikidata per i limiti di richieste (restano con un identificativo Wikipedia e senza etichetta italiana).
 
+## 0.3 Decisione v2: una fonte autorevole per dominio (sostituisce la regola delle due famiglie)
+
+Decisione del committente (novembre 2026): la doppia fonte concorde era troppo restrittiva. Da ora:
+
+| Dominio | Fonte autorevole | Copertura reale |
+|---|---|---|
+| Trasferimenti e cifre, altezze, date di nascita, presenze, tabellini (formazioni, moduli, marcatori al minuto, arbitri, capitani, numeri) | **Transfermarkt** (dataset `dcaribou/transfermarkt-datasets`, file DuckDB su R2) | partite/eventi/presenze **2012/13 – 2025/26** (+ Mondiali); trasferimenti con cifra quasi tutti dal 2004 |
+| Fasi finali dei Mondiali 1930–2026 | openfootball + Wikipedia (già verificati in v1) | completa |
+| Nazionali: risultati 1872 – oggi | **martj42/international_results** (CC0) | completa per i risultati; i marcatori sono incompleti nei primi decenni e non si usano per classifiche "di sempre" |
+| Stagione in corso 2026/27 | **open-matchday** (aggiornato ogni giorno; uso non commerciale) | risultati, primo tempo, calendario (i minuti dei gol non indicano il marcatore) |
+| Etichette italiane, luogo di nascita e coordinate | **Wikidata** in blocco via SPARQL (proprietà P2446 = ID Transfermarkt) | giocatori con valore di mercato rilevante |
+| Aneddoti (`content/`) | una fonte citata con frase testuale, **verificata automaticamente** (frase presente nella pagina, oppure query sui dati) | 10 pubblicate, 11 in bozza |
+
+Regole che restano: si scartano i record con campi mancanti o incompleti (es. partite in cui gli eventi-gol non tornano con il risultato); classifiche e insiemi **dichiarano sempre il perimetro** (competizione e stagioni), così le risposte non sono contestabili; nessun dato inventato.
+
+Il "1990" indicato come inizio per le statistiche granulari non è raggiungibile con le fonti gratuite disponibili: il dataset Transfermarkt parte dalla stagione 2012/13. Per il periodo precedente restano i Mondiali (verificati) e i risultati delle nazionali.
+
+**Aggiornamento automatico gratuito:** `pnpm data:sync` (o `npm run data:sync`) e la GitHub Action `.github/workflows/sync-data.yml` (ogni lunedì 02:17 UTC) riscaricano le fonti, rigenerano i pacchetti e aprono una pull request.
+
+Contenuti dopo la v2:
+
+| Gioco | Istanze |
+|---|---|
+| tiro_secco | 8389 |
+| prima_pagina | 1681 |
+| mercato | 1740 |
+| decina | 40 |
+| dischetto | 66 |
+| formazione | 637 |
+| cassaforte | 5520 |
+| giramondo | 867 |
+| frame | 1212 |
+| intruso | 338 |
+| asta | 245 |
+| filo_rosso | 281 |
+| mappamondo | 1221 |
+| maglia | 5000 |
+| **Totale** | **27237** |
+
 ---
 
 ## 1. Glossario

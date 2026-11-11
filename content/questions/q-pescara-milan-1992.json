@@ -1,0 +1,31 @@
+{
+  "id": "q-pescara-milan-1992",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 4,
+  "status": "draft",
+  "difficulty": 2,
+  "question": "Nel Pescara-Milan 4-5 del 13 settembre 1992, qual era il punteggio al 15'?",
+  "answer": "3-2 per il Pescara",
+  "year_min": 2000,
+  "year_max": 2000,
+  "entities": [],
+  "script": "3-2 per il Pescara",
+  "claims": [
+    {
+      "text": "3-2 per il Pescara",
+      "sources": [
+        {
+          "family": "brief",
+          "label": "Esempio fornito dal committente",
+          "url": "about:blank",
+          "quote": "3-2 per il Pescara"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "note": "Minuti dei gol non disponibili nelle fonti scaricabili."
+}

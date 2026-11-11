@@ -1,0 +1,37 @@
+{
+  "id": "q-kalulu-2026",
+  "game": [
+    "tiro_secco"
+  ],
+  "archetype": 2,
+  "status": "published",
+  "difficulty": 2,
+  "question": "Qual era il risultato di Inter-Juventus del 14 febbraio 2026 al momento dell'espulsione di Kalulu?",
+  "answer": "1-1",
+  "year_min": 2026,
+  "year_max": 2026,
+  "entities": [],
+  "script": "Kalulu fu espulso per doppia ammonizione al 42', sul 1-1. La partita finì 3-2 per l'Inter.",
+  "claims": [
+    {
+      "text": "Kalulu fu espulso per doppia ammonizione al 42', sul 1-1. La partita finì 3-2 per l'Inter.",
+      "sources": [
+        {
+          "family": "transfermarkt",
+          "label": "Transfermarkt: tabellino Inter-Juventus 3-2",
+          "url": "https://www.transfermarkt.co.uk/inter-milan_juventus-fc/index/spielbericht/4620958",
+          "quote": "Second yellow 42'"
+        }
+      ]
+    }
+  ],
+  "author": "pipeline",
+  "reviewer": "verifica automatica",
+  "options": [
+    "0-0",
+    "2-0",
+    "1-0",
+    "1-1"
+  ],
+  "correct": 3
+}

@@ -1,22 +1,22 @@
 {
   "version": "2026-11-11",
-  "generatedAt": "2026-11-11T22:00:29+00:00",
+  "generatedAt": "2026-11-11T22:47:46+00:00",
   "snapshot": "2026-11-11",
   "counts": {
-    "tiro_secco": 6397,
-    "prima_pagina": 550,
-    "mercato": 0,
-    "decina": 22,
-    "dischetto": 2,
-    "formazione": 37,
-    "cassaforte": 1929,
-    "giramondo": 98,
-    "frame": 279,
-    "intruso": 87,
-    "asta": 143,
-    "filo_rosso": 81,
-    "mappamondo": 421,
-    "maglia": 2500
+    "tiro_secco": 8389,
+    "prima_pagina": 1681,
+    "mercato": 1740,
+    "decina": 40,
+    "dischetto": 66,
+    "formazione": 637,
+    "cassaforte": 5520,
+    "giramondo": 867,
+    "frame": 1212,
+    "intruso": 338,
+    "asta": 245,
+    "filo_rosso": 281,
+    "mappamondo": 1221,
+    "maglia": 5000
   },
   "sources": [
     {
@@ -36,6 +36,24 @@
       "label": "StatsBomb Open Data",
       "url": "https://github.com/statsbomb/open-data",
       "licence": "StatsBomb Open Data licence (attribuzione)"
+    },
+    {
+      "family": "transfermarkt",
+      "label": "Transfermarkt (dataset dcaribou/transfermarkt-datasets, storico fino a luglio 2026)",
+      "url": "https://github.com/dcaribou/transfermarkt-datasets",
+      "licence": "Dati © Transfermarkt; dataset CC0"
+    },
+    {
+      "family": "martj42",
+      "label": "International football results 1872– (martj42)",
+      "url": "https://github.com/martj42/international_results",
+      "licence": "CC0"
+    },
+    {
+      "family": "open-matchday",
+      "label": "open-matchday (stagione 2026/27, aggiornato ogni giorno)",
+      "url": "https://github.com/oladeeayo/open-matchday",
+      "licence": "Uso non commerciale con attribuzione"
     }
   ],
   "coverage": {
