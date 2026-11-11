@@ -1,0 +1,10 @@
+{
+  "name": "TRIVELA",
+  "short_name": "TRIVELA",
+  "description": "Quiz calcistico arcade 1 contro 1",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0b1a",
+  "theme_color": "#0b0b1a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}

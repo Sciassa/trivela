@@ -1,0 +1,7 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist", "types": ["node"] },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/cloudflare.ts"],
+  "references": [{ "path": "../../packages/protocol" }, { "path": "../../packages/matcher" }, { "path": "../../packages/engine" }]
+}
