@@ -139,14 +139,36 @@ def _sparql_titles(titles: list[str], lang: str) -> dict[str, str]:
     return out
 
 
+class RateLimited(Exception):
+    pass
+
+
 def wp_summary_qid(title: str, lang: str = "en") -> str | None:
-    """QID via the REST summary endpoint (follows redirects)."""
+    """QID via the REST summary endpoint (follows redirects). Raises RateLimited on 429."""
     t = urllib.parse.quote(canonical_title(title).replace(" ", "_"), safe="")
+    url = f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{t}"
+    path = _cache_path(url)
+    if not path.exists():
+        wait = _last_call.get("rest", 0) + 0.4 - time.time()
+        if wait > 0:
+            time.sleep(wait)
+        _last_call["rest"] = time.time()
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                text = resp.read().decode("utf-8")
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                raise RateLimited() from e
+            return None
+        except (urllib.error.URLError, TimeoutError):
+            return None
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
     try:
-        d = json.loads(get(f"https://{lang}.wikipedia.org/api/rest_v1/page/summary/{t}", min_interval=0.3, retries=4))
-    except (urllib.error.HTTPError, RuntimeError):
+        return json.loads(path.read_text(encoding="utf-8")).get("wikibase_item")
+    except json.JSONDecodeError:
         return None
-    return d.get("wikibase_item")
 
 
 def wp_qids(titles: list[str], lang: str = "en") -> dict[str, str]:
@@ -163,8 +185,12 @@ def wp_qids(titles: list[str], lang: str = "en") -> dict[str, str]:
         else:
             missing.append(t)
     print(f"[qids] {len(out)} via SPARQL, {len(missing)} via REST", flush=True)
-    for t in missing:
-        q = wp_summary_qid(t, lang)
+    for i, t in enumerate(missing):
+        try:
+            q = wp_summary_qid(t, lang)
+        except RateLimited:
+            print(f"[qids] rate limited after {i} REST lookups: {len(missing) - i} titles keep a Wikipedia id", flush=True)
+            break
         if q:
             out[t] = q
     return out

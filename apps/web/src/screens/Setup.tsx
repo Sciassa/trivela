@@ -62,7 +62,10 @@ export function Setup({
       setError("Anno non valido.");
       return;
     }
+    // Debug aid: ?games=a,b,c,d forces the four drawn games (used by visual checks).
+    const forced = new URLSearchParams(location.search).get("games")?.split(",").filter(Boolean) as never;
     const base = {
+      ...(forced ? { forcedGames: forced } : {}),
       judging,
       players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"] as [string, string],
       yearFrom,

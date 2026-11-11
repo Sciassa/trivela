@@ -52,3 +52,27 @@ def round_it(raw: str) -> str:
     if "group" in r or "matchday" in r:
         return "Fase a gironi"
     return "Fase finale"
+
+
+# Article used before the Italian nation name: "la" by default.
+ARTICLES = {
+    "BRA": "il", "BEL": "il", "CMR": "il", "CHI": "il", "CAN": "il", "ECU": "l'", "JPN": "il", "WAL": "il",
+    "GHA": "il", "IRN": "l'", "IRQ": "l'", "KUW": "il", "MAR": "il", "MEX": "il", "PAR": "il", "PER": "il",
+    "POR": "il", "QAT": "il", "SEN": "il", "RSA": "il", "TOG": "il", "URU": "l'", "VEN": "il", "ZAI": "lo",
+    "HON": "l'", "SLV": "", "PAN": "", "HAI": "", "MLI": "il", "BFA": "il", "UZB": "l'", "CPV": "", "CUW": "",
+    "CUB": "", "ISR": "", "TRI": "", "NED": "i", "USA": "gli", "UAE": "gli", "DEI": "le", "EGY": "l'",
+    "ANG": "l'", "ARG": "l'", "AUS": "l'", "AUT": "l'", "ALG": "l'", "KSA": "l'", "ENG": "l'", "ITA": "l'",
+    "ISL": "l'", "IRL": "l'", "NIR": "l'", "HUN": "l'", "UKR": "l'", "URS": "l'", "COD": "la", "ZAM": "lo",
+    "CRC": "la", "DEN": "la",
+}
+_PREP = {
+    "di": {"la": "della ", "il": "del ", "l'": "dell'", "lo": "dello ", "i": "dei ", "gli": "degli ", "le": "delle ", "": "di "},
+    "con": {"la": "con la ", "il": "con il ", "l'": "con l'", "lo": "con lo ", "i": "con i ", "gli": "con gli ", "le": "con le ", "": "con "},
+    "per": {"la": "per la ", "il": "per il ", "l'": "per l'", "lo": "per lo ", "i": "per i ", "gli": "per gli ", "le": "per le ", "": "per "},
+}
+
+
+def prep(word: str, code: str) -> str:
+    """'di'/'con'/'per' + article + Italian nation name, e.g. prep('di', 'BRA') -> 'del Brasile'."""
+    art = ARTICLES.get(code, "la")
+    return _PREP[word][art] + NATIONS.get(code, code)

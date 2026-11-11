@@ -17,7 +17,7 @@ from itertools import combinations
 
 from . import http
 from .fetch import wc_pages
-from .italian import NATIONS, POSITIONS, WEEKDAYS, date_it, round_it
+from .italian import NATIONS, POSITIONS, WEEKDAYS, date_it, prep, round_it
 from .openfootball import load_matches
 from .paths import BUILD, PACKS_OUT, WC_YEARS
 from .text import norm, strip_disambiguation
@@ -76,6 +76,16 @@ class G:
     def fame(self, title: str) -> int:
         q = self.qid(title)
         return int(self.people.get(q or "", {}).get("sitelinks") or self.places.get(q or "", {}).get("sitelinks") or 0)
+
+    def club(self, title: str) -> str:
+        """Common club name as linked on Wikipedia squad lists (e.g. "Werder Bremen")."""
+        if not hasattr(self, "_club_labels"):
+            labels: dict[str, Counter] = defaultdict(Counter)
+            for s in self.squads:
+                if s.get("club") and s.get("club_label"):
+                    labels[s["club"]][s["club_label"]] += 1
+            self._club_labels = {t: c.most_common(1)[0][0] for t, c in labels.items()}
+        return self._club_labels.get(title) or strip_disambiguation(title)
 
     def place(self, title: str) -> str:
         q = self.qid(title)
@@ -164,7 +174,7 @@ def completeness(g: G) -> tuple[set[tuple[int, str]], set[tuple[int, str]], dict
     goals_ok = set()
     for key, n in total_by_ed.items():
         ms = verified_by_ed.get(key, [])
-        if len(ms) == n and all(m["verified"].get("goals_complete") for m in ms):
+        if len(ms) == n and all(m["verified"].get("scorers_complete") for m in ms):
             goals_ok.add(key)
     nation_ok: dict[str, bool] = {}
     for (y, c), _n in total_by_ed.items():
@@ -201,8 +211,8 @@ def gen_maglia(g: G) -> list[dict]:
         fame = g.fame(s["title"])
         if fame < 8:
             continue
-        club = f", quando giocava nel {g.place(s['club'])}" if s.get("club") else ""
-        script = f"{g.pname(s['title'])} indossò la maglia numero {s['number']} della {nation(s['code'])} al Mondiale {s['year']}{club}."
+        club = f" (club di appartenenza: {g.club(s['club'])})" if s.get("club") else ""
+        script = f"{g.pname(s['title'])} indossò la maglia numero {s['number']} {prep('di', s['code'])} al Mondiale {s['year']}{club}."
         it = base("maglia", (s["year"], s["code"], s["number"]), year=s["year"], fame=fame,
                   entities=ed_entities(s["year"]) + [f"nat:{s['code']}", pid(g, s["title"])], sources=s["sources"], script=script)
         it.update({"team": nation(s["code"]), "season": f"Mondiale {s['year']}", "number": s["number"],
@@ -379,7 +389,7 @@ def gen_prima_pagina(g: G) -> list[dict]:
         d = dt.date.fromisoformat(m["date"])
         body = [
             f"{city_txt}, {date_it(m['date'])}. {ta} e {tb} si sono affrontate"
-            f"{' allo stadio ' + stadium_txt if stadium_txt else ''} per la {round_it(m['round']).lower()} del Mondiale {m['year']}.",
+            f"{' allo stadio ' + stadium_txt if stadium_txt else ''} ({round_it(m['round']).lower()}, Mondiale {m['year']}).",
             f"Il tabellino delle reti: {goals_txt}." + (f" Dopo i supplementari restava il {sa}-{sb}." if v.get("aet") else ""),
         ]
         if v.get("pens"):
@@ -414,7 +424,7 @@ def gen_prima_pagina(g: G) -> list[dict]:
 def scorer_table(g: G, nation_ok: dict[str, bool]) -> dict[str, Counter]:
     by_nation: dict[str, Counter] = defaultdict(Counter)
     for m in g.matches:
-        for x in m["verified"].get("goals", []):
+        for x in m["verified"].get("scorers", []):
             if x["own_goal"]:
                 continue
             code = m["codes"][x["side"]]
@@ -433,41 +443,95 @@ def wc_sources(years: list[int]) -> list[dict]:
     return out
 
 
-def gen_dischetto(g: G, nation_ok: dict[str, bool], snapshot: str) -> list[dict]:
-    out = []
-    years_by_nation = defaultdict(set)
+def nation_windows(g: G, goals_ok: set) -> dict[str, tuple[int, int]]:
+    """Longest run of consecutive World Cups where the nation's scorers are fully verified
+    (editions it did not play count as complete)."""
+    played = defaultdict(set)
+    for y in WC_YEARS:
+        for om in load_matches(y):
+            for name in (om.team1, om.team2):
+                c = g.g["codes"].get(norm(name))
+                if c:
+                    played[c].add(y)
+    out = {}
+    for c, ys in played.items():
+        best, cur = None, []
+        for y in WC_YEARS:
+            if y not in ys or (y, c) in goals_ok:
+                cur.append(y)
+                if y in ys and (best is None or len([z for z in cur if z in ys]) > len([z for z in range(best[0], best[1] + 1) if z in ys])):
+                    first = next(z for z in cur if z in ys)
+                    best = (first, y)
+            else:
+                cur = []
+        if best:
+            out[c] = best
+    return out
+
+
+def window_scorers(g: G, code: str, window: tuple[int, int]) -> Counter:
+    cnt: Counter = Counter()
     for m in g.matches:
-        for c in m["codes"]:
-            years_by_nation[c].add(m["year"])
-    for code, cnt in scorer_table(g, nation_ok).items():
-        if len(cnt) < 12:
+        if not (window[0] <= m["year"] <= window[1]) or code not in m["codes"]:
             continue
-        ranked = sorted(cnt.items(), key=lambda kv: (-kv[1], g.pname(kv[0])))
-        tenth_val = ranked[9][1]
-        ranking = []
-        for title, val in ranked:
-            better = sum(1 for _t, v2 in ranked if v2 > val)
-            rank = better + 1
-            if rank > 10:
-                break
-            ranking.append({"rank": min(rank, 10) if val == tenth_val else rank, "id": pid(g, title),
-                            "name": g.pname(title), "value": val})
-        if len([r for r in ranking if r["rank"] == 10]) > 4 or ranking[0]["value"] < 3:
+        for x in m["verified"].get("scorers", []):
+            if not x["own_goal"] and m["codes"][x["side"]] == code:
+                cnt[x["title"]] += 1
+    return cnt
+
+
+def ranking_of(g: G, cnt: Counter) -> list[dict] | None:
+    ranked = sorted(cnt.items(), key=lambda kv: (-kv[1], g.pname(kv[0])))
+    if len(ranked) < 12:
+        return None
+    tenth_val = ranked[9][1]
+    out = []
+    for title, val in ranked:
+        rank = sum(1 for _t, v2 in ranked if v2 > val) + 1
+        if rank > 10:
+            break
+        out.append({"rank": 10 if val == tenth_val else rank, "id": pid(g, title), "name": g.pname(title), "value": val})
+    if len([r for r in out if r["rank"] == 10]) > 8 or out[0]["value"] < 3:
+        return None
+    return out
+
+
+def scope_note(code: str, y1: int, y2: int) -> str:
+    """Clarify ambiguous national-team identities so that correct answers cannot be disputed."""
+    if code == "GER" and y1 < 1990 and y2 > 1950:
+        return " (esclusa la Germania Ovest 1950-1990)"
+    if code == "RUS" and y1 <= 1990:
+        return " (esclusa l'Unione Sovietica)"
+    if code == "SRB" and y1 <= 2006:
+        return " (escluse Jugoslavia e Serbia e Montenegro)"
+    if code == "CZE" and y1 <= 1990:
+        return " (esclusa la Cecoslovacchia)"
+    return ""
+
+
+def gen_dischetto(g: G, goals_ok: set, snapshot: str) -> list[dict]:
+    out = []
+    for code, (y1, y2) in nation_windows(g, goals_ok).items():
+        cnt = window_scorers(g, code, (y1, y2))
+        ranking = ranking_of(g, cnt)
+        if not ranking:
             continue
+        full = y1 == WC_YEARS[0] or y2 == WC_YEARS[-1]
+        span = f"dal {y1} al {y2}"
         top3 = ", ".join(f"{r['name']} ({r['value']})" for r in ranking[:3])
-        script = f"La classifica dei marcatori della {nation(code)} nelle fasi finali dei Mondiali è guidata da {top3}."
-        it = base("dischetto", code, year=min(years_by_nation[code]), year_max=max(years_by_nation[code]),
-                  fame=max(g.fame(t) for t, _ in ranked[:10]),
-                  entities=["wc", f"nat:{code}"] + [r["id"] for r in ranking], sources=wc_sources(list(years_by_nation[code])),
-                  script=script)
-        it.update({"title": f"I 10 marcatori della {nation(code)} con più gol ai Mondiali",
-                   "definition": "Gol nelle fasi finali dei Mondiali (esclusi autogol e serie di rigori), tutte le edizioni",
+        it = base("dischetto", (code, y1, y2), year=y1, year_max=y2, fame=max(g.fame(t) for t in cnt),
+                  entities=["wc", f"nat:{code}"] + [r["id"] for r in ranking],
+                  sources=wc_sources([y for y in WC_YEARS if y1 <= y <= y2]),
+                  script=f"Nei Mondiali {span} la classifica dei marcatori {prep('di', code)} è guidata da {top3}.")
+        it.update({"title": f"I 10 marcatori {prep('di', code)} ai Mondiali {span}{scope_note(code, y1, y2)}",
+                   "definition": f"Gol nelle fasi finali dei Mondiali {span}, esclusi autogol e serie di rigori"
+                                 + ("" if not full else ""),
                    "unit": "gol", "ranking": ranking, "snapshot": snapshot})
         out.append(it)
     return out
 
 
-def gen_sets(g: G, squad_ok: set, nation_ok: dict[str, bool]) -> tuple[list[dict], list[dict]]:
+def gen_sets(g: G, squad_ok: set, goals_ok_global: set) -> tuple[list[dict], list[dict]]:
     decina, asta = [], []
     # (club, nation) across complete editions
     groups = defaultdict(set)
@@ -486,7 +550,7 @@ def gen_sets(g: G, squad_ok: set, nation_ok: dict[str, bool]) -> tuple[list[dict
         if not (8 <= n <= 30):
             continue
         rng_years = f"{cy[0]}–{cy[-1]}"
-        title = f"Giocatori della {nation(code)} convocati per un Mondiale mentre giocavano nel {g.place(club)}"
+        title = f"Giocatori {prep('di', code)} convocati per un Mondiale mentre il loro club era {g.club(club)}"
         desc = f"Edizioni considerate: {', '.join(map(str, cy))} (rose verificate su due fonti)."
         mem = sorted(({"id": pid(g, t), "name": g.pname(t)} for t in members), key=lambda x: x["name"])
         script = f"{n} giocatori: {', '.join(x['name'] for x in mem)}."
@@ -497,18 +561,20 @@ def gen_sets(g: G, squad_ok: set, nation_ok: dict[str, bool]) -> tuple[list[dict
         asta.append(it)
         if 14 <= n <= 17:
             decina.append(dict(it, id=iid("decina", club, code)))
-    # scorers of a nation with at least k goals
-    for code, cnt in scorer_table(g, nation_ok).items():
+    # scorers of a nation with at least k goals (inside a fully verified window)
+    windows = nation_windows(g, goals_ok_global)
+    for code, (wy1, wy2) in windows.items():
+        cnt = window_scorers(g, code, (wy1, wy2))
         for k in (1, 2, 3, 4):
             members = [t for t, v in cnt.items() if v >= k]
             n = len(members)
             if not (8 <= n <= 30):
                 continue
             mem = sorted(({"id": pid(g, t), "name": g.pname(t)} for t in members), key=lambda x: x["name"])
-            title = (f"Giocatori della {nation(code)} che hanno segnato ai Mondiali" if k == 1 else
-                     f"Giocatori della {nation(code)} con almeno {k} gol ai Mondiali")
-            it = base("set_scorers", (code, k), year=1930, year_max=2026, fame=max(g.fame(t) for t in members),
-                      entities=["wc", f"nat:{code}"] + [x["id"] for x in mem], sources=wc_sources([m["year"] for m in g.matches if code in m["codes"]]),
+            title = (f"Giocatori {prep('di', code)} che hanno segnato ai Mondiali dal {wy1} al {wy2}" if k == 1 else
+                     f"Giocatori {prep('di', code)} con almeno {k} gol ai Mondiali dal {wy1} al {wy2}") + scope_note(code, wy1, wy2)
+            it = base("set_scorers", (code, k, wy1, wy2), year=wy1, year_max=wy2, fame=max(g.fame(t) for t in members),
+                      entities=["wc", f"nat:{code}"] + [x["id"] for x in mem], sources=wc_sources([y for y in WC_YEARS if wy1 <= y <= wy2]),
                       script=f"{n} giocatori: {', '.join(x['name'] for x in mem)}.")
             it.update({"title": title, "description": "Fasi finali dei Mondiali, esclusi autogol e serie di rigori.",
                        "members": mem})
@@ -547,19 +613,19 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
         if s.get("club"):
             by_team[(s["year"], s["code"])].append(s)
     for (y, c), facts in by_team.items():
-        clubs = sorted({g.place(f["club"]) for f in facts})
+        clubs = sorted({g.club(f["club"]) for f in facts})
         for f in facts:
             fame = g.fame(f["title"])
             if fame < 30:
                 continue
-            o = opts4(g.place(f["club"]), clubs, f"club-{y}-{c}-{f['title']}")
+            o = opts4(g.club(f["club"]), clubs, f"club-{y}-{c}-{f['title']}")
             if not o:
                 continue
-            script = f"Al Mondiale {y} {g.pname(f['title'])} ({nation(c)}) era un giocatore del {g.place(f['club'])}."
+            script = f"Al Mondiale {y} {g.pname(f['title'])} ({nation(c)}) aveva come club {g.club(f['club'])}."
             it = base("ts_club_at_wc", (y, c, f["title"]), year=y, fame=fame,
                       entities=ed_entities(y) + [f"nat:{c}", pid(g, f["title"]), g.qid(f["club"]) or f["club"]],
                       sources=f["sources"], script=script)
-            it.update({"question": f"In quale squadra giocava {g.pname(f['title'])} quando disputò il Mondiale {y} con la {nation(c)}?",
+            it.update({"question": f"In quale squadra giocava {g.pname(f['title'])} quando disputò il Mondiale {y} {prep('con', c)}?",
                        "options": o[0], "correct": o[1], "archetype": 3})
             out.append(it)
     # B) shirt number
@@ -573,7 +639,7 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
             continue
         it = base("ts_number", (s["year"], s["code"], s["title"]), year=s["year"], fame=g.fame(s["title"]),
                   entities=ed_entities(s["year"]) + [f"nat:{s['code']}", pid(g, s["title"])], sources=s["sources"],
-                  script=f"Al Mondiale {s['year']} {g.pname(s['title'])} vestì il numero {s['number']} della {nation(s['code'])}.")
+                  script=f"Al Mondiale {s['year']} {g.pname(s['title'])} vestì il numero {s['number']} {prep('di', s['code'])}.")
         it.update({"question": f"Con quale numero di maglia giocò {g.pname(s['title'])} il Mondiale {s['year']}?",
                    "options": o[0], "correct": o[1], "archetype": 1})
         out.append(it)
@@ -594,8 +660,8 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
             code = m["codes"][side]
             it = base("ts_captain", (m["id"], side), year=m["year"], fame=g.fame(cap),
                       entities=ed_entities(m["year"]) + [f"nat:{code}", pid(g, cap)], sources=m["sources"],
-                      script=f"In {match_label(m)} (Mondiale {m['year']}, {date_it(m['date'])}) la fascia della {nation(code)} era al braccio di {g.pname(cap)}.")
-            it.update({"question": f"Chi era il capitano della {nation(code)} in {match_label(m)} (Mondiale {m['year']}, {round_it(m['round']).lower()})?",
+                      script=f"In {match_label(m)} (Mondiale {m['year']}, {date_it(m['date'])}) la fascia {prep('di', code)} era al braccio di {g.pname(cap)}.")
+            it.update({"question": f"Chi era il capitano {prep('di', code)} in {match_label(m)} (Mondiale {m['year']}, {round_it(m['round']).lower()})?",
                        "options": o[0], "correct": o[1], "archetype": 2})
             out.append(it)
     # D) referee of a knockout match
@@ -636,16 +702,16 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
             it = base("ts_weekday", (y, c, day), year=y, fame=20, entities=ed_entities(y) + [f"nat:{c}"],
                       sources=target["sources"],
                       script=f"Al Mondiale {y} la {nation(c)} giocò di {WEEKDAYS[day]} soltanto {match_label(target)}, il {date_it(target['date'])}.")
-            it.update({"question": f"Quale fu l'unica partita della {nation(c)} al Mondiale {y} giocata di {WEEKDAYS[day]}?",
+            it.update({"question": f"Quale fu l'unica partita {prep('di', c)} al Mondiale {y} giocata di {WEEKDAYS[day]}?",
                        "options": o[0], "correct": o[1], "archetype": 1})
             out.append(it)
     # F) birthday goals (DOB must carry an external reference: second family)
     goals_by_person = defaultdict(list)
     complete_people = set()
     for m in g.matches:
-        for x in m["verified"].get("goals", []):
+        for x in m["verified"].get("scorers", []):
             if not x["own_goal"]:
-                goals_by_person[x["title"]].append((m, x))
+                goals_by_person[x["title"]].append((m, {**x, "minute": 0, "extra": 0}))
     for t, gl in goals_by_person.items():
         if all((m["year"], m["codes"][x["side"]]) in goals_ok for m, x in gl):
             complete_people.add(t)
@@ -681,7 +747,7 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
         out.append(it)
     # G) first World Cup goal: opponent
     for t in complete_people:
-        gl = sorted(goals_by_person[t], key=lambda mx: (mx[0]["date"], mx[1]["minute"], mx[1]["extra"]))
+        gl = sorted(goals_by_person[t], key=lambda mx: mx[0]["date"])
         if g.fame(t) < 40 or not gl:
             continue
         m, x = gl[0]
@@ -696,7 +762,7 @@ def gen_tiro_secco(g: G, goals_ok: set, squad_ok: set) -> list[dict]:
             continue
         it = base("ts_first_goal", t, year=m["year"], fame=g.fame(t),
                   entities=ed_entities(m["year"]) + [pid(g, t), f"nat:{own}", f"nat:{opp}"], sources=m["sources"],
-                  script=f"Il primo gol di {g.pname(t)} ai Mondiali arrivò in {match_label(m)} il {date_it(m['date'])}, al {x['minute']}'.")
+                  script=f"Il primo gol di {g.pname(t)} ai Mondiali arrivò in {match_label(m)} il {date_it(m['date'])}.")
         it.update({"question": f"Contro quale nazionale {g.pname(t)} segnò il suo primo gol ai Mondiali?",
                    "options": o[0], "correct": o[1], "archetype": 3})
         out.append(it)
@@ -721,8 +787,8 @@ def gen_cassaforte(g: G) -> list[dict]:
                 continue
             it = base("cf_scorer", (m["id"], x["title"], minute), year=m["year"], fame=fame,
                       entities=ent + [pid(g, x["title"])], sources=m["sources"],
-                      script=f"Al {minute}' di {match_label(m)} ({round_it(m['round']).lower()}, Mondiale {m['year']}) segnò {g.pname(x['title'])} per la {team}.")
-            it.update({"level": level, "question": f"Chi segnò per la {team} al {minute}' di {match_label(m)} ({round_it(m['round']).lower()}, Mondiale {m['year']})?",
+                      script=f"Al {minute}' di {match_label(m)} ({round_it(m['round']).lower()}, Mondiale {m['year']}) segnò {g.pname(x['title'])} {prep('per', m['codes'][x['side']])}.")
+            it.update({"level": level, "question": f"Chi segnò {prep('per', m['codes'][x['side']])} al {minute}' di {match_label(m)} ({round_it(m['round']).lower()}, Mondiale {m['year']})?",
                        "parts": [person_answer(g, x["title"])]})
             out.append(it)
         if len(goals) == 2 and len(v["goals"]) == 2 and goals[0]["title"] != goals[1]["title"]:
@@ -781,9 +847,9 @@ def gen_intruso(g: G, squad_ok: set) -> list[dict]:
                     break
             if ambiguous:
                 continue
-            distract = [f"Convocati con la {nation(c)} sia al Mondiale {z1} sia al {z2}"
+            distract = [f"Convocati {prep('con', c)} sia al Mondiale {z1} sia al {z2}"
                         for (z1, z2), s2 in props.items() if (z1, z2) != (y1, y2) and not all(t in s2 for t in trio)]
-            correct = f"Convocati con la {nation(c)} sia al Mondiale {y1} sia al {y2}"
+            correct = f"Convocati {prep('con', c)} sia al Mondiale {y1} sia al {y2}"
             o = opts4(correct, distract, f"intr-links-{c}-{y1}-{y2}")
             if not o:
                 continue
@@ -870,11 +936,11 @@ def gen_giramondo(g: G) -> list[dict]:
     out = []
     for t, facts in by_person.items():
         facts.sort(key=lambda s: s["year"])
-        clubs = list(dict.fromkeys(g.place(f["club"]) for f in facts))
+        clubs = list(dict.fromkeys(g.club(f["club"]) for f in facts))
         if len(facts) < 3 or len(clubs) < 2 or g.fame(t) < 40:
             continue
-        clues = [f"Mondiale {f['year']}: giocava nel {g.place(f['club'])}" for f in facts]
-        clues.sort(key=lambda c: g.fame(next(f["club"] for f in facts if g.place(f["club"]) in c)))
+        clues = [f"Mondiale {f['year']} · club: {g.club(f['club'])}" for f in facts]
+        clues.sort(key=lambda c: g.fame(next(f["club"] for f in facts if g.club(f["club"]) in c)))
         code = facts[-1]["code"]
         pos = next((POSITIONS[f["pos"]] for f in facts if f.get("pos")), None)
         nums = sorted({f["number"] for f in facts if f.get("number")})
@@ -942,11 +1008,20 @@ def build_entities(g: G, used: set[str]) -> tuple[list[dict], dict]:
         aliases.discard(name)
         ents[p] = {"id": p, "kind": "person", "name": name, "fame": g.fame(t), "family": g.family(t),
                    "aliases": sorted(a for a in aliases if a and len(a) < 60)[:8], "years": sorted(years.get(p, []))}
+    club_stop = {"fc", "f c", "cf", "ac", "as", "ssc", "sc", "cd", "afc", "club", "calcio", "sv", "fk", "sk", "f.c.", "a.c."}
     for title in {s["club"] for s in g.squads if s.get("club")}:
         q = g.qid(title) or title
         info = g.places.get(q, {})
-        ents[q] = {"id": q, "kind": "club", "name": g.place(title), "fame": g.fame(title),
-                   "aliases": sorted({strip_disambiguation(title), info.get("en") or title} - {g.place(title)})}
+        name = g.club(title)
+        base_names = {strip_disambiguation(title), info.get("en") or title, name, g.place(title)}
+        short = set()
+        for b in base_names:
+            toks = [t for t in b.replace(".", " ").split() if t.lower() not in club_stop and not t.isdigit()]
+            if toks:
+                short.add(" ".join(toks))
+        name = g.club(title)
+        ents[q] = {"id": q, "kind": "club", "name": name,
+                   "fame": g.fame(title), "aliases": sorted((base_names | short) - {name})}
     for m in g.matches:
         city = m["verified"].get("city")
         if city and g.qid(city):
@@ -974,6 +1049,11 @@ def build_entities(g: G, used: set[str]) -> tuple[list[dict], dict]:
         link(f"nat:{s['code']}", p)
         if s.get("club"):
             link(p, g.qid(s["club"]) or s["club"])
+    # person nicknames that collide with a team/place name (e.g. alias "Italia") are dropped
+    reserved = {norm(n) for e in ents.values() if e["kind"] != "person" for n in [e["name"], *e["aliases"]]}
+    for e in ents.values():
+        if e["kind"] == "person":
+            e["aliases"] = [a for a in e["aliases"] if norm(a) not in reserved]
     ent_list = sorted(ents.values(), key=lambda e: e["id"])
     return ent_list, {"neighbors": {k: sorted(v) for k, v in nb.items()}}
 
@@ -986,13 +1066,13 @@ def main() -> None:
     snapshot = dt.date.today().isoformat()
     goals_ok, squad_ok, nation_ok = completeness(g)
     tm = teammate_graph(g)
-    decina, asta = gen_sets(g, squad_ok, nation_ok)
+    decina, asta = gen_sets(g, squad_ok, goals_ok)
     packs = {
         "tiro_secco": gen_tiro_secco(g, goals_ok, squad_ok),
         "prima_pagina": gen_prima_pagina(g),
         "mercato": [],
         "decina": decina,
-        "dischetto": gen_dischetto(g, nation_ok, snapshot),
+        "dischetto": gen_dischetto(g, goals_ok, snapshot),
         "formazione": gen_formazione(g),
         "cassaforte": gen_cassaforte(g),
         "giramondo": gen_giramondo(g),

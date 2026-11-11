@@ -18,7 +18,7 @@ export function Stage({ children, scanlines = true }: { children: ReactNode; sca
   return (
     <div className="stage-wrap need-landscape">
       <RotateOverlay to="orizzontale" />
-      <div className={`stage ${scanlines ? "scanlines" : ""}`} style={{ transform: `scale(${scale})` }}>
+      <div className={`stage ${scanlines ? "scanlines" : ""}`} style={{ transform: `translate(-50%, -50%) scale(${scale})` }}>
         {children}
       </div>
       <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>

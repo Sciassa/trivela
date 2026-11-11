@@ -38,9 +38,9 @@ a { color: var(--p1); }
 }
 
 /* ------------------------------------------------------------ stage */
-.stage-wrap { position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden; background: var(--bg); }
+.stage-wrap { position: fixed; inset: 0; overflow: hidden; background: var(--bg); }
 .stage {
-  width: 1600px; height: 900px; position: relative; transform-origin: center center;
+  width: 1600px; height: 900px; position: absolute; left: 50%; top: 50%; transform-origin: center center;
   background:
     radial-gradient(ellipse at 50% 120%, #1d1d4a 0%, transparent 60%),
     linear-gradient(var(--bg), var(--bg2));
@@ -98,7 +98,7 @@ a { color: var(--p1); }
 .sb-player.right { justify-content: flex-end; }
 .sb-name { font-size: 22px; }
 .sb-score { font-size: 48px; min-width: 120px; text-align: center; }
-.sb-turn { outline: 4px solid currentColor; outline-offset: 6px; animation: blink 1s steps(2) infinite; }
+.sb-turn { outline: 4px solid currentColor; outline-offset: 6px; }
 .sb-mid { text-align: center; font-family: var(--pixel); font-size: 16px; color: var(--accent); }
 .sb-mid small { display: block; color: var(--dim); font-size: 11px; margin-top: 8px; }
 .delta { position: absolute; font-family: var(--pixel); font-size: 40px; animation: rise 1.2s ease-out forwards; }
@@ -193,3 +193,5 @@ a { color: var(--p1); }
 /* remote screen: inputs live on the phones */
 .readonly .game .input, .readonly .game .kbd, .readonly .game .suggest, .readonly .buzz-center .input, .readonly .buzz-center .suggest { display: none; }
 .readonly .game button:not(.next), .readonly .buzz-layout button:not(.next) { pointer-events: none; }
+.phone-ui .row > .btn { width: auto; }
+.phone-ui .row > .btn.grow { flex: 1; }

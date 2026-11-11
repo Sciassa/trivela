@@ -1,0 +1,45 @@
+{
+  "version": "2026-11-11",
+  "generatedAt": "2026-11-11T22:00:29+00:00",
+  "snapshot": "2026-11-11",
+  "counts": {
+    "tiro_secco": 6397,
+    "prima_pagina": 550,
+    "mercato": 0,
+    "decina": 22,
+    "dischetto": 2,
+    "formazione": 37,
+    "cassaforte": 1929,
+    "giramondo": 98,
+    "frame": 279,
+    "intruso": 87,
+    "asta": 143,
+    "filo_rosso": 81,
+    "mappamondo": 421,
+    "maglia": 2500
+  },
+  "sources": [
+    {
+      "family": "openfootball",
+      "label": "openfootball (World Cup)",
+      "url": "https://github.com/openfootball/worldcup.json",
+      "licence": "Public Domain (CC0)"
+    },
+    {
+      "family": "wikimedia",
+      "label": "Wikipedia (en) e Wikidata",
+      "url": "https://www.wikipedia.org",
+      "licence": "CC BY-SA 4.0 / CC0"
+    },
+    {
+      "family": "statsbomb",
+      "label": "StatsBomb Open Data",
+      "url": "https://github.com/statsbomb/open-data",
+      "licence": "StatsBomb Open Data licence (attribuzione)"
+    }
+  ],
+  "coverage": {
+    "goals_complete_team_editions": 312,
+    "squads_complete_team_editions": 205
+  }
+}

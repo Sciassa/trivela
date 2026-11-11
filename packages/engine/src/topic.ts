@@ -9,6 +9,27 @@ const STOP = new Set([
 ]);
 
 const TOPIC_KINDS: EntityKind[] = ["club", "nation", "competition", "edition", "person", "city"];
+const KIND_PRIORITY: EntityKind[] = ["edition", "competition", "nation", "club", "city", "person"];
+
+/** Exact key match with kind priority (nations beat nicknames), then fuzzy resolution. */
+function resolveTopicGram(gram: string, index: MatchIndex): { id: string; name: string } | null {
+  const key = normalize(gram);
+  const exact = index.keys.filter((k) => k.key === key).map((k) => index.entities[k.entity]!);
+  const pool = exact.filter((e) => TOPIC_KINDS.includes(e.kind));
+  if (pool.length) {
+    pool.sort((a, b) => KIND_PRIORITY.indexOf(a.kind) - KIND_PRIORITY.indexOf(b.kind) || b.fame - a.fame);
+    const best = pool[0]!;
+    const rivals = pool.filter((e) => e.kind === best.kind && e.id !== best.id);
+    if (!rivals.length || best.kind !== "person") return { id: best.id, name: best.name };
+    return null;
+  }
+  if (/\d/.test(key)) return null; // numbers must match exactly (no "Germania 2014" -> "Germania 2006")
+  for (const kinds of [["edition", "competition", "nation", "club", "city"], ["person"]] as EntityKind[][]) {
+    const r = resolve(gram, index, kinds);
+    if (r.status === "ok") return { id: r.id, name: r.name };
+  }
+  return null;
+}
 
 /** Extract year ranges: "2011/12", "2011-2012", "anni 2000", "anni '90", "1990". */
 export function parseYears(raw: string): [number, number] | null {
@@ -37,7 +58,8 @@ export function parseYears(raw: string): [number, number] | null {
 export function parseTopic(text: string, index: MatchIndex): TopicResolution {
   const years = parseYears(text);
   const cleaned = normalize(text.replace(/\b(18|19|20)\d{2}\s*[/-]\s*\d{2,4}\b/g, " ").replace(/anni\s*['’]?\s*\d{2,4}/gi, " "));
-  const tokens = cleaned.split(" ").filter((t) => t && !STOP.has(t) && !/^\d+$/.test(t));
+  // years already captured by parseYears are not entity tokens on their own
+  const tokens = cleaned.split(" ").filter((t) => t && !STOP.has(t));
   const seeds: string[] = [];
   const names: string[] = [];
   const used = new Array<boolean>(tokens.length).fill(false);
@@ -45,9 +67,9 @@ export function parseTopic(text: string, index: MatchIndex): TopicResolution {
     for (let i = 0; i + n <= tokens.length; i++) {
       if (used.slice(i, i + n).some(Boolean)) continue;
       const gram = tokens.slice(i, i + n).join(" ");
-      if (gram.length < 3) continue;
-      const r = resolve(gram, index, TOPIC_KINDS);
-      if (r.status === "ok") {
+      if (gram.length < 3 || /^[\d ]+$/.test(gram)) continue;
+      const r = resolveTopicGram(gram, index);
+      if (r) {
         if (!seeds.includes(r.id)) {
           seeds.push(r.id);
           names.push(r.name);
@@ -71,12 +93,23 @@ export function parseTopic(text: string, index: MatchIndex): TopicResolution {
       }
     }
   }
-  const yearLabel = years ? (years[0] === years[1] ? `${years[0]}` : `${years[0]}–${years[1]}`) : "";
-  const summary = [...names, yearLabel].filter(Boolean).join(" · ");
-  if (seeds.length === 0 && !years) {
+  // An edition implies its year: derive years from it if none were typed.
+  let yrs = years;
+  if (!yrs) {
+    const edYears = seeds.flatMap((id) => {
+      const e = index.entities[index.byId.get(id) ?? -1];
+      return e?.kind === "edition" ? e.years ?? [] : [];
+    });
+    if (edYears.length) yrs = [Math.min(...edYears), Math.max(...edYears)];
+  }
+  const hasEdition = seeds.some((id) => index.entities[index.byId.get(id) ?? -1]?.kind === "edition");
+  const shown = hasEdition ? names.filter((n, k) => index.entities[index.byId.get(seeds[k]!) ?? -1]?.kind !== "competition") : names;
+  const yearLabel = yrs && !hasEdition ? (yrs[0] === yrs[1] ? `${yrs[0]}` : `${yrs[0]}–${yrs[1]}`) : "";
+  const summary = [...shown, yearLabel].filter(Boolean).join(" · ");
+  if (seeds.length === 0 && !yrs) {
     return { text, status: "unknown", summary: "", seeds: [], years: null };
   }
-  return { text, status: "ok", summary, seeds, years };
+  return { text, status: "ok", summary, seeds, years: yrs };
 }
 
 const overlapsYears = (it: InstanceMeta, years: [number, number] | null) =>

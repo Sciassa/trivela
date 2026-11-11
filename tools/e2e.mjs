@@ -10,7 +10,7 @@ const PORT = 8799;
 const BASE = `http://localhost:${PORT}`;
 mkdirSync("test-results", { recursive: true });
 
-const server = spawn("pnpm", ["--filter", "@trivela/realtime", "start"], { env: { ...process.env, PORT: String(PORT) }, stdio: "pipe" });
+const server = spawn("pnpm", ["--filter", "@trivela/realtime", "start"], { env: { ...process.env, PORT: String(PORT) }, stdio: "pipe", detached: true });
 await new Promise((res, rej) => {
   server.stdout.on("data", (d) => String(d).includes("TRIVELA server") && res());
   server.on("exit", (c) => rej(new Error(`server exited ${c}`)));
@@ -43,7 +43,7 @@ try {
   const inputs = p.locator("input.input");
   await inputs.nth(0).fill("Anna");
   await inputs.nth(1).fill("Bruno");
-  await inputs.nth(3).fill("Italia");
+  await inputs.nth(3).fill("Italia 90");
   await inputs.nth(4).fill("Brasile 1970");
   await p.waitForTimeout(500);
   await p.screenshot({ path: "test-results/setup.png" });
@@ -63,7 +63,7 @@ try {
   await screen.getByText("PREMI START").click();
   await screen.getByText("SFIDA · PIÙ SCHERMI (REGIA / PULSANTIERE)").click();
   await screen.getByText(/STANZA [A-Z]{4}/).waitFor();
-  const code = (await screen.getByText(/STANZA [A-Z]{4}/).textContent()).match(/[A-Z]{4}/)[0];
+  const code = (await screen.getByText(/STANZA [A-Z]{4}/).textContent()).match(/STANZA ([A-Z]{4})/)[1];
   const host = await page({ viewport: { width: 400, height: 860 }, hasTouch: true });
   await host.goto(`${BASE}/#/join/${code}?r=host`);
   await host.getByText("In attesa").waitFor();
@@ -72,6 +72,9 @@ try {
   await sIn.nth(4).fill("Germania");
   await screen.waitForTimeout(500);
   await screen.getByText("CREA LA PARTITA ▶").click();
+  await screen.waitForTimeout(1500);
+  await screen.screenshot({ path: "test-results/room-after-setup.png" });
+  await host.screenshot({ path: "test-results/room-host-wait.png" });
   await host.getByText("INIZIA ▶").click();
   await host.getByText("VIA AL GIOCO ▶").click();
   await host.waitForTimeout(800);
@@ -88,6 +91,10 @@ try {
   console.error(e);
 } finally {
   await browser.close();
-  server.kill();
+  try {
+    process.kill(-server.pid, "SIGTERM");
+  } catch {
+    server.kill();
+  }
 }
 process.exit(failed ? 1 : 0);

@@ -70,7 +70,7 @@ export function WorldMap({
     <div className="col" style={{ gap: 10 }}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        style={{ width: "100%", background: "#060c1f", border: "4px solid var(--line)", cursor: disabled ? "default" : "crosshair" }}
+        style={{ width: "100%", maxHeight: 540, background: "#060c1f", border: "4px solid var(--line)", cursor: disabled ? "default" : "crosshair" }}
         shapeRendering="crispEdges"
         onClick={onClick}
       >

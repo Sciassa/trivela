@@ -126,14 +126,24 @@ class WGoal:
     own_goal: bool
 
 
+PLAIN_MIN_RE = re.compile(r"(\d{1,3})(?:\s*\+\s*(\d{1,2}))?\s*['’′]\s*(\((?:pen\.?|p|o\.g\.?|og)\))?", re.IGNORECASE)
+
+
 def parse_goals(value: str) -> list[WGoal]:
-    """Sequence of [[player]] links followed by {{goal|..}} templates."""
+    """Sequence of [[player]] links followed by {{goal|..}} templates or plain minutes (9', 90+2' (pen.))."""
     goals: list[WGoal] = []
     events: list[tuple[int, str, object]] = []
     for m in LINK_RE.finditer(value):
         events.append((m.start(), "link", m.group(1).strip()))
-    for s, _e, body in find_templates(value, r"goal"):
+    templates = find_templates(value, r"goal")
+    for s, _e, body in templates:
         events.append((s, "goal", body))
+    stripped = value
+    for s, e, _b in reversed(templates):
+        stripped = stripped[:s] + " " * (e - s) + stripped[e:]
+    stripped = LINK_RE.sub(lambda m: " " * (m.end() - m.start()), stripped)
+    for m in PLAIN_MIN_RE.finditer(stripped):
+        events.append((m.start(), "plain", m))
     events.sort(key=lambda x: x[0])
     current = None
     for _pos, kind, payload in events:
@@ -141,6 +151,12 @@ def parse_goals(value: str) -> list[WGoal]:
             current = payload
             continue
         if current is None:
+            continue
+        if kind == "plain":
+            m = payload  # type: ignore[assignment]
+            flag = (m.group(3) or "").lower()
+            goals.append(WGoal(current, int(m.group(1)), int(m.group(2) or 0), "p" in flag and "o" not in flag,
+                               "o" in flag))
             continue
         pos, _named = split_params(str(payload))
         for p in pos:
@@ -262,7 +278,7 @@ class WSquadPlayer:
 def parse_squads(text: str) -> list[WSquadPlayer]:
     text = strip_comments(text)
     out: list[WSquadPlayer] = []
-    heads = [(m.start(), m.group(2).strip()) for m in re.finditer(r"^(={3,4})\s*([^=]+?)\s*\1\s*$", text, re.MULTILINE)]
+    heads = [(m.start(), m.group(2).strip()) for m in re.finditer(r"^(={2,4})\s*([^=]+?)\s*\1\s*$", text, re.MULTILINE)]
     tpls = find_templates(text, r"national football squad player|nat fs g player|nat fs player")
     for s, _e, body in tpls:
         team = None

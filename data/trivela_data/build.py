@@ -257,6 +257,14 @@ def verify_match(m: OMatch, w: WMatch, swap: bool, c1: str, c2: str, resolve, re
     complete = (not unresolved) and wc == oc and "score" in v and sum(agreed.values()) == sum(v["score"])
     v["goals_complete"] = complete
     report["goals_complete" if complete else "goals_partial"] += 1
+    # scorer identities per side (minutes ignored): enough for counts and rankings
+    skey = lambda x: (x[0], x[3], x[4])  # noqa: E731
+    ws, os_ = Counter(skey(x) for x in wgoals), Counter(skey(x) for x in ogoals)
+    scorers_ok = (not unresolved) and ws == os_ and "score" in v and sum(ws.values()) == sum(v["score"])
+    v["scorers_complete"] = scorers_ok
+    if scorers_ok:
+        v["scorers"] = [{"title": k[0], "own_goal": k[1], "side": k[2]} for k, n in ws.items() for _ in range(n)]
+    report["scorers_complete" if scorers_ok else "scorers_partial"] += 1
 
     # line-ups (starters)
     lineups = [None, None]
