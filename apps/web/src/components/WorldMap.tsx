@@ -43,9 +43,13 @@ export function WorldMap({
   const path = useMemo(() => geoPath(proj), [proj]);
   const onClick = (e: React.MouseEvent<SVGSVGElement>) => {
     if (disabled) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - r.left) / r.width) * W;
-    const y = ((e.clientY - r.top) / r.height) * H;
+    const svg = e.currentTarget;
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const { x, y } = pt.matrixTransform(ctm.inverse());
     const ll = proj.invert?.([x, y]);
     if (!ll) return;
     if (view.k < 16) setView({ c: [ll[0], ll[1]], k: view.k * 4 });
