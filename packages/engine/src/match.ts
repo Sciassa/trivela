@@ -1,4 +1,4 @@
-import { GAME_IDS, type GameId, type InstanceMeta, type Packs, type PlayerIdx, type Role } from "@trivela/protocol";
+import { GAME_IDS, leaguesOf, type GameId, type InstanceMeta, type Packs, type PlayerIdx, type Role } from "@trivela/protocol";
 import { MODULES } from "./games";
 import { Rng } from "./rng";
 import { other, type EngineCtx, type EngineEvent, type Env, type Intent, type MatchConfig, type MatchState } from "./types";
@@ -21,9 +21,22 @@ export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: num
   return true; // lists and rankings (decina, dischetto, asta) ignore the filter
 }
 
+/**
+ * League filter (SPEC §3.4): an instance tied to domestic leagues needs at
+ * least one of them to be selected; national teams and big tournaments carry no
+ * league and are always eligible.
+ */
+export function passesLeagueFilter(item: InstanceMeta, leagues: string[] | null | undefined): boolean {
+  if (!leagues) return true;
+  const own = leaguesOf(item);
+  return own.length === 0 || own.some((l) => leagues.includes(l));
+}
+
 export function eligibleItems(game: GameId, packs: Packs, config: MatchConfig): InstanceMeta[] {
   const exclude = new Set(config.excludeIds ?? []);
-  return (packs.items[game] as InstanceMeta[]).filter((it) => !exclude.has(it.id) && passesYearFilter(game, it, config.yearFrom));
+  return (packs.items[game] as InstanceMeta[]).filter(
+    (it) => !exclude.has(it.id) && passesYearFilter(game, it, config.yearFrom) && passesLeagueFilter(it, config.leagues),
+  );
 }
 
 /** How many instances a game consumes in one match. */

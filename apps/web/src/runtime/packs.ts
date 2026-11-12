@@ -1,5 +1,5 @@
-import { emptyPackItems, type GameId, type Packs } from "@trivela/protocol";
-import { buildIndex } from "@trivela/matcher";
+import { emptyPackItems, LEAGUES, type GameId, type Packs } from "@trivela/protocol";
+import { buildIndex, type MatchIndex } from "@trivela/matcher";
 import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, POOL, Rng, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
 
 /**
@@ -43,8 +43,43 @@ export function loadCore(): Promise<Core> {
   return core;
 }
 
-/** Empty context for phones: no index download, the Screen device judges the answers. */
+/** Empty index, used until the names index of a phone has been downloaded. */
 export const emptyCtx: EngineCtx = { index: buildIndex([]) };
+
+/**
+ * Names index for the spelling helper on the phones that type answers. It holds
+ * only the names of people (no questions, no solutions): the helper needs it to
+ * correct what is typed, on every device (SPEC §10.3).
+ */
+export async function loadNamesIndex(): Promise<MatchIndex> {
+  return (await loadCore()).ctx.index;
+}
+
+/* ------------------------------------------------------------ leagues */
+
+export const ALL_LEAGUES: string[] = LEAGUES.map((l) => l.id);
+
+/** Leagues chosen on this device (per-viewer convenience: all of them by default). */
+export function savedLeagues(): string[] {
+  try {
+    const v = JSON.parse(localStorage.getItem("trivela.leagues") ?? "null") as unknown;
+    const ok = Array.isArray(v) ? v.filter((x): x is string => typeof x === "string" && ALL_LEAGUES.includes(x)) : [];
+    return ok.length ? ok : ALL_LEAGUES;
+  } catch {
+    return ALL_LEAGUES;
+  }
+}
+
+export function saveLeagues(v: string[]): void {
+  try {
+    localStorage.setItem("trivela.leagues", JSON.stringify(v));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** All leagues selected means "no filter". */
+export const leaguesForMatch = (v: string[]): string[] | null => (v.length >= ALL_LEAGUES.length ? null : v);
 
 function loadGame(g: GameId): Promise<unknown[]> {
   if (!gameCache.has(g)) gameCache.set(g, getJson<unknown[]>(`games/${g}.json`, []));

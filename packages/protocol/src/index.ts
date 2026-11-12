@@ -17,6 +17,36 @@ export const GAME_IDS = [
 ] as const;
 
 export type GameId = (typeof GAME_IDS)[number];
+
+/**
+ * Domestic leagues the player can switch on and off (SPEC §3.4). Questions
+ * about national teams and big tournaments (World Cup, Euros, Champions
+ * League, Europa and Conference League, UEFA Super Cup) are always included.
+ * `cups` are the domestic cups that follow their league.
+ */
+export const LEAGUES = [
+  { id: "IT1", name: "Serie A", cups: ["CIT", "SCI"] },
+  { id: "GB1", name: "Premier League", cups: [] },
+  { id: "ES1", name: "LaLiga", cups: [] },
+  { id: "L1", name: "Bundesliga", cups: [] },
+  { id: "FR1", name: "Ligue 1", cups: [] },
+] as const;
+export type LeagueId = (typeof LEAGUES)[number]["id"];
+
+/**
+ * Domestic competitions an instance belongs to (the `comp:` tags in `entities`),
+ * with cups mapped to their league. Empty: the instance is always eligible.
+ */
+export function leaguesOf(item: { entities: string[] }): string[] {
+  const out = new Set<string>();
+  for (const e of item.entities) {
+    if (!e.startsWith("comp:")) continue;
+    const c = e.slice(5);
+    const lg = LEAGUES.find((l) => l.id === c || (l.cups as readonly string[]).includes(c));
+    if (lg) out.add(lg.id);
+  }
+  return [...out];
+}
 /** Every game can be drawn (there is no fixed final game). */
 export type PoolGameId = GameId;
 export type PlayerIdx = 0 | 1;

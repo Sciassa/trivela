@@ -24,7 +24,8 @@ def mercato(t: TM, limit: int = 2500) -> list[dict]:
         frm, to = t.club(fc, fn) if fc else clean_club(fn), t.club(tc, tn) if tc else clean_club(tn)
         clues = [fee_label(float(fee)), window_label(d), POS_IT.get(p["pos"], p["pos"]), nat_it(p["nat"]),
                  f"Squadra cedente: {frm}", f"Squadra acquirente: {to}"]
-        it = base("mercato", (pid, str(d)), year=d.year, fame=t.fame(pid), entities=["comp:IT1", t.pid(pid)],
+        leagues = {t.club_league.get(int(c)) for c in (fc, tc) if c} & set(L5)
+        it = base("mercato", (pid, str(d)), year=d.year, fame=t.fame(pid), entities=["comp:IT1", *(f"comp:{lg}" for lg in leagues), t.pid(pid)],
                   sources=[t.src_player(pid)],
                   script=f"{t.pname(pid)} passò {articled('da', frm, False)} {articled('a', to, False)} ({window_label(d).lower()}) per {fee_label(float(fee))}, secondo Transfermarkt.")
         it.update({"clues": clues, "flag": p["nat"], "answer": t.answer(pid)})
@@ -34,7 +35,11 @@ def mercato(t: TM, limit: int = 2500) -> list[dict]:
 
 
 def giramondo(t: TM, limit: int = 2000) -> list[dict]:
-    """Careers in strict chronological order, split into five clues."""
+    """Career as the clubs in order of first arrival (with the year), split into five clues.
+
+    Returns to a club already listed (end of a loan, second spell) are left out: the clue list reads as
+    "where he went, in order", without the back-and-forth that made loan careers unreadable.
+    """
     rows = t.q("""select player_id, transfer_date, to_club_id, to_club_name from transfers
                   where to_club_name is not null and transfer_date is not null and transfer_date <= date '2026-07-06' order by player_id, transfer_date""")
     careers = defaultdict(list)
@@ -45,6 +50,7 @@ def giramondo(t: TM, limit: int = 2000) -> list[dict]:
         if not t.is_notable(pid):
             continue
         clubs: list[tuple] = []
+        leagues: set[str] = set()
         for d, cid, cname in steps:
             raw = " ".join((cname or "").split())
             if SKIP_CLUB.search(raw):
@@ -52,7 +58,9 @@ def giramondo(t: TM, limit: int = 2000) -> list[dict]:
             name = t.club(cid, cname) if cid else clean_club(cname)
             if SKIP_CLUB.search(name):
                 continue
-            if not clubs or clubs[-1][1] != name:
+            if cid and t.club_league.get(int(cid)) in L5:
+                leagues.add(t.club_league[int(cid)])
+            if all(c[1] != name for c in clubs):
                 clubs.append((d, name))
         if len(clubs) < 4 or any(clubs[i][0] > clubs[i + 1][0] for i in range(len(clubs) - 1)):
             continue
@@ -63,14 +71,15 @@ def giramondo(t: TM, limit: int = 2000) -> list[dict]:
             sizes = [n // 5 + (1 if k < n % 5 else 0) for k in range(5)]
             clues, i = [], 0
             for sz in sizes:
-                clues.append(" → ".join(step(c) for c in clubs[i:i + sz]))
+                clues.append("; ".join(step(c) for c in clubs[i:i + sz]))
                 i += sz
         else:
             clues = [step(c) for c in clubs]
             clues.insert(3, f"Ruolo: {POS_IT.get(p['pos'], p['pos'] or 'n.d.')} · nazionalità: {nat_it(p['nat'])}")
-        it = base("giramondo", pid, year=clubs[0][0].year, year_max=clubs[-1][0].year, fame=t.fame(pid), entities=[t.pid(pid)],
+        it = base("giramondo", pid, year=clubs[0][0].year, year_max=clubs[-1][0].year, fame=t.fame(pid),
+                  entities=[t.pid(pid), *(f"comp:{lg}" for lg in sorted(leagues))],
                   sources=[t.src_player(pid)], active=[clubs[-1][0].year],
-                  script=f"La carriera di {t.pname(pid)} in ordine cronologico (anno del trasferimento): " + " → ".join(step(c) for c in clubs) + ".")
+                  script=f"La carriera di {t.pname(pid)}: le squadre in ordine di primo arrivo, con l'anno. " + " → ".join(step(c) for c in clubs) + ".")
         it.update({"clues": clues, "answer": t.answer(pid)})
         out.append(it)
     out.sort(key=lambda x: -x["fame"])

@@ -75,6 +75,14 @@ try {
   await p.getByPlaceholder("Nome").first().fill("Anna");
   await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
   check((await p.getByText(/argomento/i).count()) === 0, "no free-topic field in the setup");
+  // league picker: everything is on by default, at least one league always stays on, the choice is remembered
+  const chip = (name) => p.locator(".league-pick button", { hasText: name });
+  check((await p.locator('.league-pick button[aria-pressed="true"]').count()) === 5, "all five leagues are selected by default");
+  for (const n of ["Serie A", "Premier League", "LaLiga", "Bundesliga", "Ligue 1"]) await chip(n).click();
+  check((await p.locator('.league-pick button[aria-pressed="true"]').count()) === 1, "the last league cannot be switched off");
+  await chip("Serie A").click();
+  await chip("Premier League").click();
+  await chip("Serie A").click();
   await p.getByText("GIOCA ▶").click();
   await p.getByText("SI PARTE ▶").click({ timeout: 15000 });
   const gameFiles = p.dataRequests.filter((u) => u.includes("/data/games/"));
@@ -117,7 +125,8 @@ try {
     await screen.locator(".option.right").waitFor();
     await screen.screenshot({ path: "test-results/room-screen-reveal.png" });
     check(true, "an answer given on the phone is judged and revealed on the Screen");
-    check(p1.dataRequests.length + p2.dataRequests.length === 0, "controllers download no question data");
+    const questionFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => u.includes("/data/games/"));
+    check(questionFiles.length === 0, "controllers download no question data (only the names index)");
     // go on to the buzzer game to check the buzz path: finish Tiro Secco (3 more questions) and La Maglia
     for (let n = 0; n < 60; n++) {
       if (await screen.getByText("IL MERCATO").count()) break;
@@ -138,6 +147,10 @@ try {
     await p2.locator(".big-buzz").dispatchEvent("pointerdown");
     await screen.getByText("RISPONDE!").waitFor();
     await p2.locator("input.input").waitFor();
+    // the spelling helper works on the phones too, without revealing anything
+    await p2.locator("input.input").fill("Lewandowsky");
+    await p2.locator(".suggest button").first().waitFor({ timeout: 15000 });
+    check((await p2.locator(".suggest button").allInnerTexts()).some((t) => /Lewandowski/.test(t)), "the controller shows spelling suggestions");
     await screen.screenshot({ path: "test-results/room-buzz.png" });
     await p2.screenshot({ path: "test-results/pad-answer.png" });
     check(true, "the buzzer pressed on a phone reaches the Screen");
@@ -161,7 +174,7 @@ try {
     await screen.locator(".option").first().waitFor();
     check((await screen.locator(".option.right").count()) === 0, "the Screen does not show the answer before the reveal");
     check((await screen.locator(".btn.next").count()) === 0, "with a Regia connected only the host moves the game on");
-    check(host.dataRequests.length === 0, "the Regia downloads no question data");
+    check(host.dataRequests.length === 0, "the Regia downloads no data at all");
     await host.locator(".btn.ok").first().click();
     await screen.locator(".option.right").waitFor();
     await screen.getByText("ESATTO!").waitFor();

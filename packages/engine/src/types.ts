@@ -9,6 +9,8 @@ export interface MatchConfig {
   players: [string, string];
   /** "Domande a partire dall'anno"; null = no filter. */
   yearFrom: number | null;
+  /** Domestic leagues the questions may come from (SPEC §3.4); undefined or null = all of them. */
+  leagues?: string[] | null;
   seed: number;
   /** Instance ids that must not be used (tournament / device history). */
   excludeIds?: string[];

@@ -129,6 +129,22 @@ function PrimaPagina({ state, g, dispatch, ctx, start }: GameProps) {
 
 /* ------------------------------------------------------------ Buzzer games */
 
+/** A clue is plain text, or career steps "2018 Club; 2019 Club": each step becomes a badge with the year. */
+function ClueText({ text }: { text: string }) {
+  const steps = text.split("; ").map((x) => x.match(/^(\d{4}) (.+)$/));
+  if (!steps.every(Boolean)) return <span>{text}</span>;
+  return (
+    <span className="steps">
+      {steps.map((m, k) => (
+        <span key={k} className="step">
+          <b>{m![1]}</b>
+          {m![2]}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GameProps) {
   const { readonly } = usePlay();
   const item = g.items[g.i] as { clues: string[]; answer: { display: string }; sources: SourceRef[] };
@@ -188,11 +204,12 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
             )}
           </div>
           <StateTimer state={state} start={start} />
+          {g.game === "giramondo" && <div className="sub">Le squadre in ordine di primo arrivo, con l'anno.</div>}
           <div className="clues" key={g.i}>
             {Array.from({ length: total }, (_, k) => (
               <div key={k} className={`clue ${k < g.revealed ? "shown" : "hidden"} ${k === g.revealed - 1 && g.stage !== "reveal" ? "current" : ""}`}>
                 <span className="pts">{points[k]} PT</span>
-                <span>{k < g.revealed || g.stage === "reveal" ? item.clues[k] : "? ? ?"}</span>
+                {k < g.revealed || g.stage === "reveal" ? <ClueText text={item.clues[k]!} /> : <span>? ? ?</span>}
               </div>
             ))}
           </div>

@@ -34,11 +34,25 @@ def test_tiro_secco_has_four_distinct_options_and_variety():
     assert len({it["generator"].split("@")[0] for it in items}) >= 15
 
 
-def test_giramondo_is_chronological():
+def test_giramondo_is_chronological_and_has_no_repeated_club():
     for it in load("giramondo"):
-        years = [int(y) for c in it["clues"] for y in re.findall(r"(?:^| → )(\\d{4}) ", c)]
+        entries = [e for c in it["clues"] for e in c.split("; ") if re.match(r"\d{4} ", e)]
+        years = [int(e[:4]) for e in entries]
+        clubs = [e[5:] for e in entries]
         assert years == sorted(years), it["answer"]["display"]
+        assert len(set(clubs)) == len(clubs), it["answer"]["display"]  # first arrival only: no back-and-forth
         assert len(it["clues"]) == 5
+
+
+def test_league_tags():
+    """Every item names the competition it belongs to, so the league filter can work."""
+    tagged = {g: sum(1 for it in load(g) if any(e.startswith("comp:") for e in it["entities"])) for g in GAMES}
+    assert all(n == len(load(g)) for g, n in tagged.items() if g != "giramondo"), tagged
+    assert tagged["giramondo"] > 900  # careers through at least one top-five league
+    leagues = {"IT1", "GB1", "ES1", "L1", "FR1"}
+    for lg in leagues:
+        enough = [g for g in GAMES if sum(1 for it in load(g) if f"comp:{lg}" in it["entities"]) >= 40 or g in ("giramondo",)]
+        assert len(enough) >= 5, (lg, enough)
 
 
 def test_maglia_asks_for_a_number():
