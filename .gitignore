@@ -9,9 +9,7 @@ playwright-report/
 # data pipeline
 data/.venv/
 data/cache/
-data/build/*
-!data/build/graph.json
-!data/build/verification_report.json
+data/build/
 __pycache__/
 *.pyc
 .DS_Store

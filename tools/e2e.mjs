@@ -43,8 +43,8 @@ try {
   const inputs = p.locator("input.input");
   await inputs.nth(0).fill("Anna");
   await inputs.nth(1).fill("Bruno");
-  await inputs.nth(3).fill("Italia 90");
-  await inputs.nth(4).fill("Brasile 1970");
+  await inputs.nth(3).fill("Juventus");
+  await inputs.nth(4).fill("Mondiale 2022");
   await p.waitForTimeout(500);
   await p.screenshot({ path: "test-results/setup.png" });
   await p.getByText("GIOCA ▶").click();
@@ -88,7 +88,14 @@ try {
   await screen.screenshot({ path: "test-results/room-screen.png" });
   await host.screenshot({ path: "test-results/room-host.png" });
   check(!!code, `room ${code} created`);
-  check(!answerLine || !shown.includes(answerLine.replace(/^Risposta: (\w\) )?/, "")) || answerLine.length < 12, "screen does not show the answer before the reveal");
+  const answerText = answerLine.replace(/^Risposta: (\w\) )?/, "");
+  const optionTexts = await screen.locator(".option").allInnerTexts();
+  const multipleChoice = optionTexts.some((t) => answerText && t.includes(answerText));
+  const highlighted = await screen.locator(".option.right").count();
+  check(
+    multipleChoice ? highlighted === 0 : !answerText || answerText.length < 4 || !shown.includes(answerText),
+    `screen does not show the answer before the reveal (${multipleChoice ? "multiple choice, no highlighted option" : "open answer hidden"})`,
+  );
   check(errors.length === 0, `no page errors in rooms (${errors.join(" | ")})`);
   check(phoneDataRequests.length === 0, `the Regia phone downloads no question data (${phoneDataRequests.length} requests)`);
 } catch (e) {

@@ -23,8 +23,6 @@ jobs:
           restore-keys: data-cache-
       - name: Scarica fonti e rigenera i pacchetti
         run: uv run --project data python -m trivela_data.sync
-      - name: Valida l'archivio redazionale
-        run: uv run --project data python -m trivela_data.validate_content
       - name: Apri la pull request con i nuovi pacchetti
         uses: peter-evans/create-pull-request@v7
         with:
@@ -32,7 +30,7 @@ jobs:
           commit-message: "data: weekly packs sync"
           title: "data: aggiornamento settimanale dei pacchetti"
           body: |
-            Aggiornamento automatico: storico Transfermarkt (se cambiato), nazionali (martj42), stagione 2026/27 (open-matchday).
+            Aggiornamento automatico: storico Transfermarkt (riscaricato solo se il file pubblicato è cambiato).
             Controlla i conteggi in `apps/web/public/packs/manifest.json` prima di fare il merge.
           add-paths: |
             apps/web/public/packs/**

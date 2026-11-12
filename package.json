@@ -10,8 +10,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "e2e": "node tools/e2e.mjs",
-    "content:validate": "cd data && uv run python -m trivela_data.validate_content",
-    "data:build": "cd data && uv run python -m trivela_data.fetch && uv run python -m trivela_data.build && uv run python -m trivela_data.build_content && uv run python -m trivela_data.generate",
+    "data:build": "cd data && uv run python -m trivela_data.sync",
     "data:generate": "cd data && uv run python -m trivela_data.generate",
     "data:sync": "cd data && uv run python -m trivela_data.sync"
   },

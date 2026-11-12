@@ -12,7 +12,7 @@ TRIVELA è un quiz calcistico arcade 1v1 multi-dispositivo. **`SPEC.md` è la fo
 
 Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
-1. **Nessun fatto non verificato.** Ogni fatto viene da **una fonte autorevole per il suo dominio** (SPEC §0.3: Transfermarkt per mercato/tabellini/presenze, martj42 per le nazionali, open-matchday per il 2026/27, Wikidata per etichette e luoghi). Si scartano i record con campi mancanti o incoerenti. Classifiche e insiemi dichiarano sempre competizione e stagioni coperte. Le domande scritte a mano entrano solo se la verifica automatica (`build_content`) le conferma sulla fonte citata.
+1. **Nessun fatto non verificato, una sola fonte.** Tutti i dati vengono dal dataset Transfermarkt `dcaribou/transfermarkt-datasets` (SPEC §0.5): stagioni 2012/13–2025/26, Mondiali dal 2006, Europei dal 2008, trasferimenti. Non aggiungere altre fonti senza una decisione dell'utente registrata nella SPEC. Si scartano i record con campi mancanti o incoerenti (es. partite in cui gli eventi-gol non tornano con il risultato). Classifiche e insiemi dichiarano sempre competizione e stagioni coperte.
 11. **Domande inedite e su giocatori noti** (SPEC §0.4): mai riproporre i casi degli episodi usati come ispirazione (`postprocess.SHOW_FINGERPRINTS`); un giocatore è protagonista solo se supera il filtro notorietà. Non indebolire questi filtri.
 12. **Caricamento a richiesta**: i telefoni (Regia, pulsantiere) non scaricano mai dati di gioco; lo Schermo scarica solo i giochi sorteggiati.
 2. **Nessun LLM** (vincolo "tutto gratis", SPEC §0.1): né in gioco né nella pipeline. Testi e Copioni nascono da template sui fatti dell'istanza.
@@ -22,7 +22,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 6. **Filtro anno** secondo la tabella SPEC §3.3: elenchi/classifiche (`decina`, `dischetto`, `asta`) e argomento libero (`prima_pagina`, `cassaforte`) lo ignorano.
 7. **Argomento libero davvero libero**: niente menu o liste di argomenti. Si rifiuta solo un testo che non corrisponde ad alcuna entità calcistica.
 8. **Identità originale**: nessun nome, logo o voce di trasmissioni, conduttori o persone reali usati come branding; nessuna testata giornalistica reale (la Prima Pagina usa una testata di fantasia). Nessun box "pagelle".
-9. **Fonti nel rispetto dei termini**: mai scraper verso siti che lo vietano. I dati Transfermarkt arrivano solo dal dataset pubblicato (`dcaribou/transfermarkt-datasets`), mai dal sito. open-matchday è solo per uso non commerciale. Ogni connettore documenta la licenza in `data/ingest/<fonte>/LICENSE.md`.
+9. **Fonti nel rispetto dei termini**: mai scraper verso siti che lo vietano. I dati Transfermarkt arrivano solo dal dataset pubblicato (`dcaribou/transfermarkt-datasets`), mai dal sito. Niente crawler che aggirano protezioni anti-bot (es. SofaScore): servirebbe una licenza. Ogni connettore documenta la licenza in `data/ingest/<fonte>/LICENSE.md`.
 10. **Motore deterministico**: `packages/engine` è TypeScript puro, senza accesso a orologio, rete, DOM o `Math.random` (usa l'RNG con seme). Lo stesso motore gira nel browser (B1 offline) e nel Durable Object.
 
 ## Struttura
@@ -30,16 +30,16 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - `apps/web`: PWA React (schermo singolo, Schermo/Regia/Pulsantiere, torneo). UI arcade in `src/components`, giochi in `src/games/GameView.tsx`.
 - `apps/realtime`: `room.ts` (logica stanza indipendente dalla piattaforma) + `node-server.ts` (server LAN gratuito).
 - `packages/protocol` (tipi condivisi), `packages/engine` (14 giochi, sorteggio, argomento libero, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica e effetti sintetizzati).
-- `data/trivela_data`: `fetch`/`build` (Mondiali, `build/graph.json`), `gen_tm` (Transfermarkt), `gen_hist` (ewenme, salimt, StatsBomb, engsoccerdata, Fjelstul), `intl` (nazionali e 2026/27), `postprocess` (inediti, notorietà, id), `generate` (scrive `apps/web/public/data/`), `sync` (aggiornamento settimanale). `content/`: archivio redazionale JSON verificato.
+- `data/trivela_data`: `gen_tm` (tutti i generatori sul dataset Transfermarkt), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
 
 ## Comandi
 
 - JS (pnpm workspaces): `pnpm install` · `pnpm dev` (app su Vite) · `pnpm typecheck` · `pnpm test` · `pnpm build` · `pnpm e2e` (dopo `pnpm build`)
 - Pubblicazione: GitHub Pages da `main` (`.github/workflows/pages.yml`), solo schermo singolo.
 - Server stanze in rete locale: `pnpm build && pnpm server` (porta 8787, serve anche l'app)
-- Dati (Python 3.12+ con `uv`, dipendenza: `duckdb`): aggiornamento settimanale `pnpm data:sync`; ricostruzione completa `pnpm data:build` (fetch → build Mondiali → build_content → generate). I dati in `apps/web/public/data/` (`games/<id>.json` + file comuni) e `data/build/graph.json` vanno committati.
+- Dati (Python 3.12+ con `uv`, dipendenza: `duckdb`): `pnpm data:sync` (scarica il dataset solo se è cambiato e rigenera) · `pnpm data:generate` (solo rigenerazione). I file in `apps/web/public/data/` vanno committati.
 - Test dati: `cd data && uv run pytest`
-- Wikipedia/Wikidata limitano le richieste: il client HTTP della pipeline ha cache su disco (`data/cache/`, non versionata), ritmo lento e rispetta `Retry-After`. Non abbassare gli intervalli.
+- Il dataset scaricato sta in `data/cache/tm/` (non versionato).
 
 ## Convenzioni di sviluppo
 

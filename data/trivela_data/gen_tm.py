@@ -16,8 +16,9 @@ from collections import Counter, defaultdict, deque
 
 import duckdb
 
-from . import http
 from .paths import CACHE
+
+USER_AGENT = "TrivelaQuizBot/0.4 (non-commercial football quiz pipeline)"
 
 TM_DB = CACHE / "tm" / "transfermarkt-datasets.duckdb"
 TM_DB_URL = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/transfermarkt-datasets.duckdb"
@@ -78,7 +79,7 @@ def ensure_db() -> None:
         return
     TM_DB.parent.mkdir(parents=True, exist_ok=True)
     import urllib.request
-    req = urllib.request.Request(TM_DB_URL, headers={"User-Agent": http.USER_AGENT})
+    req = urllib.request.Request(TM_DB_URL, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=600) as r, open(TM_DB, "wb") as f:
         while chunk := r.read(1 << 20):
             f.write(chunk)
@@ -160,6 +161,8 @@ class TM:
         c = self.clubs.get(cid) if cid else None
         name = self.short_names.get(cid) if cid else None
         name = name or (c[1] if c else None) or fallback or "?"
+        if name in COUNTRY_IT:
+            return COUNTRY_IT[name]
         return clean_club(name)
 
     def answer(self, player_id: int) -> dict:
@@ -271,7 +274,8 @@ def big_games(t: TM, limit: int = 1500) -> list[tuple]:
               (competition_id = 'CL' and (round ilike '%final%' or round ilike '%last 16%'))
            or (competition_id in ('CIT','SCI','USC') and round ilike '%final%')
            or (competition_id = 'IT1' and home_club_name in {top} and away_club_name in {top})
-           or (competition_id = 'CL' and (home_club_name in {top} or away_club_name in {top})))
+           or (competition_id = 'CL' and (home_club_name in {top} or away_club_name in {top}))
+           or competition_id in ('FIWC','EURO'))
         order by date desc""")
     return [(int(r[0]),) + tuple(r[1:]) for r in rows[:limit]]
 
@@ -289,10 +293,20 @@ def goals_of(t: TM, game_ids: list[int]) -> dict[int, list[tuple]]:
 
 
 def game_label(t: TM, g) -> str:
+    """Label with the score (only used on games whose goal events match the score)."""
     return f"{t.club_name(g[5], g[9])}-{t.club_name(g[6], g[10])} {g[7]}-{g[8]}"
 
 
 def comp_round(g) -> str:
+    if g[1] in ("FIWC", "EURO"):
+        label = "Mondiale" if g[1] == "FIWC" else "Europeo"
+        rnd = (g[3] or "").replace("Group", "Girone").replace("Final", "finale").replace("Semi-Finals", "semifinale") \
+            .replace("Quarter-Finals", "quarti di finale").replace("Round of 16", "ottavi di finale").replace("last 16", "ottavi di finale")
+        return f"{label} {g[4].year}, {rnd}"
+    return comp_round_club(g)
+
+
+def comp_round_club(g) -> str:
     rnd = (g[3] or "").replace("1st leg", "andata").replace("2nd leg", "ritorno").replace("last 16", "ottavi") \
         .replace("Quarter-Finals", "quarti").replace("Semi-Finals", "semifinale").replace("Final", "finale")
     comp = COMP_IT.get(g[1], g[1])
@@ -344,7 +358,7 @@ def gen_games(t: TM) -> dict[str, list[dict]]:
         scorers = [x for x in gl if x[2] and not x[3]]
         for x in scorers:
             f = t.fame(x[2])
-            level = 1 if f >= 100 else 2 if f >= 60 else 3
+            level = 1 if f >= 80 else 2 if f >= 60 else 3
             team = home if side(x[1]) == 0 else away
             it = base("tm_cf_scorer", (gid, x[2], x[0]), year=d.year, fame=f, entities=ents, sources=src,
                       script=f"Al {x[0]}' di {label} ({comp_round(g)}) segnò {t.pname(x[2])} per {team}.")
@@ -413,7 +427,10 @@ def gen_formazione(t: TM, limit: int = 600) -> list[dict]:
             f"select game_id, club_id, player_id, position, number, team_captain from game_lineups where type='starting_lineup' and game_id in ({ids})"):
         lu[(int(gid), club)].append((pid_, pos, num, cap))
     out = []
+    goals = goals_of(t, list(gmap))
     for gid, g in gmap.items():
+        if len(goals.get(gid, [])) != (g[7] or 0) + (g[8] or 0):
+            continue  # shoot-out goals summed into the score, or incomplete events
         teams = []
         for club, form in ((g[5], g[15]), (g[6], g[16])):
             pl = lu.get((gid, club), [])
@@ -811,70 +828,9 @@ def gen_intruso(t: TM, played: dict, big: list[int], limit: int = 600) -> list[d
     return out[:limit]
 
 
-# ------------------------------------------------------------------ Wikidata bulk (P2446 = Transfermarkt player ID)
-
-def wikidata_by_tm(tm_ids: list[int]) -> dict[str, dict]:
-    out: dict[str, dict] = {}
-    ids = sorted({str(i) for i in tm_ids})
-    for i in range(0, len(ids), 300):
-        values = " ".join(f'"{x}"' for x in ids[i:i + 300])
-        try:
-            rows = http.sparql(f"""SELECT ?tm ?item ?it ?pobIt ?coord WHERE {{
-  VALUES ?tm {{ {values} }} ?item wdt:P2446 ?tm .
-  OPTIONAL {{ ?item rdfs:label ?it FILTER(lang(?it)="it") }}
-  OPTIONAL {{ ?item wdt:P19 ?pob . ?pob wdt:P625 ?coord . OPTIONAL {{ ?pob rdfs:label ?pobIt FILTER(lang(?pobIt)="it") }} }}
-}}""")
-        except RuntimeError:
-            print("[wikidata] giving up on remaining chunks (rate limited)", flush=True)
-            break
-        for r in rows:
-            d = out.setdefault(r["tm"], {"qid": r["item"].rsplit("/", 1)[-1]})
-            if r.get("it"):
-                d["it"] = r["it"]
-            if r.get("coord") and "coord" not in d:
-                import re
-                m = re.match(r"Point\(([-\d.]+) ([-\d.]+)\)", r["coord"])
-                if m:
-                    d["coord"] = [float(m.group(2)), float(m.group(1))]
-                    d["pob"] = r.get("pobIt")
-    return out
-
-
-def gen_birthplaces(t: TM, wd: dict[str, dict], limit: int = 800) -> dict[str, list[dict]]:
-    mappa, ts = [], []
-    cand = [(int(k), v) for k, v in wd.items() if v.get("coord") and v.get("pob") and int(k) in t.players]
-    cand.sort(key=lambda x: -t.fame(x[0]))
-    for pid_, v in cand[:limit]:
-        src = [t.src_player(pid_), {"family": "wikimedia", "label": "Wikidata: luogo di nascita", "url": f"https://www.wikidata.org/wiki/{v['qid']}"}]
-        it = base("tm_birthplace", pid_, year=t.players[pid_][2].year if t.players[pid_][2] else 2000, fame=t.fame(pid_),
-                  entities=[t.pid(pid_)], sources=src, script=f"{t.pname(pid_)} è nato a {v['pob']}.")
-        it.update({"question": f"Dove è nato {t.pname(pid_)}?", "target": {"lat": v["coord"][0], "lon": v["coord"][1], "label": v["pob"]}})
-        it["yearMin"] = it["yearMax"] = 2012
-        mappa.append(it)
-    r = random.Random(5)
-    pool = cand[:limit]
-    for k in range(min(400, len(pool) // 4)):
-        four = r.sample(pool, 4)
-        lats = sorted(v["coord"][0] for _p, v in four)
-        if lats[-1] - lats[-2] < 1.0:
-            continue
-        north = max(four, key=lambda x: x[1]["coord"][0])
-        names = [t.pname(p) for p, _ in four]
-        o = opts4(t.pname(north[0]), names, f"north-{k}")
-        if not o:
-            continue
-        it = base("tm_ts_north", tuple(sorted(p for p, _ in four)), year=2012, year_max=2026, fame=min(t.fame(p) for p, _ in four),
-                  entities=[t.pid(p) for p, _ in four],
-                  sources=[{"family": "wikimedia", "label": f"Wikidata: {t.pname(p)}", "url": f"https://www.wikidata.org/wiki/{v['qid']}"} for p, v in four],
-                  script="Luoghi di nascita: " + ", ".join(f"{t.pname(p)} a {v['pob']} ({v['coord'][0]:.1f}° N)" for p, v in sorted(four, key=lambda x: -x[1]["coord"][0])) + ".")
-        it.update({"question": "Chi di questi giocatori è nato più a nord?", "options": o[0], "correct": o[1], "archetype": 6})
-        ts.append(it)
-    return {"mappamondo": mappa, "tiro_secco": ts}
-
-
 # ------------------------------------------------------------------ entities
 
-def tm_entities(t: TM, used_ids: set[str], wd: dict[str, dict]) -> list[dict]:
+def tm_entities(t: TM, used_ids: set[str]) -> list[dict]:
     ents = []
     rel = t.q("""select distinct player_id from appearances where competition_id in ('IT1','CL','GB1','ES1','L1','FR1')""")
     keep = {r[0] for r in rel}
@@ -883,8 +839,7 @@ def tm_entities(t: TM, used_ids: set[str], wd: dict[str, dict]) -> list[dict]:
         if pid_ not in keep and eid not in used_ids:
             continue
         name = p[1]
-        info = wd.get(str(pid_), {})
-        aliases = sorted({info.get("it")} - {None, name})
+        aliases: list[str] = []
         parts = name.split()
         ents.append({"id": eid, "kind": "person", "name": name, "fame": t.fame(pid_), "aliases": aliases,
                      "family": parts[-1] if len(parts) > 1 else name})
@@ -893,7 +848,16 @@ def tm_entities(t: TM, used_ids: set[str], wd: dict[str, dict]) -> list[dict]:
         ents.append({"id": f"tm:c:{cid}", "kind": "club", "name": nm, "fame": int(min(150, t.club_fame.get(cid, 0) / 20)),
                      "aliases": sorted({c[1]} - {nm})})
     for comp, name in COMP_IT.items():
-        ents.append({"id": f"comp:{comp}", "kind": "competition", "name": name, "fame": 200, "aliases": []})
+        ents.append({"id": f"comp:{comp}", "kind": "competition", "name": name, "fame": 200,
+                     "aliases": ["Mondiali", "Coppa del Mondo"] if comp == "FIWC" else ["Europei"] if comp == "EURO" else []})
+    for nid, name in t.q("select national_team_id, name from national_teams"):
+        it_name = COUNTRY_IT.get(name, name)
+        ents.append({"id": f"tm:c:{nid}", "kind": "nation", "name": it_name, "fame": 120,
+                     "aliases": sorted({name, f"Nazionale {it_name}"} - {it_name})})
+    for comp, year in t.q("select distinct competition_id, year(date) from games where competition_id in ('FIWC','EURO')"):
+        label = "Mondiale" if comp == "FIWC" else "Europeo"
+        ents.append({"id": f"ed:{comp}:{year}", "kind": "edition", "name": f"{label} {year}", "fame": 150, "years": [year],
+                     "aliases": [f"{label}i {year}", f"{'Mondiali' if comp == 'FIWC' else 'Euro'} {year}"]})
     for season in range(2012, 2026):
         ents.append({"id": f"tm:IT1:{season}", "kind": "edition", "name": f"Serie A {season_label(season)}", "fame": 100,
                      "years": [season], "aliases": [f"Serie A {season}/{season + 1}", f"Campionato {season_label(season)}"]})
@@ -910,19 +874,17 @@ def tm_topics(t: TM) -> dict[str, list[str]]:
         nb["comp:IT1"].add(f"tm:IT1:{season}")
     for s in range(2012, 2026):
         nb["comp:CL"].add(f"tm:CL:{s}")
+    for comp, year, h, a in t.q("select competition_id, year(date), home_club_id, away_club_id from games where competition_id in ('FIWC','EURO')"):
+        ed = f"ed:{comp}:{year}"
+        nb[f"comp:{comp}"].add(ed)
+        for c in (h, a):
+            nb[ed].add(f"tm:c:{int(c)}")
+            nb[f"tm:c:{int(c)}"].add(ed)
     return {k: sorted(v) for k, v in nb.items()}
 
 
-def generate_all(qmap_extra: dict[str, str] | None = None) -> tuple[dict[str, list[dict]], list[dict], dict, dict]:
-    pre = TM()
-    tm_ids = [pid_ for pid_ in pre.players if pre.fame(pid_) >= 45]
-    wd = wikidata_by_tm(tm_ids)
-    qmap = {k: v["qid"] for k, v in wd.items()}
-    global LAST_QMAP
-    LAST_QMAP = qmap
-    if qmap_extra:
-        qmap.update(qmap_extra)
-    t = TM(qmap)
+def generate_all() -> tuple[dict[str, list[dict]], list[dict], dict, dict]:
+    t = TM()
     packs: dict[str, list[dict]] = defaultdict(list)
     packs["mercato"] += gen_mercato(t)
     for k, v in gen_games(t).items():
@@ -937,10 +899,9 @@ def generate_all(qmap_extra: dict[str, str] | None = None) -> tuple[dict[str, li
     tm_graph = teammates(t)
     packs["filo_rosso"] += gen_filo_rosso(t, tm_graph)
     packs["intruso"] += gen_intruso(t, lists["_played"], lists["_big"])
-    for k, v in gen_birthplaces(t, wd).items():
-        packs[k] += v
+    packs["mappamondo"] += []  # Transfermarkt has no coordinates: the game stays out of the draw
     used = {e for items in packs.values() for it in items for e in it["entities"]}
-    ents = tm_entities(t, used, wd)
+    ents = tm_entities(t, used)
     return dict(packs), ents, tm_graph, tm_topics(t)
 
 

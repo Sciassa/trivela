@@ -2,7 +2,7 @@
 
 Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 14 mini-giochi, tornei tra amici. Si gioca su 1, 2, 3 o 4 schermi: con un conduttore che usa il telefono come Regia, oppure in modalità automatica con le pulsantiere.
 
-Ogni domanda nasce da fonti gratuite e autorevoli per il loro dominio (Transfermarkt via dataset pubblici, openfootball, Wikipedia/Wikidata, StatsBomb, martj42, open-matchday, engsoccerdata, Fjelstul), calcolata sui dati: niente domande inventate né prese dalla TV, e solo su giocatori noti.
+Ogni domanda è calcolata su un'unica fonte uniforme, il dataset pubblico di Transfermarkt (`dcaribou/transfermarkt-datasets`): stagioni 2012/13–2025/26 dei principali campionati e coppe, Mondiali dal 2006, Europei dal 2008 e trasferimenti. Niente domande inventate né prese dalla TV, e solo su giocatori noti.
 
 - [`SPEC.md`](SPEC.md): specifica di prodotto e architettura (fonte di verità; vedi §0.1 per le decisioni della v1)
 - [`CLAUDE.md`](CLAUDE.md): istruzioni operative per lo sviluppo
@@ -35,10 +35,10 @@ Il server stampa l'indirizzo da aprire (es. `http://192.168.1.10:8787`). Sullo S
 
 ## Dati
 
-I dati delle domande sono già in `apps/web/public/data/` (un file per gioco, scaricato solo quando il gioco viene sorteggiato). Per rigenerarli dalle fonti (richiede rete; Wikipedia e Wikidata limitano le richieste, quindi la prima volta servono decine di minuti):
+I dati delle domande sono già in `apps/web/public/data/` (un file per gioco, scaricato solo quando il gioco viene sorteggiato). Per aggiornarli (scarica il dataset da circa 210 MB solo se è cambiato, poi rigenera in meno di un minuto):
 
 ```bash
-pnpm data:build
+pnpm data:sync
 ```
 
 ## Test
