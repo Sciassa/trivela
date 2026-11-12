@@ -18,6 +18,8 @@ export interface TournamentState {
   format: "round_robin" | "swiss";
   rounds: number;
   yearFrom: number | null;
+  /** Domestic leagues allowed for every match of the tournament (null = all). */
+  leagues: string[] | null;
   matches: TournamentMatch[];
   usedIds: string[];
   phase: "league" | "semi" | "final" | "done";
@@ -33,7 +35,7 @@ export interface Standing {
   best: number;
 }
 
-export function createTournament(players: string[], opts: { rounds?: number; yearFrom?: number | null } = {}): TournamentState {
+export function createTournament(players: string[], opts: { rounds?: number; yearFrom?: number | null; leagues?: string[] | null } = {}): TournamentState {
   if (players.length < 4 || players.length > 12) throw new Error("Da 4 a 12 giocatori");
   const format = players.length <= 6 ? "round_robin" : "swiss";
   const t: TournamentState = {
@@ -41,6 +43,7 @@ export function createTournament(players: string[], opts: { rounds?: number; yea
     format,
     rounds: format === "round_robin" ? (players.length % 2 === 0 ? players.length - 1 : players.length) : opts.rounds ?? 3,
     yearFrom: opts.yearFrom ?? null,
+    leagues: opts.leagues ?? null,
     matches: [],
     usedIds: [],
     phase: "league",

@@ -370,7 +370,6 @@ export function TextEntry({
   const inStage = useContext(StageCtx);
   const overlay = useMemo(() => inStage && isCoarse(), [inStage]);
   const [open, setOpen] = useState(false);
-  const { pad } = usePlay();
   const helper = useMemo(spellerOn, []);
   const bar = useRef<HTMLInputElement>(null);
   const sugg = useMemo(() => (index && helper ? suggest(value, index) : []), [value, index, helper]);
@@ -382,8 +381,7 @@ export function TextEntry({
   };
   useEffect(() => () => void (open && close()), [open]);
 
-  // controllers have no people index: the Screen judges their answers
-  const chips = index && !pad && sugg.length > 0 && (
+  const chips = index && sugg.length > 0 && (
     <div className="suggest" aria-label="Correttore ortografico">
       {sugg.map((s) => (
         <button key={s.name} type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => onChange(s.name)}>

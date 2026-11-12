@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameId } from "@trivela/protocol";
 import { MODULES } from "./games";
-import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, passesYearFilter, POOL, reduce, sampleVaried, viewFor } from "./match";
+import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, viewFor } from "./match";
 import { Rng } from "./rng";
 import { createTournament, recordResult, roundRobin, standings } from "./tournament";
 import type { Intent, MatchConfig, MatchState } from "./types";
@@ -106,6 +106,29 @@ describe("year filter and sampling", () => {
       expect(d.filter((g) => ["decina", "dischetto", "asta"].includes(g)).length).toBeLessThanOrEqual(1);
       expect(["tiro_secco", "frame", "maglia"]).toContain(d[0]);
     }
+  });
+});
+
+describe("league filter", () => {
+  const tag = (...comps: string[]) => meta({ entities: comps.map((c) => `comp:${c}`) });
+  it("keeps what belongs to a selected league and what belongs to no league", () => {
+    expect(passesLeagueFilter(tag("IT1"), ["IT1"])).toBe(true);
+    expect(passesLeagueFilter(tag("GB1"), ["IT1"])).toBe(false);
+    expect(passesLeagueFilter(tag("IT1", "GB1"), ["GB1"])).toBe(true); // a transfer between two leagues
+    expect(passesLeagueFilter(tag("CIT"), ["IT1"])).toBe(true); // Coppa Italia follows Serie A
+    expect(passesLeagueFilter(tag("CIT"), ["FR1"])).toBe(false);
+    expect(passesLeagueFilter(tag("FIWC"), ["FR1"])).toBe(true); // World Cup: always
+    expect(passesLeagueFilter(tag("CL"), ["FR1"])).toBe(true); // Champions League: always
+    expect(passesLeagueFilter(tag("GB1"), null)).toBe(true);
+    expect(passesLeagueFilter(tag("GB1"), undefined)).toBe(true);
+  });
+  it("applies to the questions drawn for a match", () => {
+    const p = makePacks();
+    p.items.tiro_secco.forEach((q, k) => (q.entities = [k % 2 ? "comp:IT1" : "comp:GB1"]));
+    const only = eligibleItems("tiro_secco", p, { judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"] });
+    expect(only).toHaveLength(10);
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "frame", "prima_pagina", "decina"] }, p);
+    expect(r.ok && (r.state.content.tiro_secco as { entities: string[] }[]).every((q) => q.entities[0] === "comp:GB1")).toBe(true);
   });
 });
 

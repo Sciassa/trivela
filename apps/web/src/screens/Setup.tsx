@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { LEAGUES } from "@trivela/protocol";
 import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
-import { forcedGamesFromUrl, newSeed, prepareFreshMatch } from "../runtime/packs";
+import { ALL_LEAGUES, forcedGamesFromUrl, leaguesForMatch, newSeed, prepareFreshMatch, saveLeagues, savedLeagues } from "../runtime/packs";
 import { Page } from "../components/ui";
 
 export interface SetupResult {
@@ -42,22 +43,55 @@ export function YearField({ year, setYear, locked }: { year: string; setYear: (v
   );
 }
 
+/** Which championships the questions may come from; national teams and big tournaments are always in. */
+export function LeaguesField({ value, onChange, locked }: { value: string[]; onChange: (v: string[]) => void; locked?: boolean }) {
+  const toggle = (id: string) => {
+    if (locked) return;
+    const next = value.includes(id) ? value.filter((x) => x !== id) : [...value, id];
+    if (!next.length) return; // at least one league stays on
+    saveLeagues(next);
+    onChange(next);
+  };
+  return (
+    <div className="field">
+      <label>CAMPIONATI INCLUSI NELLE DOMANDE</label>
+      <div className="league-pick">
+        {LEAGUES.map((l) => (
+          <button key={l.id} type="button" className={value.includes(l.id) ? "on" : ""} aria-pressed={value.includes(l.id)} disabled={locked} onClick={() => toggle(l.id)}>
+            {value.includes(l.id) ? "✓ " : ""}
+            {l.name}
+          </button>
+        ))}
+        {!locked && value.length < ALL_LEAGUES.length && (
+          <button type="button" className="all" onClick={() => (saveLeagues(ALL_LEAGUES), onChange(ALL_LEAGUES))}>
+            TUTTI
+          </button>
+        )}
+      </div>
+      <span className="note">Nazionali, Mondiali, Europei, Champions, Europa e Conference League sono sempre inclusi. Con pochi campionati alcuni giochi hanno meno domande e possono non uscire.</span>
+    </div>
+  );
+}
+
 export function Setup({
   onStart,
   onBack,
   presetPlayers,
   yearFrom: presetYear,
+  leagues: presetLeagues,
   excludeIds,
 }: {
   onStart: (r: SetupResult) => void;
   onBack: () => void;
   presetPlayers?: [string, string];
   yearFrom?: number | null;
+  leagues?: string[] | null;
   excludeIds?: string[];
 }) {
   const [p1, setP1] = useState(presetPlayers?.[0] ?? "");
   const [p2, setP2] = useState(presetPlayers?.[1] ?? "");
   const [year, setYear] = useState(presetYear ? String(presetYear) : "");
+  const [leagues, setLeagues] = useState<string[]>(() => (presetLeagues === undefined ? savedLeagues() : presetLeagues ?? ALL_LEAGUES));
   const [tableMode, setTableMode] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -74,6 +108,7 @@ export function Setup({
       judging: "auto",
       players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"],
       yearFrom,
+      leagues: leaguesForMatch(leagues),
       seed: newSeed(),
       excludeIds,
       forcedGames: forcedGamesFromUrl(),
@@ -90,6 +125,7 @@ export function Setup({
     <Page title="NUOVA SFIDA · UN SOLO SCHERMO" onBack={onBack}>
       <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
       <YearField year={year} setYear={setYear} locked={presetYear !== undefined} />
+      <LeaguesField value={leagues} onChange={setLeagues} locked={presetLeagues !== undefined} />
       <div className="field">
         <label>DOVE STA LO SCHERMO?</label>
         <div className="seg">

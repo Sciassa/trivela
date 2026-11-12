@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { createTournament, recordResult, standings, usedIds, winnerOfMatch, type EngineCtx, type MatchState, type TournamentState } from "@trivela/engine";
 import { LocalMatch } from "./LocalMatch";
-import { Setup } from "./Setup";
+import { LeaguesField, Setup } from "./Setup";
+import { ALL_LEAGUES, leaguesForMatch, savedLeagues } from "../runtime/packs";
 import { Page } from "../components/ui";
 
 const KEY = "trivela.tournament";
@@ -27,6 +28,7 @@ export function Tournament({ onBack }: { onBack: () => void }) {
   const [t, setT] = useState<TournamentState | null>(load);
   const [names, setNames] = useState("");
   const [year, setYear] = useState("");
+  const [leagues, setLeagues] = useState(savedLeagues);
   const [playing, setPlaying] = useState<{ matchId: string; state: MatchState; tableMode: boolean; ctx: EngineCtx } | null>(null);
   const [setupFor, setSetupFor] = useState<string | null>(null);
   useEffect(() => save(t), [t]);
@@ -52,6 +54,7 @@ export function Tournament({ onBack }: { onBack: () => void }) {
       <Setup
         presetPlayers={[t.players[m.a]!, t.players[m.b]!]}
         yearFrom={t.yearFrom}
+        leagues={t.leagues ?? null}
         excludeIds={t.usedIds}
         onBack={() => setSetupFor(null)}
         onStart={(r) => {
@@ -74,8 +77,9 @@ export function Tournament({ onBack }: { onBack: () => void }) {
           <label>SOLO DOMANDE DALL'ANNO… (VUOTO = TUTTE)</label>
           <input className="input" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="es. 2018" />
         </div>
+        <LeaguesField value={leagues} onChange={setLeagues} />
         <div className="note">Fase 1: Classifica Generale (si sommano i punti di tutte le sfide). Fase 2: semifinali 1ª-4ª e 2ª-3ª, poi finale.</div>
-        <button className="btn big" disabled={list.length < 4 || list.length > 12} onClick={() => setT(createTournament(list, { yearFrom: year ? Number(year) : null }))}>
+        <button className="btn big" disabled={list.length < 4 || list.length > 12} onClick={() => setT(createTournament(list, { yearFrom: year ? Number(year) : null, leagues: leaguesForMatch(leagues) }))}>
           CREA IL TORNEO ({list.length} GIOCATORI)
         </button>
       </Page>

@@ -490,3 +490,17 @@ table.table tr.top td { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* career steps (Il Giramondo) */
+.steps { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; }
+.step { display: inline-flex; align-items: center; gap: 10px; background: #0d0d26; border: 3px solid var(--line); padding: 2px 12px 2px 2px; line-height: 1.05; }
+.step b { font-family: var(--pixel); font-size: 15px; font-weight: normal; color: var(--bg); background: var(--accent); padding: 12px 8px; }
+.step + .step::before { content: none; }
+.stage.short .step b { font-size: 13px; padding: 9px 6px; }
+
+/* league picker */
+.league-pick { display: flex; flex-wrap: wrap; gap: 8px; }
+.league-pick button { font-family: var(--pixel); font-size: 12px; line-height: 1.4; padding: 12px 14px; min-height: 48px; background: var(--panel); color: var(--dim); border: 3px solid var(--line); }
+.league-pick button.on { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+.league-pick button.all { color: var(--accent); border-style: dashed; }
+.league-pick button:disabled { opacity: .6; }

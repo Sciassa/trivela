@@ -184,7 +184,8 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 - Una partita è fatta di **5 giochi sorteggiati su 10**; non c'è più un gioco finale fisso. Vince chi ha più punti.
 - **Round brevi**: al massimo 2 domande a testa per gioco (Tiro Secco, Frame, Maglia); 2 profili per i giochi a prenotazione (Mercato, Giramondo); 2 categorie per l'Asta; **una sola** lista per Decina e Dischetto, una partita per la Formazione, una prima pagina a testa.
 - **La Maglia** è capovolta: si mostrano giocatore, squadra e stagione e si risponde con il **numero** (tastierino numerico).
-- **Il Giramondo** mostra la carriera in **ordine cronologico** (anno del trasferimento → squadra), non più dal club meno noto al più noto.
+- **Il Giramondo** mostra la carriera in **ordine cronologico**, non più dal club meno noto al più noto. Ogni squadra compare **una volta sola, al primo arrivo**, con l'anno (es. «2019 Real Madrid», «2019 Maiorca», «2020 Villarreal»): i ritorni alla squadra già elencata (fine prestito, secondo periodo) sono omessi, perché nel dataset non c'è l'indicazione del prestito e la sequenza completa («Real Madrid → Maiorca → Real Madrid → Villarreal…») risultava illeggibile. Sullo schermo ogni passaggio è un riquadro con l'anno.
+- **Campionati a scelta** (§3.4): all'inizio di sfida, sala d'attesa e torneo si scelgono i campionati da cui pescare le domande.
 - **Dal Dischetto**: se più giocatori sono a pari merito all'ultimo posto utile, valgono finché restano posti nella Top 10 (es. 7 nomi a pari merito dal 6° posto: ne valgono 5).
 - Nel sorteggio delle domande i **tipi di domanda si alternano** (campionamento uniforme per generatore), così una partita non è dominata dal tipo con più istanze.
 
@@ -205,6 +206,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 - Canali separati: le pulsantiere ricevono solo la vista pubblica (mai le soluzioni); la Regia riceve le soluzioni del solo gioco in corso.
 - Codice stanza di **5 lettere** + QR per ruolo. Presenza con battiti periodici; arbitraggio del pulsante su tempi corretti con finestra di 250 ms.
 - Il server Node per la rete locale (`apps/realtime`) è stato rimosso.
+- **Suggerimenti ortografici su tutti i dispositivi**: anche le pulsantiere mostrano il correttore. Per questo scaricano l'**indice dei soli nomi** (`entities.json`: persone, nessuna domanda né soluzione); i file dei giochi restano solo sullo Schermo. La Regia non scrive e non scarica nulla.
 
 **Interfaccia**
 
@@ -307,6 +309,15 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | L'Asta | ❌ | Tutte le stagioni coperte |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
+
+### 3.4 Campionati inclusi
+
+- Il setup (schermo singolo, sala d'attesa, torneo) permette di scegliere da quali **campionati** pescare le domande: Serie A (con Coppa Italia e Supercoppa italiana), Premier League, LaLiga, Bundesliga, Ligue 1. Di default sono tutti attivi; ne resta sempre almeno uno. La scelta è ricordata sul dispositivo e, nel torneo, è fissata per tutte le sfide.
+- **Sempre incluse**: nazionali, Mondiali, Europei, Champions League, Europa League, Conference League, Supercoppa europea.
+- Regola: ogni istanza porta i campionati a cui appartiene (tag `comp:` in `entities`). Un'istanza senza campionato è sempre ammessa; altrimenti basta **uno** dei suoi campionati selezionato (un trasferimento Premier → Serie A esce se è attiva una delle due; una carriera esce se ha toccato un campionato attivo).
+- Vale per tutti i giochi, **liste e classifiche comprese** (una Top 10 della Ligue 1 esce solo con la Ligue 1 attiva), a differenza del filtro anno.
+- Se i giochi ancora ammissibili sono meno di 5, la partita non parte e lo dice. Con un solo campionato attivo tutti e 10 i giochi hanno abbastanza domande.
+- **Serie B e altri campionati**: il dataset che usiamo non ha la Serie B. Gli altri campionati di prima fascia presenti (Eredivisie, Liga Portugal, Süper Lig…) non sono ancora generati: aggiungerli è una decisione futura.
 
 ---
 

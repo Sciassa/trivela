@@ -1,13 +1,13 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
 import type { DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, PrimaPaginaItem, SetItem, TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
-import { emptyCtx, forcedGamesFromUrl, newSeed, prepareFreshMatch, rememberSeen } from "../runtime/packs";
+import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
-import { parseYear, PlayersFields, YearField } from "./Setup";
+import { LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
 import { AnswerBox, Page, PlayCtx, ScorePicker, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
@@ -38,6 +38,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
   const [year, setYear] = useState("");
+  const [leagues, setLeagues] = useState(savedLeagues);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [matchCtx, setMatchCtx] = useState(ctx);
@@ -78,6 +79,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
       judging: room.judging(),
       players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"],
       yearFrom,
+      leagues: leaguesForMatch(leagues),
       seed: newSeed(),
       forcedGames: forcedGamesFromUrl(),
     });
@@ -126,6 +128,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
       </div>
       <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} />
       <YearField year={year} setYear={setYear} />
+      <LeaguesField value={leagues} onChange={setLeagues} />
       {error && <div className="err">{error}</div>}
       <button className="btn big" disabled={loading || !ready} onClick={() => void start()}>
         {loading ? "CARICO I GIOCHI…" : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
@@ -474,6 +477,16 @@ function myTurn(g: GameStateAny, me: PlayerIdx): boolean {
 
 export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   const room = useRoom(role, code);
+  // the people index (names only, no questions) feeds the spelling helper on this phone too
+  const [index, setIndex] = useState(emptyCtx.index);
+  useEffect(() => {
+    let live = true;
+    void loadNamesIndex().then((i) => live && setIndex(i));
+    return () => {
+      live = false;
+    };
+  }, []);
+  const padCtx = useMemo(() => ({ index }), [index]);
   const me: PlayerIdx = role === "p1" ? 0 : 1;
   const s: MatchState | null = room.state;
   const g = s?.game;
@@ -518,7 +531,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
               RISPONDI A VOCE!
             </div>
           ) : (
-            <AnswerBox index={emptyCtx.index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+            <AnswerBox index={index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
           )
         ) : g.stage === "reveal" ? (
           <div className="panel waiting">GUARDA LO SCHERMO</div>
@@ -555,7 +568,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       ) : turn ? (
         <PlayCtx.Provider value={{ readonly: false, flow, pad: true }}>
           <PadCanvas>
-            <GameView state={s} g={g} dispatch={room.dispatch} ctx={emptyCtx} start={room.timerStart} />
+            <GameView state={s} g={g} dispatch={room.dispatch} ctx={padCtx} start={room.timerStart} />
           </PadCanvas>
         </PlayCtx.Provider>
       ) : (

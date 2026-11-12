@@ -1,6 +1,6 @@
 {
   "version": "2026-11-12",
-  "generatedAt": "2026-11-12T18:29:19+00:00",
+  "generatedAt": "2026-11-12T19:16:03+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 2400,
@@ -82,7 +82,7 @@
       "excluded_not_notable": 0
     },
     "asta": {
-      "kept": 3160,
+      "kept": 3163,
       "excluded_show": 5,
       "excluded_not_notable": 0
     },
