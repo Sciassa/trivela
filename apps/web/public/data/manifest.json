@@ -1,135 +1,96 @@
 {
   "version": "2026-11-12",
-  "generatedAt": "2026-11-12T00:32:46+00:00",
-  "snapshot": "2026-11-12",
+  "generatedAt": "2026-11-12T16:31:31+00:00",
+  "snapshot": "2026-07-06",
   "counts": {
-    "tiro_secco": 9174,
-    "prima_pagina": 1625,
-    "mercato": 1401,
-    "decina": 39,
-    "dischetto": 64,
-    "formazione": 751,
-    "cassaforte": 5761,
-    "giramondo": 1542,
-    "frame": 1325,
-    "intruso": 316,
-    "asta": 241,
-    "filo_rosso": 280,
-    "mappamondo": 1220,
+    "tiro_secco": 1659,
+    "prima_pagina": 1241,
+    "mercato": 1306,
+    "decina": 17,
+    "dischetto": 62,
+    "formazione": 553,
+    "cassaforte": 3892,
+    "giramondo": 763,
+    "frame": 1064,
+    "intruso": 232,
+    "asta": 98,
+    "filo_rosso": 199,
+    "mappamondo": 0,
     "maglia": 1200
   },
   "sources": [
     {
-      "family": "openfootball",
-      "label": "openfootball (World Cup)",
-      "url": "https://github.com/openfootball/worldcup.json",
-      "licence": "Public Domain (CC0)"
-    },
-    {
-      "family": "wikimedia",
-      "label": "Wikipedia (en) e Wikidata",
-      "url": "https://www.wikipedia.org",
-      "licence": "CC BY-SA 4.0 / CC0"
-    },
-    {
-      "family": "statsbomb",
-      "label": "StatsBomb Open Data",
-      "url": "https://github.com/statsbomb/open-data",
-      "licence": "StatsBomb Open Data licence (attribuzione)"
-    },
-    {
       "family": "transfermarkt",
-      "label": "Transfermarkt (dataset dcaribou/transfermarkt-datasets, storico fino a luglio 2026)",
+      "label": "Transfermarkt (dataset dcaribou/transfermarkt-datasets, stagioni 2012/13–2025/26, Mondiali ed Europei dal 2006)",
       "url": "https://github.com/dcaribou/transfermarkt-datasets",
-      "licence": "Dati © Transfermarkt; dataset CC0"
-    },
-    {
-      "family": "martj42",
-      "label": "International football results 1872– (martj42)",
-      "url": "https://github.com/martj42/international_results",
-      "licence": "CC0"
-    },
-    {
-      "family": "open-matchday",
-      "label": "open-matchday (stagione 2026/27, aggiornato ogni giorno)",
-      "url": "https://github.com/oladeeayo/open-matchday",
-      "licence": "Uso non commerciale con attribuzione"
+      "licence": "Dati © Transfermarkt; dataset pubblico, uso non commerciale"
     }
   ],
-  "coverage": {
-    "goals_complete_team_editions": 312,
-    "squads_complete_team_editions": 205
-  },
   "filters": {
     "tiro_secco": {
-      "kept": 9174,
-      "excluded_show": 32,
-      "excluded_not_notable": 170
+      "kept": 1659,
+      "excluded_show": 16,
+      "excluded_not_notable": 167
     },
     "prima_pagina": {
-      "kept": 1625,
+      "kept": 1241,
       "excluded_show": 19,
-      "excluded_not_notable": 37
+      "excluded_not_notable": 75
     },
     "mercato": {
-      "kept": 1401,
+      "kept": 1306,
       "excluded_show": 3,
-      "excluded_not_notable": 504
+      "excluded_not_notable": 431
     },
     "decina": {
-      "kept": 39,
+      "kept": 17,
       "excluded_show": 1,
       "excluded_not_notable": 0
     },
     "dischetto": {
-      "kept": 64,
-      "excluded_show": 2,
+      "kept": 62,
+      "excluded_show": 1,
       "excluded_not_notable": 0
     },
     "formazione": {
-      "kept": 751,
-      "excluded_show": 49,
+      "kept": 553,
+      "excluded_show": 47,
       "excluded_not_notable": 0
     },
     "cassaforte": {
-      "kept": 5761,
-      "excluded_show": 53,
-      "excluded_not_notable": 178
+      "kept": 3892,
+      "excluded_show": 47,
+      "excluded_not_notable": 223
     },
     "giramondo": {
-      "kept": 1542,
-      "excluded_show": 10,
-      "excluded_not_notable": 115
+      "kept": 763,
+      "excluded_show": 6,
+      "excluded_not_notable": 0
     },
     "frame": {
-      "kept": 1325,
-      "excluded_show": 18,
+      "kept": 1064,
+      "excluded_show": 16,
       "excluded_not_notable": 0
     },
     "intruso": {
-      "kept": 316,
+      "kept": 232,
       "excluded_show": 1,
-      "excluded_not_notable": 22
+      "excluded_not_notable": 19
     },
     "asta": {
-      "kept": 241,
+      "kept": 98,
       "excluded_show": 4,
       "excluded_not_notable": 0
     },
     "filo_rosso": {
-      "kept": 280,
-      "excluded_show": 2,
-      "excluded_not_notable": 0
-    },
-    "mappamondo": {
-      "kept": 1220,
+      "kept": 199,
       "excluded_show": 1,
       "excluded_not_notable": 0
     },
     "maglia": {
       "kept": 1200,
-      "excluded_show": 9,
-      "excluded_not_notable": 6925
+      "excluded_show": 8,
+      "excluded_not_notable": 4426
     }
   }
 }

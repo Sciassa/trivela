@@ -144,6 +144,34 @@ Contenuti dopo la v2:
 | maglia | 1200 |
 | **Totale** | **24939** |
 
+## 0.5 Decisione v4: una sola fonte (Transfermarkt)
+
+Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i giochi usano solo il dataset Transfermarkt** `dcaribou/transfermarkt-datasets`. Le fonti di §0.3–§0.4 (openfootball, Wikipedia/Wikidata, StatsBomb, martj42, open-matchday, engsoccerdata, Fjelstul, ewenme, salimt) e l'archivio redazionale `content/` sono stati rimossi. Questa sezione prevale su §0.1–§0.4.
+
+- **Copertura:** stagioni 2012/13–2025/26 di Serie A, Premier League, LaLiga, Bundesliga, Ligue 1, Champions, Europa e Conference League, Coppa Italia e Supercoppe; Mondiali 2006–2026 (gironi 2026); Europei 2008–2024; trasferimenti con cifra (quasi tutti dal 2004). Si perdono gli anni precedenti, la Serie B, le amichevoli e qualificazioni delle Nazionali e la stagione 2026/27 (il dataset si ferma al 6 luglio 2026).
+- **Coerenza:** si scartano le partite in cui gli eventi-gol non tornano con il risultato (nel dataset i rigori delle serie finali sono sommati ai gol).
+- **Il Mappamondo** è vuoto: Transfermarkt non fornisce coordinate. Il gioco è escluso dal sorteggio finché non si decide una fonte geografica.
+- **Filtro notorietà:** valore di mercato massimo ≥ 10 mln € oppure ≥ 80 presenze o ≥ 20 gol tra Top 5 campionati e Champions League (il criterio sui sitelink Wikidata cade con Wikidata).
+- **SofaScore:** valutato e scartato. L'API non è pubblica e scaricarla richiederebbe di aggirare la protezione anti-bot. Si potrà integrare solo con una licenza.
+
+| Gioco | Istanze |
+|---|---|
+| tiro_secco | 1662 |
+| prima_pagina | 1242 |
+| mercato | 1306 |
+| decina | 17 |
+| dischetto | 62 |
+| formazione | 553 |
+| cassaforte | 3892 |
+| giramondo | 763 |
+| frame | 1064 |
+| intruso | 231 |
+| asta | 98 |
+| filo_rosso | 196 |
+| mappamondo | 0 |
+| maglia | 1200 |
+| **Totale** | **12286** |
+
 ---
 
 ## 1. Glossario
