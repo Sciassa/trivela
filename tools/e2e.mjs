@@ -109,6 +109,7 @@ try {
     const active = (await p1.locator(".option").count()) ? p1 : p2;
     const idle = active === p1 ? p2 : p1;
     check((await idle.locator(".option").count()) === 0, "only the player on turn can answer from the phone");
+    await active.waitForTimeout(900);
     await active.screenshot({ path: "test-results/pad-turn.png" });
     const hasCorrect = await active.evaluate(() => document.body.innerHTML.includes("option right"));
     check(!hasCorrect, "the controller receives no solution before answering");

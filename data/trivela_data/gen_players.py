@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from collections import Counter, defaultdict
 
-from .tm_core import COMP_IT, IN_COMP, L5, POS_IT, SRC_DATASET, TM, base, clean_club, fee_label, nat_it, season_label, window_label
+from .tm_core import COMP_IT, IN_COMP, L5, POS_IT, SRC_DATASET, TM, articled, base, clean_club, fee_label, nat_it, season_label, window_label
 
 ICONIC = {7, 9, 10, 11, 45, 77, 80, 88, 99}
 SKIP_CLUB = re.compile(r"\b(U\d\d|Youth|Primavera|Retired|Without Club|Career break|Unknown|Ban|Juvenil|Sub-\d\d|Jgd|Yth)\b|\b(II|B)$", re.I)
@@ -26,7 +26,7 @@ def mercato(t: TM, limit: int = 2500) -> list[dict]:
                  f"Squadra cedente: {frm}", f"Squadra acquirente: {to}"]
         it = base("mercato", (pid, str(d)), year=d.year, fame=t.fame(pid), entities=["comp:IT1", t.pid(pid)],
                   sources=[t.src_player(pid)],
-                  script=f"{t.pname(pid)} passò da {frm} a {to} ({window_label(d).lower()}) per {fee_label(float(fee))}, secondo Transfermarkt.")
+                  script=f"{t.pname(pid)} passò {articled('da', frm, False)} {articled('a', to, False)} ({window_label(d).lower()}) per {fee_label(float(fee))}, secondo Transfermarkt.")
         it.update({"clues": clues, "flag": p["nat"], "answer": t.answer(pid)})
         out.append((float(fee) * (1 + t.fame(pid)), it))
     out.sort(key=lambda x: -x[0])

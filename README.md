@@ -1,13 +1,28 @@
 # TRIVELA
 
-Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 14 mini-giochi, tornei tra amici. Si gioca su 1, 2, 3 o 4 schermi: con un conduttore che usa il telefono come Regia, oppure in modalità automatica con le pulsantiere.
+Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 10 mini-giochi, tornei tra amici.
 
-Ogni domanda è calcolata su un'unica fonte uniforme, il dataset pubblico di Transfermarkt (`dcaribou/transfermarkt-datasets`): stagioni 2012/13–2025/26 dei principali campionati e coppe, Mondiali dal 2006, Europei dal 2008 e trasferimenti. Niente domande inventate né prese dalla TV, e solo su giocatori noti.
+Si gioca aprendo il sito, senza installare né avviare nulla:
 
-- [`SPEC.md`](SPEC.md): specifica di prodotto e architettura (fonte di verità; vedi §0.1 per le decisioni della v1)
+**https://sciassa.github.io/trivela/**
+
+- **Un solo schermo**: tablet, PC o telefono in orizzontale; ci si passa il dispositivo.
+- **Schermo + 2 telefoni** (senza conduttore): ogni giocatore usa il proprio telefono come pulsantiera e tastiera.
+- **Schermo + 1 telefono** (con conduttore): il conduttore vede soluzioni e copione sul telefono e convalida le risposte date a voce.
+- **Torneo** da 4 a 12 giocatori con classifica, semifinali e finale.
+
+Per le modalità con i telefoni: sullo schermo principale scegli *Schermo + telefoni*, poi inquadra il QR con ogni telefono (oppure apri lo stesso sito sul telefono, tocca *Entra con codice* e scrivi il codice di 5 lettere). Non serve la stessa Wi-Fi: basta internet su ogni dispositivo. Lo schermo principale può essere anche un telefono in orizzontale.
+
+Ogni partita sorteggia 5 giochi su 10; ogni gioco dura al massimo 2 domande a testa. Tutte le domande (oltre 14.000, almeno 1000 per gioco) sono calcolate sul dataset pubblico di Transfermarkt (`dcaribou/transfermarkt-datasets`): stagioni 2012/13–2025/26 dei principali campionati e coppe, Mondiali dal 2006, Europei dal 2008 e trasferimenti. Niente domande inventate né prese dalla TV, e solo su giocatori noti.
+
+- [`SPEC.md`](SPEC.md): specifica di prodotto e architettura (fonte di verità; §0.6 per le decisioni correnti)
 - [`CLAUDE.md`](CLAUDE.md): istruzioni operative per lo sviluppo
 
-## Giocare
+## Come funziona il collegamento senza server
+
+Lo schermo principale ospita la partita ed è l'unico a scaricare domande e soluzioni. I telefoni scambiano con lui piccoli messaggi cifrati attraverso relay MQTT pubblici e gratuiti (più di uno in parallelo). Sono servizi di terzi senza garanzie: se un giorno non fossero raggiungibili, la modalità a un solo schermo funziona comunque.
+
+## Sviluppo
 
 Requisiti: Node 22 e pnpm.
 
@@ -15,23 +30,9 @@ Requisiti: Node 22 e pnpm.
 pnpm install
 ```
 
-**Schermo singolo** (tablet, PC o telefono in orizzontale), anche offline una volta caricata:
-
 ```bash
 pnpm dev
 ```
-
-**Più dispositivi** (Schermo + Regia e/o pulsantiere sulla stessa Wi-Fi), con il server gratuito sul PC:
-
-```bash
-pnpm build
-```
-
-```bash
-pnpm server
-```
-
-Il server stampa l'indirizzo da aprire (es. `http://192.168.1.10:8787`). Sullo Schermo scegli *Sfida · più schermi*: compaiono i QR per Regia e pulsantiere.
 
 ## Dati
 

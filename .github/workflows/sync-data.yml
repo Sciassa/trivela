@@ -31,6 +31,6 @@ jobs:
           title: "data: aggiornamento settimanale dei pacchetti"
           body: |
             Aggiornamento automatico: storico Transfermarkt (riscaricato solo se il file pubblicato è cambiato).
-            Controlla i conteggi in `apps/web/public/packs/manifest.json` prima di fare il merge.
+            Controlla i conteggi in `apps/web/public/data/manifest.json` prima di fare il merge.
           add-paths: |
-            apps/web/public/packs/**
+            apps/web/public/data/**
