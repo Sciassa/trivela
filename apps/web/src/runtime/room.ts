@@ -1,106 +1,147 @@
-import { useEffect, useRef, useState } from "react";
-import type { Intent, MatchConfig, MatchState } from "@trivela/engine";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { EngineCtx, Intent, MatchState } from "@trivela/engine";
 import { playEvents } from "./useMatch";
+import { openRoom, relayParam, type RoomLink } from "./transport";
+import { RoomCore, roomCode, type ClientRole, type DownMsg, type Roster, type UpMsg } from "./roomCore";
 
-export type Role = "screen" | "host" | "p1" | "p2";
-export interface Roster {
-  screen: boolean;
-  host: boolean;
-  p1: boolean;
-  p2: boolean;
+export type { ClientRole, Roster };
+
+const NOBODY: Roster = { host: false, p1: false, p2: false };
+
+/** Link opened by the phones; it keeps the relay override, if any. */
+export function joinUrl(code: string, role: ClientRole): string {
+  const relay = relayParam();
+  return `${location.origin}${location.pathname}${relay ? `?relay=${encodeURIComponent(relay)}` : ""}#/join/${code}?r=${role}`;
 }
 
-function wsUrl(params: Record<string, string>): string {
-  const env = (import.meta.env.VITE_ROOM_SERVER as string | undefined) ?? "";
-  const base = env || `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}`;
-  return `${base}/ws?${new URLSearchParams(params).toString()}`;
+function savedCode(): string {
+  try {
+    const old = sessionStorage.getItem("trivela.room");
+    if (old) return old;
+    const code = roomCode();
+    sessionStorage.setItem("trivela.room", code);
+    return code;
+  } catch {
+    return roomCode();
+  }
 }
 
-/** WebSocket room client with clock sync and automatic reconnection. */
-export function useRoom(role: Role, code?: string) {
-  const [state, setState] = useState<MatchState | null>(null);
-  const [roomCode, setRoomCode] = useState(code ?? "");
-  const [roster, setRoster] = useState<Roster>({ screen: false, host: false, p1: false, p2: false });
-  const [error, setError] = useState("");
+/**
+ * The Screen device hosts the room: it runs the engine and is the only one
+ * holding questions and solutions. Phones connect through the relay.
+ */
+export function useHostedRoom(ctx: EngineCtx) {
+  const code = useMemo(savedCode, []);
   const [connected, setConnected] = useState(false);
-  const [timerStart, setTimerStart] = useState(Date.now());
-  const ws = useRef<WebSocket | null>(null);
-  const offset = useRef(0);
-  const codeRef = useRef(code ?? "");
+  const [, setTick] = useState(0);
+  const core = useRef<RoomCore | null>(null);
 
   useEffect(() => {
-    let closed = false;
-    let retry: number | undefined;
-    const connect = () => {
-      let token = "";
-      try {
-        token = sessionStorage.getItem(`trivela.token.${role}`) ?? "";
-      } catch {
-        /* ignore */
-      }
-      const params: Record<string, string> = { role };
-      if (codeRef.current) params.room = codeRef.current;
-      if (token) params.token = token;
-      const sock = new WebSocket(wsUrl(params));
-      ws.current = sock;
-      const samples: number[] = [];
-      sock.onopen = () => {
-        setConnected(true);
-        for (let i = 0; i < 5; i++) window.setTimeout(() => sock.readyState === 1 && sock.send(JSON.stringify({ t: "ping", c: Date.now() })), i * 200);
-      };
-      sock.onmessage = (ev) => {
-        const m = JSON.parse(ev.data as string);
-        if (m.t === "joined") {
-          codeRef.current = m.code;
-          setRoomCode(m.code);
-          try {
-            sessionStorage.setItem(`trivela.token.${role}`, m.token);
-          } catch {
-            /* ignore */
-          }
-        } else if (m.t === "pong") {
+    let link: RoomLink | null = null;
+    const room = new RoomCore(ctx, (ch, msg) => link?.send(typeof ch === "string" ? ch : `to/${ch.to}`, msg));
+    link = openRoom(code, (channel, from, msg) => channel === "up" && room.onMessage(from, msg as UpMsg), setConnected);
+    link.listen("up");
+    core.current = room;
+    let lastRev = -1;
+    room.onChange = () => {
+      if (room.state && room.rev !== lastRev) playEvents(room.state.events);
+      lastRev = room.rev;
+      setTick((t) => t + 1);
+    };
+    const sweep = window.setInterval(() => room.sweep(), 3000);
+    return () => {
+      window.clearInterval(sweep);
+      room.dispose();
+      link?.close();
+      core.current = null;
+    };
+  }, [code, ctx]);
+
+  const room = core.current;
+  return {
+    code,
+    connected,
+    state: room?.state ?? null,
+    roster: room?.roster() ?? NOBODY,
+    timerStart: room?.timerStart ?? 0,
+    judging: () => core.current?.judging() ?? "auto",
+    dispatch: (intent: Intent) => core.current?.intent("screen", intent),
+    start: (state: MatchState | null, matchCtx?: EngineCtx) => core.current?.start(state, matchCtx),
+  };
+}
+
+/** Phone side (Regia or controller): renders the views sent by the Screen. */
+export function useRoom(role: ClientRole, code: string) {
+  const [state, setState] = useState<MatchState | null>(null);
+  const [roster, setRoster] = useState<Roster>(NOBODY);
+  const [connected, setConnected] = useState(false);
+  const [live, setLive] = useState(false);
+  const [timerStart, setTimerStart] = useState(Date.now());
+  const link = useRef<RoomLink | null>(null);
+  const offset = useRef(0);
+
+  useEffect(() => {
+    let rev = 0;
+    let lastHeard = 0;
+    const samples: number[] = [];
+    const l = openRoom(
+      code,
+      (_channel, _from, raw) => {
+        const m = raw as DownMsg;
+        lastHeard = Date.now();
+        setLive(true);
+        if (m.t === "pong") {
           const now = Date.now();
-          const rtt = now - m.c;
-          samples.push(m.s - (m.c + rtt / 2));
-          offset.current = samples.slice().sort((a, b) => a - b)[Math.floor(samples.length / 2)]!;
-          sock.send(JSON.stringify({ t: "offset", offset: offset.current }));
+          samples.push(m.s - (m.c + (now - m.c) / 2));
+          offset.current = samples.slice(-9).sort((a, b) => a - b)[Math.floor(Math.min(samples.length, 9) / 2)]!;
+          if (m.rev !== rev) hello();
         } else if (m.t === "view") {
+          if (m.rev < rev && m.rev > rev - 1000) return; // late duplicate from another relay
+          rev = m.rev;
           setState(m.state);
           setRoster(m.roster);
-          setTimerStart(Date.now() - (m.now - m.timerStart));
-          if (role === "screen" && m.state) playEvents(m.state.events ?? []);
-        } else if (m.t === "roster") {
-          setRoster(m.roster);
-        } else if (m.t === "error") {
-          setError(m.msg);
+          setTimerStart(samples.length ? m.timerStart - offset.current : Date.now() - (m.now - m.timerStart));
         }
-      };
-      sock.onclose = () => {
-        setConnected(false);
-        if (!closed) retry = window.setTimeout(connect, 1500);
-      };
-    };
-    connect();
+      },
+      (ok) => {
+        setConnected(ok);
+        if (ok) {
+          hello();
+          for (let i = 0; i < 5; i++) window.setTimeout(ping, 150 + i * 250);
+        }
+      },
+    );
+    link.current = l;
+    const hello = () => l.send("up", { t: "hello", role, rev } satisfies UpMsg);
+    const ping = () => l.send("up", { t: "ping", c: Date.now() } satisfies UpMsg);
+    l.listen(role === "host" ? "host" : "pub");
+    l.listen(`to/${l.id}`);
+    const beat = window.setInterval(() => {
+      hello();
+      ping();
+      if (Date.now() - lastHeard > 9000) setLive(false);
+    }, 3000);
+    const bye = () => l.send("up", { t: "bye" } satisfies UpMsg);
+    window.addEventListener("pagehide", bye);
     return () => {
-      closed = true;
-      window.clearTimeout(retry);
-      ws.current?.close();
+      window.clearInterval(beat);
+      window.removeEventListener("pagehide", bye);
+      bye();
+      window.setTimeout(() => l.close(), 200);
+      link.current = null;
     };
-  }, [role]);
+  }, [role, code]);
 
-  const send = (m: unknown) => ws.current?.readyState === 1 && ws.current.send(JSON.stringify(m));
   return {
     state,
     roster,
-    code: roomCode,
-    error,
+    code,
     connected,
+    live,
     timerStart,
-    dispatch: (intent: Intent) => send({ t: "intent", intent }),
-    buzz: () => send({ t: "buzz", at: Date.now() }),
-    setup: (config: Omit<MatchConfig, "judging" | "seed">) => {
-      setError("");
-      send({ t: "setup", config });
-    },
+    dispatch: (intent: Intent) => link.current?.send("up", { t: "intent", intent } satisfies UpMsg),
+    buzz: () => link.current?.send("up", { t: "buzz", at: Date.now() + offset.current } satisfies UpMsg),
   };
 }
+
+export type RoomClient = ReturnType<typeof useRoom>;

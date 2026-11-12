@@ -30,11 +30,11 @@ export function useLocalMatch(initial: MatchState, ctx: EngineCtx) {
     return () => window.clearTimeout(id);
   }, [state.timer?.id, dispatch]);
 
-  // Music intensity: tension in the final, faster while a timer runs.
+  // Music intensity: tension in the last game, faster while a timer runs.
   useEffect(() => {
-    const g = state.order[state.gameIdx];
-    audio.setIntensity(g === "cassaforte" && state.phase === "playing" ? 2 : state.timer ? 1 : 0);
-  }, [state.timer?.id, state.phase, state.gameIdx, state.order]);
+    const last = state.gameIdx === state.order.length - 1;
+    audio.setIntensity(last && state.phase === "playing" ? 2 : state.timer ? 1 : 0);
+  }, [state.timer?.id, state.phase, state.gameIdx, state.order.length]);
 
   return { state, dispatch, timerStart };
 }

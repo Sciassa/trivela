@@ -1,42 +1,99 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createPortal, flushSync } from "react-dom";
 import { suggest, type MatchIndex } from "@trivela/matcher";
-import type { SourceRef } from "@trivela/protocol";
+import type { PlayerIdx, SourceRef } from "@trivela/protocol";
 import type { MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { GAME_NAMES } from "../rules";
+import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
 
-/* ------------------------------------------------------------ Stage 16:9 */
+/* ------------------------------------------------------------ contexts */
 
-export function Stage({ children, scanlines = true }: { children: ReactNode; scanlines?: boolean }) {
-  const [scale, setScale] = useState(1);
+/** True inside the scaled stage (text inputs open the typing bar on touch devices). */
+const StageCtx = createContext(false);
+
+export interface PlayMode {
+  /** Screen of a room with phones connected: inputs live on the phones. */
+  readonly: boolean;
+  /** This device may press AVANTI / VIA. */
+  flow: boolean;
+  /** Controller layout (phone of a player). */
+  pad: boolean;
+}
+export const PlayCtx = createContext<PlayMode>({ readonly: false, flow: true, pad: false });
+export const usePlay = () => useContext(PlayCtx);
+
+/* ------------------------------------------------------------ Stage */
+
+const BASE_W = 1600;
+const BASE_H = 900;
+
+/**
+ * The stage always fills the viewport: a virtual canvas of at least 1600×900
+ * (smaller on phones, so that text and buttons stay big) scaled to the device.
+ */
+function stageMetrics() {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const scale = Math.max(Math.min(vw / BASE_W, vh / BASE_H), Math.min(0.6, vh / 620, vw / 1100));
+  return { scale, w: Math.ceil(vw / scale), h: Math.ceil(vh / scale) };
+}
+
+export function Stage({ children }: { children: ReactNode }) {
+  const [m, setM] = useState(stageMetrics);
   useLayoutEffect(() => {
-    const fit = () => setScale(Math.min(window.innerWidth / 1600, window.innerHeight / 900));
-    fit();
+    const fit = () => {
+      // keep the layout still while the on-screen keyboard is open
+      if (document.documentElement.dataset.typing) return;
+      setM(stageMetrics());
+    };
     window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    return () => {
+      window.removeEventListener("resize", fit);
+      window.removeEventListener("orientationchange", fit);
+    };
   }, []);
   return (
-    <div className="stage-wrap need-landscape">
-      <RotateOverlay to="orizzontale" />
-      <div className={`stage ${scanlines ? "scanlines" : ""}`} style={{ transform: `translate(-50%, -50%) scale(${scale})` }}>
-        {children}
+    <StageCtx.Provider value={true}>
+      <div className="stage-wrap need-landscape">
+        <RotateOverlay />
+        <div className={`stage ${m.h < 760 ? "short" : ""}`} style={{ width: m.w, height: m.h, transform: `scale(${m.scale})` }}>
+          <Backdrop />
+          <div className="stage-body">{children}</div>
+          <div className="scanlines" />
+        </div>
+        <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
+          <filter id="paper-noise">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n" />
+            <feColorMatrix in="n" type="saturate" values="0" result="g" />
+            <feComponentTransfer in="g" result="a">
+              <feFuncA type="table" tableValues="0 0.08" />
+            </feComponentTransfer>
+            <feComposite in="a" in2="SourceGraphic" operator="in" result="m" />
+            <feBlend in="SourceGraphic" in2="m" mode="multiply" />
+          </filter>
+        </svg>
       </div>
-      <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
-        <filter id="paper-noise">
-          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n" />
-          <feColorMatrix in="n" type="saturate" values="0" result="g" />
-          <feComponentTransfer in="g" result="a">
-            <feFuncA type="table" tableValues="0 0.08" />
-          </feComponentTransfer>
-          <feComposite in="a" in2="SourceGraphic" operator="in" result="m" />
-          <feBlend in="SourceGraphic" in2="m" mode="multiply" />
-        </filter>
-      </svg>
+    </StageCtx.Provider>
+  );
+}
+
+/** Night stadium: stars, floodlights, crowd and pitch (pure CSS). */
+export function Backdrop() {
+  return (
+    <div className="backdrop" aria-hidden>
+      <div className="bd-stars" />
+      <div className="bd-stars far" />
+      <div className="bd-beam left" />
+      <div className="bd-beam right" />
+      <div className="bd-crowd" />
+      <div className="bd-pitch" />
     </div>
   );
 }
 
-export function RotateOverlay({ to }: { to: "orizzontale" | "verticale" }) {
+export function RotateOverlay() {
   return (
     <div className="rotate-overlay">
       <div>
@@ -44,7 +101,7 @@ export function RotateOverlay({ to }: { to: "orizzontale" | "verticale" }) {
         <p className="px" style={{ fontSize: 14, lineHeight: 1.8 }}>
           Ruota il dispositivo
           <br />
-          in {to}
+          in orizzontale
         </p>
       </div>
     </div>
@@ -73,27 +130,123 @@ export function useWakeLock(active: boolean) {
   }, [active]);
 }
 
+/* ------------------------------------------------------------ Fit */
+
+/**
+ * Auto-fit: when the content is taller than the available area it is scaled
+ * down (and given proportionally more width), so nothing is ever cut off.
+ */
+export function Fit({ children, center = false, className = "" }: { children: ReactNode; center?: boolean; className?: string }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const o = outer.current!;
+    const i = inner.current!;
+    const fit = () => {
+      const W = o.clientWidth;
+      const H = o.clientHeight;
+      if (!W || !H) return;
+      const measure = (k: number) => {
+        i.style.width = `${W / k}px`;
+        return i.offsetHeight * k;
+      };
+      let k = 1;
+      if (measure(1) > H) {
+        let lo = 0.3;
+        let hi = 1;
+        for (let n = 0; n < 7; n++) {
+          const mid = (lo + hi) / 2;
+          if (measure(mid) <= H) lo = mid;
+          else hi = mid;
+        }
+        k = lo;
+      }
+      const h = measure(k);
+      i.style.transform = `translateY(${center ? Math.max(0, (H - h) / 2) : 0}px) scale(${k})`;
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(o);
+    ro.observe(i);
+    // focusing an input must never scroll the clipped area
+    const unscroll = () => {
+      o.scrollTop = 0;
+      o.scrollLeft = 0;
+    };
+    o.addEventListener("scroll", unscroll);
+    return () => {
+      ro.disconnect();
+      o.removeEventListener("scroll", unscroll);
+    };
+  }, [center]);
+  return (
+    <div ref={outer} className={`fit ${className}`}>
+      <div ref={inner} className="fit-inner">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------ Scoreboard */
+
+function useCountUp(value: number): number {
+  const [shown, setShown] = useState(value);
+  useEffect(() => {
+    if (shown === value) return;
+    const t = window.setTimeout(() => setShown((s) => s + Math.sign(value - s) * Math.max(1, Math.round(Math.abs(value - s) / 4))), 45);
+    return () => window.clearTimeout(t);
+  }, [shown, value]);
+  return shown;
+}
+
+function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
+  const score = state.scores[p];
+  const shown = useCountUp(score);
+  const [delta, setDelta] = useState<{ v: number; id: number } | null>(null);
+  const prev = useRef(score);
+  useEffect(() => {
+    if (score !== prev.current) {
+      setDelta({ v: score - prev.current, id: Date.now() });
+      prev.current = score;
+    }
+  }, [score]);
+  const turn = state.phase === "playing" && state.game?.turn === p;
+  return (
+    <div className={`hud-player p${p + 1} ${turn ? "turn" : ""}`}>
+      <Sprite name="face" size={64} className="hud-face" />
+      <div className="hud-id">
+        <span className="hud-name">{state.config.players[p]}</span>
+        <span className="hud-tag">{turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
+      </div>
+      <span className={`hud-score ${shown !== score ? "rolling" : ""}`}>{shown}</span>
+      {delta && (
+        <span key={delta.id} className={`hud-delta ${delta.v > 0 ? "plus" : "minus"}`}>
+          {delta.v > 0 ? `+${delta.v}` : delta.v}
+        </span>
+      )}
+    </div>
+  );
+}
 
 export function Scoreboard({ state }: { state: MatchState }) {
   const g = state.order[state.gameIdx];
-  const turn = state.game?.turn as 0 | 1 | null | undefined;
   return (
-    <div className="scoreboard">
-      {[0, 1].map((p) => (
-        <div key={p} className={`sb-player ${p === 1 ? "right" : ""} ${p === 0 ? "c-p1" : "c-p2"}`} style={{ order: p === 0 ? 0 : 2 }}>
-          {p === 1 && <span className="sb-name">{state.config.players[p]}</span>}
-          <span className={`sb-score ${turn === p && state.phase === "playing" ? "sb-turn" : ""}`}>{state.scores[p]}</span>
-          {p === 0 && <span className="sb-name">{state.config.players[p]}</span>}
+    <header className="hud">
+      <PlayerCard state={state} p={0} />
+      <div className="hud-mid" style={{ "--game": g ? GAME_COLORS[g] : "var(--accent)" } as CSSProperties}>
+        <div className="hud-game">
+          {g ? <GameIcon game={g} size={40} /> : <Sprite name="ball" size={40} />}
+          <span>{g ? GAME_NAMES[g] : "TRIVELA"}</span>
         </div>
-      ))}
-      <div className="sb-mid" style={{ order: 1 }}>
-        {g ? GAME_NAMES[g] : "TRIVELA"}
-        <small>
-          GIOCO {Math.min(state.gameIdx + 1, state.order.length)}/{state.order.length}
-        </small>
+        <div className="hud-pips">
+          {state.order.map((x, k) => (
+            <i key={x} className={k < state.gameIdx ? "done" : k === state.gameIdx ? "now" : ""} />
+          ))}
+        </div>
       </div>
-    </div>
+      <PlayerCard state={state} p={1} />
+    </header>
   );
 }
 
@@ -106,7 +259,7 @@ export function TimerBar({ ms, start, id }: { ms: number; start: number; id: num
     const t = window.setInterval(() => setNow(Date.now()), 100);
     return () => window.clearInterval(t);
   }, [id]);
-  const left = Math.max(0, ms - (now - start));
+  const left = Math.max(0, Math.min(ms, ms - (now - start)));
   const sec = Math.ceil(left / 1000);
   useEffect(() => {
     if (sec <= 5 && sec > 0 && sec !== lastTick.current) {
@@ -115,19 +268,17 @@ export function TimerBar({ ms, start, id }: { ms: number; start: number; id: num
     }
   }, [sec]);
   return (
-    <div className="row">
-      <div className={`timer grow ${left < 5000 ? "hurry" : ""}`}>
-        <div style={{ transform: `scaleX(${left / ms})` }} />
+    <div className={`timer ${left < 5000 ? "hurry" : ""}`}>
+      <div className="timer-track">
+        <div className="timer-fill" style={{ transform: `scaleX(${left / ms})` }} />
       </div>
-      <span className="px" style={{ width: 60, textAlign: "right" }}>
-        {sec}
-      </span>
+      <span className="timer-num">{sec}</span>
     </div>
   );
 }
 
 export function StateTimer({ state, start }: { state: MatchState; start: number }) {
-  if (!state.timer || state.timer.kind === "feedback" || state.timer.kind === "ready") return <div style={{ height: 20 }} />;
+  if (!state.timer || state.timer.kind === "feedback" || state.timer.kind === "ready") return <div className="timer idle" />;
   return <TimerBar key={state.timer.id} ms={state.timer.ms} start={start} id={state.timer.id} />;
 }
 
@@ -138,23 +289,27 @@ export function Copione({ text, sources }: { text: string | null | undefined; so
   useEffect(() => {
     setN(0);
     if (!text) return;
-    const t = window.setInterval(() => setN((x) => (x >= text.length ? x : x + 2)), 18);
+    const t = window.setInterval(() => setN((x) => (x >= text.length ? x : x + 3)), 18);
     return () => window.clearInterval(t);
   }, [text]);
   if (!text) return null;
   return (
     <div className="copione" onClick={() => setN(text.length)}>
-      {text.slice(0, n)}
-      {n < text.length && <span className="blink">▌</span>}
-      {sources && n >= text.length && <Sources sources={sources} />}
+      {/* the full text keeps the box at its final size while the typewriter runs */}
+      <span className="copione-ghost">{text}</span>
+      <span className="copione-text">
+        {text.slice(0, n)}
+        {n < text.length && <span className="blink">▌</span>}
+      </span>
+      {sources && <Sources sources={sources} />}
     </div>
   );
 }
 
 export function Sources({ sources }: { sources: SourceRef[] }) {
   return (
-    <div className="sources" style={{ marginTop: 10 }}>
-      Fonti:{" "}
+    <div className="sources">
+      Fonte:{" "}
       {sources.map((s, i) => (
         <span key={i}>
           {i > 0 && " · "}
@@ -167,141 +322,206 @@ export function Sources({ sources }: { sources: SourceRef[] }) {
   );
 }
 
-/* ------------------------------------------------------------ Keyboard + answer */
+/* ------------------------------------------------------------ Text entry */
 
-const ROWS = ["QWERTYUIOP", "ASDFGHJKL'", "ZXCVBNM-"];
+const isCoarse = () => typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
 
-export function PixelKeyboard({ onKey, compact }: { onKey: (k: string) => void; compact?: boolean }) {
-  const size = compact ? { minWidth: 40, height: 44, fontSize: 13 } : undefined;
-  return (
-    <div className="kbd">
-      {ROWS.map((r) => (
-        <div key={r} className="kbd-row">
-          {r.split("").map((c) => (
-            <button key={c} style={size} onPointerDown={(e) => (e.preventDefault(), onKey(c.toLowerCase()))}>
-              {c}
-            </button>
-          ))}
-        </div>
+/** The spelling helper can be switched off from the options page. */
+export function spellerOn(): boolean {
+  try {
+    return localStorage.getItem("trivela.speller") !== "off";
+  } catch {
+    return true;
+  }
+}
+export function setSpeller(on: boolean): void {
+  try {
+    localStorage.setItem("trivela.speller", on ? "on" : "off");
+  } catch {
+    /* ignore */
+  }
+}
+
+/**
+ * Text field. With `index` it shows the zero-information spelling helper,
+ * which only sees the typed text and the global index (never the question).
+ * Inside the stage, on touch devices, typing happens in a bar pinned to the
+ * top of the viewport so the on-screen keyboard never covers it.
+ */
+export function TextEntry({
+  value,
+  onChange,
+  onEnter,
+  index,
+  placeholder = "Scrivi la risposta",
+  autoFocus = false,
+  numeric = false,
+  color,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onEnter?: () => void;
+  index?: MatchIndex;
+  placeholder?: string;
+  autoFocus?: boolean;
+  numeric?: boolean;
+  color?: string;
+}) {
+  const inStage = useContext(StageCtx);
+  const overlay = useMemo(() => inStage && isCoarse(), [inStage]);
+  const [open, setOpen] = useState(false);
+  const { pad } = usePlay();
+  const helper = useMemo(spellerOn, []);
+  const bar = useRef<HTMLInputElement>(null);
+  const sugg = useMemo(() => (index && helper ? suggest(value, index) : []), [value, index, helper]);
+
+  const close = () => {
+    setOpen(false);
+    delete document.documentElement.dataset.typing;
+    window.dispatchEvent(new Event("resize"));
+  };
+  useEffect(() => () => void (open && close()), [open]);
+
+  // controllers have no people index: the Screen judges their answers
+  const chips = index && !pad && sugg.length > 0 && (
+    <div className="suggest" aria-label="Correttore ortografico">
+      {sugg.map((s) => (
+        <button key={s.name} type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => onChange(s.name)}>
+          {s.name}
+        </button>
       ))}
-      <div className="kbd-row">
-        <button className="wide" onPointerDown={(e) => (e.preventDefault(), onKey("⌫"))}>
-          ⌫
-        </button>
-        <button className="wide" style={{ minWidth: 260 }} onPointerDown={(e) => (e.preventDefault(), onKey(" "))}>
-          SPAZIO
-        </button>
-        <button className="wide" onPointerDown={(e) => (e.preventDefault(), onKey("⏎"))}>
-          OK
-        </button>
+    </div>
+  );
+  const common = {
+    value,
+    placeholder,
+    autoComplete: "off",
+    autoCorrect: "off",
+    autoCapitalize: "off",
+    spellCheck: false,
+    inputMode: numeric ? ("numeric" as const) : ("text" as const),
+    enterKeyHint: "done" as const,
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(numeric ? e.target.value.replace(/\D/g, "") : e.target.value),
+  };
+  if (!overlay) {
+    return (
+      <div className="entry">
+        <input className="input" style={{ borderColor: color }} autoFocus={autoFocus} onKeyDown={(e) => e.key === "Enter" && onEnter?.()} {...common} />
+        {chips}
       </div>
+    );
+  }
+  return (
+    <div className="entry">
+      <button
+        type="button"
+        className={`input fake ${value ? "" : "empty"}`}
+        style={{ borderColor: color }}
+        onClick={() => {
+          document.documentElement.dataset.typing = "1";
+          flushSync(() => setOpen(true));
+          bar.current?.focus();
+        }}
+      >
+        {value || placeholder}
+        <span className="fake-hint">✎ tocca per scrivere</span>
+      </button>
+      {chips}
+      {open &&
+        createPortal(
+          <div className="typebar" onPointerDown={(e) => e.target === e.currentTarget && close()}>
+            <div className="typebar-row">
+              <input
+                ref={bar}
+                className="typebar-input"
+                onBlur={close}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    close();
+                    onEnter?.();
+                  }
+                }}
+                {...common}
+              />
+              <button
+                type="button"
+                className="typebar-ok"
+                onPointerDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  close();
+                  onEnter?.();
+                }}
+              >
+                OK
+              </button>
+            </div>
+            {chips}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
 
-/**
- * Text answer with the zero-information spelling helper. The helper only sees
- * the typed text and the global index (never the question).
- */
+/** Single text answer with submit button. */
 export function AnswerBox({
   index,
   onSubmit,
-  placeholder = "Scrivi la risposta",
-  keyboard = true,
+  placeholder,
   submitLabel = "INVIA",
   autoFocus = true,
 }: {
   index: MatchIndex;
   onSubmit: (text: string) => void;
   placeholder?: string;
-  keyboard?: boolean;
   submitLabel?: string;
   autoFocus?: boolean;
 }) {
   const [text, setText] = useState("");
-  const [helper, setHelper] = useState(() => {
-    try {
-      return localStorage.getItem("trivela.speller") !== "off";
-    } catch {
-      return true;
-    }
-  });
-  const sugg = useMemo(() => (helper ? suggest(text, index) : []), [text, index, helper]);
-  const submit = (t = text) => {
-    if (!t.trim()) return;
-    onSubmit(t.trim());
+  const submit = () => {
+    if (!text.trim()) return;
+    onSubmit(text.trim());
     setText("");
   };
-  const onKey = (k: string) => {
-    audio.play("blip");
-    if (k === "⌫") setText((t) => t.slice(0, -1));
-    else if (k === "⏎") submit();
-    else setText((t) => t + k);
-  };
   return (
-    <div className="col" style={{ gap: 10 }}>
-      <div className="row">
-        <input
-          className="input"
-          value={text}
-          placeholder={placeholder}
-          autoFocus={autoFocus}
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && submit()}
-          inputMode={keyboard ? "none" : "text"}
-        />
-        <button className="btn" onClick={() => submit()}>
-          {submitLabel}
-        </button>
-      </div>
-      <div className="suggest" aria-label="Correttore ortografico">
-        {sugg.map((s) => (
-          <button key={s.name} onClick={() => setText(s.name)}>
-            {s.name}
-          </button>
-        ))}
-        <span className="grow" />
-        <button
-          onClick={() => {
-            const v = !helper;
-            setHelper(v);
-            try {
-              localStorage.setItem("trivela.speller", v ? "on" : "off");
-            } catch {
-              /* ignore */
-            }
-          }}
-        >
-          correttore: {helper ? "ON" : "OFF"}
-        </button>
-      </div>
-      {keyboard && <PixelKeyboard onKey={onKey} />}
+    <div className="answer">
+      <TextEntry value={text} onChange={setText} onEnter={submit} index={index} placeholder={placeholder} autoFocus={autoFocus} />
+      <button className="btn" onClick={submit}>
+        {submitLabel}
+      </button>
     </div>
   );
 }
 
-/* ------------------------------------------------------------ Score picker */
+/** Shown on the big screen in place of the inputs when the players use their phones. */
+export function PhoneHint({ text = "Si risponde dal telefono" }: { text?: string }) {
+  return (
+    <div className="phone-hint">
+      <Sprite name="phone" size={44} /> {text}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Pickers */
 
 export function ScorePicker({ teams, onSubmit, children }: { teams: [string, string]; onSubmit: (s: [number, number]) => void; children?: ReactNode }) {
   const [s, setS] = useState<[number, number]>([0, 0]);
-  const step = (i: 0 | 1, d: number) => setS((x) => (i === 0 ? [Math.max(0, x[0] + d), x[1]] : [x[0], Math.max(0, x[1] + d)]));
+  const step = (i: 0 | 1, d: number) => {
+    audio.play("blip");
+    setS((x) => (i === 0 ? [Math.max(0, Math.min(15, x[0] + d)), x[1]] : [x[0], Math.max(0, Math.min(15, x[1] + d))]));
+  };
   return (
     <div className="col">
-      <div className="row" style={{ justifyContent: "center", gap: 40 }}>
-        {[0, 1].map((i) => (
-          <div key={i} className="col center" style={{ gap: 8 }}>
-            <span style={{ fontSize: 34 }}>{teams[i]}</span>
-            <div className="row">
-              <button className="btn ghost" onClick={() => step(i as 0 | 1, -1)}>
+      <div className="score-picker">
+        {([0, 1] as const).map((i) => (
+          <div key={i} className="sp-team">
+            <span className="sp-name">{teams[i]}</span>
+            <div className="sp-ctl">
+              <button className="btn ghost sq" onClick={() => step(i, -1)} aria-label={`meno ${teams[i]}`}>
                 −
               </button>
-              <span className="px" style={{ fontSize: 64, minWidth: 90, textAlign: "center" }}>
-                {s[i]}
-              </span>
-              <button className="btn ghost" onClick={() => step(i as 0 | 1, 1)}>
+              <span className="led big">{s[i]}</span>
+              <button className="btn ghost sq" onClick={() => step(i, 1)} aria-label={`più ${teams[i]}`}>
                 +
               </button>
             </div>
@@ -309,19 +529,58 @@ export function ScorePicker({ teams, onSubmit, children }: { teams: [string, str
         ))}
       </div>
       {children}
-      <button className="btn" onClick={() => onSubmit(s)}>
-        CONFERMA
+      <button className="btn wide" onClick={() => onSubmit(s)}>
+        CONFERMA IL RISULTATO
       </button>
     </div>
   );
 }
 
-export function NextButton({ onClick, label = "AVANTI ▶" }: { onClick: () => void; label?: string }) {
+/** Numeric keypad for shirt numbers (also driven by the physical keyboard). */
+export function NumberPad({ onSubmit }: { onSubmit: (n: string) => void }) {
+  const [v, setV] = useState("");
+  const ref = useRef(v);
+  ref.current = v;
+  const key = (k: string) => {
+    audio.play("blip");
+    if (k === "⌫") setV((x) => x.slice(0, -1));
+    else if (k === "OK") ref.current && onSubmit(ref.current);
+    else setV((x) => (x + k).replace(/^0+(?=\d)/, "").slice(0, 2));
+  };
   useEffect(() => {
-    const h = (e: KeyboardEvent) => e.key === "Enter" && onClick();
+    const h = (e: KeyboardEvent) => {
+      if (/^\d$/.test(e.key)) key(e.key);
+      else if (e.key === "Backspace") key("⌫");
+      else if (e.key === "Enter") key("OK");
+    };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [onClick]);
+  }, []);
+  return (
+    <div className="numpad">
+      <div className="numpad-display led big">{v || "–"}</div>
+      <div className="numpad-keys">
+        {["1", "2", "3", "4", "5", "6", "7", "8", "9", "⌫", "0", "OK"].map((k) => (
+          <button key={k} className={`btn ${k === "OK" ? "ok" : "ghost"} sq`} disabled={k === "OK" && !v} onClick={() => key(k)}>
+            {k}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Flow */
+
+export function NextButton({ onClick, label = "AVANTI ▶" }: { onClick: () => void; label?: string }) {
+  const { flow } = usePlay();
+  useEffect(() => {
+    if (!flow) return;
+    const h = (e: KeyboardEvent) => e.key === "Enter" && !(e.target instanceof HTMLInputElement) && onClick();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [onClick, flow]);
+  if (!flow) return <span className="px dim wait-host">LA REGIA PROSEGUE…</span>;
   return (
     <button className="btn next" onClick={onClick}>
       {label}
@@ -333,8 +592,60 @@ export function Result({ last, players }: { last: { player: 0 | 1 | null; points
   if (!last) return null;
   const who = last.player === null ? "" : players[last.player];
   return (
-    <div className={`px ${last.ok ? "c-ok" : "c-ko"}`} style={{ fontSize: 22 }}>
-      {last.ok ? "ESATTO!" : "NO!"} {who} {last.points > 0 ? `+${last.points}` : last.points < 0 ? last.points : ""}
+    <div className={`result ${last.ok ? "ok" : "ko"}`}>
+      <span className="result-word">{last.ok ? "ESATTO!" : "NO!"}</span>
+      {last.points !== 0 && (
+        <span className="result-pts">
+          {who} {last.points > 0 ? `+${last.points}` : last.points}
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Effects */
+
+const CONFETTI = ["var(--accent)", "var(--p1)", "var(--p2)", "var(--ok)", "#ffffff"];
+
+export function Confetti({ count = 36, rain = false }: { count?: number; rain?: boolean }) {
+  const bits = useMemo(
+    () =>
+      Array.from({ length: count }, (_, k) => ({
+        left: Math.random() * 100,
+        delay: Math.random() * (rain ? 3 : 0.25),
+        dur: (rain ? 2.6 : 0.9) + Math.random() * 1.2,
+        dx: (Math.random() - 0.5) * 240,
+        size: 10 + Math.floor(Math.random() * 3) * 6,
+        color: CONFETTI[k % CONFETTI.length]!,
+      })),
+    [count, rain],
+  );
+  return (
+    <div className={`confetti ${rain ? "rain" : "burst"}`} aria-hidden>
+      {bits.map((b, k) => (
+        <i key={k} style={{ left: `${b.left}%`, width: b.size, height: b.size, background: b.color, animationDelay: `${b.delay}s`, animationDuration: `${b.dur}s`, "--dx": `${b.dx}px` } as CSSProperties} />
+      ))}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Pages (forms outside the stage) */
+
+export function Page({ title, onBack, children, wide = false }: { title: string; onBack?: () => void; children: ReactNode; wide?: boolean }) {
+  return (
+    <div className="page">
+      <div className="page-bg" aria-hidden />
+      <div className={`page-body ${wide ? "wide" : ""}`}>
+        <div className="page-head">
+          {onBack && (
+            <button className="btn ghost sq" onClick={onBack} aria-label="Indietro">
+              ◀
+            </button>
+          )}
+          <h1 className="px">{title}</h1>
+        </div>
+        {children}
+      </div>
     </div>
   );
 }

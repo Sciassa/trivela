@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v1.1 — prima versione giocabile (dati: Mondiali FIFA 1930–2026). Vincolo: tutto gratuito.**
+> Stato: **v5 — 10 giochi, stanze senza server, interfaccia adattiva (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -13,10 +13,10 @@ Principi che nessuna feature può violare:
 
 | # | Principio | Conseguenza pratica |
 |---|---|---|
-| P1 | **Zero fatti non verificati.** Nell'app entra solo ciò che è confermato da fonti affidabili. | Regola delle due famiglie di fonti (§8.3). Nessun LLM genera fatti a runtime. |
+| P1 | **Zero fatti non verificati.** Nell'app entra solo ciò che è calcolato su dati affidabili e coerenti. | Una sola fonte uniforme con controlli di completezza (§0.5, §0.6). Nessun LLM, né in gioco né nella pipeline. |
 | P2 | **Niente è contestabile.** | Nessun pulsante "contesta", "segnala errore" o override tra giocatori. Regole di accettazione fisse e pubblicate (§10). Statistiche sempre con definizione e data di aggiornamento. |
 | P3 | **L'aiuto ortografico non dà alcuna informazione sulla risposta.** | È un correttore, non un completatore; è funzione pura del solo testo digitato (§10.3). Proprietà testata in CI. |
-| P4 | **Argomento a piacere completamente libero.** | Input testuale libero, senza liste; generazione deterministica dal grafo con espansione (§7). |
+| P4 | *(rimosso con la v5: l'argomento a piacere non esiste più, §0.6)* | — |
 | P5 | **Domande "da maniaco", mai da quiz generalista.** | Archetipi (§8.6), filtro di curiosità, distrattori verificati. |
 | P6 | **Identità originale.** | Nessun nome, logo, persona reale o testata giornalistica reale usati come branding. Il conduttore è un ruolo generico; il giornale è di fantasia. |
 | P7 | **Fonti usate nel rispetto dei loro termini.** | Nessuno scraping massivo di siti che lo vietano (§8.1). |
@@ -174,10 +174,52 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ---
 
+## 0.6 Decisione v5: 10 giochi, niente argomento, round brevi, stanze senza server
+
+Decisione del committente (novembre 2026). Questa sezione prevale su tutte le precedenti.
+
+**Giochi e partita**
+
+- **Rimossi**: l'argomento a piacere, *La Cassaforte*, *L'Intruso*, *Il Filo Rosso*, *Il Mappamondo*. Restano 10 giochi (§4).
+- Una partita è fatta di **5 giochi sorteggiati su 10**; non c'è più un gioco finale fisso. Vince chi ha più punti.
+- **Round brevi**: al massimo 2 domande a testa per gioco (Tiro Secco, Frame, Maglia); 2 profili per i giochi a prenotazione (Mercato, Giramondo); 2 categorie per l'Asta; **una sola** lista per Decina e Dischetto, una partita per la Formazione, una prima pagina a testa.
+- **La Maglia** è capovolta: si mostrano giocatore, squadra e stagione e si risponde con il **numero** (tastierino numerico).
+- **Il Giramondo** mostra la carriera in **ordine cronologico** (anno del trasferimento → squadra), non più dal club meno noto al più noto.
+- **Dal Dischetto**: se più giocatori sono a pari merito all'ultimo posto utile, valgono finché restano posti nella Top 10 (es. 7 nomi a pari merito dal 6° posto: ne valgono 5).
+- Nel sorteggio delle domande i **tipi di domanda si alternano** (campionamento uniforme per generatore), così una partita non è dominata dal tipo con più istanze.
+
+**Dati**
+
+- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, prima_pagina 1300, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, frame 1500, asta 1500, maglia 1500.
+- Fonte unica Transfermarkt (§0.5) con uno **strato di fatti verificati**: una partita entra nelle statistiche solo se gli eventi-gol tornano con il risultato (rigori delle serie finali ricalcolati a parte) e, dove serve, se presenze e formazioni sono complete (11 + 11). Classifiche ed elenchi si calcolano solo su finestre (competizione, squadra, stagioni) interamente coperte, e le dichiarano nel titolo.
+- **Unica eccezione alla fonte unica**: le **date di nascita degli allenatori**, che Transfermarkt non fornisce nel dataset, vengono da **Wikidata** (CC0; allenatori con identificativo Transfermarkt P2447, abbinati solo per nome esatto e univoco). File versionato: `data/static/managers.json`. Servono alle curiosità del tipo «quale allenatore ha vinto nel giorno del suo compleanno?» e «quali due allenatori nati lo stesso giorno si sono affrontati?».
+- 18 tipi di curiosità per il Tiro Secco (compleanni, gemelli di data di nascita, gol e autogol nella stessa partita, rossi lampo, rimonte, gol dalla panchina, omonimi, doppie maglie…), ognuno con distrattori verificati come errati.
+- **Un solo nome per persona**: l'indice dei nomi contiene solo persone (giocatori, allenatori, arbitri) con l'identificativo della fonte; i profili doppi (stesso nome e data di nascita) sono fusi. Due persone con nome identico restano distinte e la risposta è accettata se coincide con una qualsiasi di loro.
+
+**Più dispositivi senza server** (sostituisce §12.1–§12.3)
+
+- Basta aprire il sito pubblicato (GitHub Pages) su ogni dispositivo: non c'è alcun server nostro da avviare.
+- Lo **Schermo ospita la stanza**: esegue il motore, è l'unico a scaricare domande e soluzioni e a giudicare le risposte. I telefoni mandano intenzioni e ricevono viste già filtrate.
+- Due modalità: **senza conduttore** (Schermo + 2 telefoni-pulsantiera) e **con conduttore** (Schermo + 1 telefono-Regia che vede soluzioni e copione e convalida le risposte a voce). Lo Schermo può essere un PC, una TV, un tablet o un telefono in orizzontale.
+- Trasporto: i messaggi passano da **relay MQTT pubblici e gratuiti** su WebSocket sicuro (quattro in parallelo, di cui uno sulla porta 443; ne basta uno raggiungibile e i doppioni vengono scartati). Non serve la stessa Wi-Fi. Il contenuto è **cifrato** (AES-GCM) con una chiave derivata dal codice stanza: il relay vede solo byte opachi. I relay sono servizi di terzi senza garanzie: se non sono raggiungibili resta sempre la modalità a schermo singolo. **Da verificare sul campo**: i test automatici usano un relay MQTT locale con lo stesso protocollo, perché l'ambiente di sviluppo non raggiunge quelli pubblici.
+- Canali separati: le pulsantiere ricevono solo la vista pubblica (mai le soluzioni); la Regia riceve le soluzioni del solo gioco in corso.
+- Codice stanza di **5 lettere** + QR per ruolo. Presenza con battiti periodici; arbitraggio del pulsante su tempi corretti con finestra di 250 ms.
+- Il server Node per la rete locale (`apps/realtime`) è stato rimosso.
+
+**Interfaccia**
+
+- Il palco **riempie sempre lo schermo**: tela virtuale di almeno 1600×900 (più piccola sui telefoni, così testi e pulsanti restano grandi) che si allarga o si alza secondo il formato del dispositivo.
+- **Adattamento automatico**: se il contenuto non entra nell'area, viene rimpicciolito quanto basta (e riceve più larghezza). Niente testi o riquadri tagliati.
+- Sui dispositivi touch, dentro il palco, si scrive in una **barra fissata in alto** con la tastiera di sistema (la tastiera pixel a schermo è stata tolta): la tastiera non copre mai ciò che si sta scrivendo.
+- Grafica: stadio notturno animato (stelle, riflettori, pubblico, prato), sprite pixel-art per ogni gioco, tabellone a LED con punteggi animati, sorteggio a carte, coriandoli, lampi verde/rosso, transizioni a scatti. Sempre nel rispetto di `prefers-reduced-motion`.
+- I moduli (nuova sfida, sala d'attesa, torneo) e le schermate dei telefoni sono pagine a scorrimento normale, utilizzabili in verticale e in orizzontale.
+
+---
+
 ## 1. Glossario
 
-- **Partita**: sfida 1v1 composta da 4 giochi sorteggiati + la finale *La Cassaforte*.
-- **Gioco / Prova**: uno dei 14 mini-giochi del catalogo (§4).
+- **Partita**: sfida 1v1 composta da 5 giochi sorteggiati tra i 10 del catalogo.
+- **Gioco / Prova**: uno dei 10 mini-giochi del catalogo (§4).
 - **Schermo**: dispositivo orizzontale che mostra tabellone, grafiche, timer e punteggi.
 - **Regia**: dispositivo verticale del conduttore (Modalità A).
 - **Controller**: smartphone personale di uno sfidante (Modalità B a 3 schermi).
@@ -185,7 +227,6 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 - **Istanza di domanda**: domanda concreta prodotta da un generatore o dalla redazione, con risposta, fonti e metadati.
 - **Famiglia di fonti**: gruppo di fonti non indipendenti tra loro (es. Wikipedia + Wikidata = famiglia *Wikimedia*).
 - **ANNO**: valore del filtro "Domande sul calcio a partire dall'anno".
-- **Argomento**: tema libero dichiarato da ciascun giocatore a inizio partita.
 - **Copione**: testo narrativo (aneddoto/retroscena) associato alla risposta; letto dal conduttore in Modalità A, mostrato a schermo in Modalità B.
 
 ---
@@ -207,7 +248,7 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 - **B1 · Schermo singolo**: un dispositivo (tablet/telefono/PC), orizzontale.
   - Giochi a turni: *pass-and-play* (ci si passa il dispositivo).
   - Giochi a prenotazione: dispositivo al centro, **doppio pulsante** ai bordi (§2.4).
-  - Funziona **completamente offline** (pacchetti di domande pre-generati), tranne l'argomento libero (richiede rete, §7).
+  - Funziona offline una volta caricati i pacchetti dei giochi sorteggiati.
 - **B3 · Tre schermi**: Schermo centrale orizzontale + 2 smartphone **verticali** come controller (pulsante, inserimento risposte).
 - In Modalità B, dopo ogni risposta lo Schermo rivela esito e mostra automaticamente il **box Copione**.
 
@@ -229,7 +270,7 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 - Input: `pointerdown`, `touch-action: none`, multitouch indipendente; tastiera fisica su PC (`A` = P1, `L` = P2).
 - Arbitraggio: vince il `event.timeStamp` più basso; a parità esatta nello stesso frame decide il seme della partita (deterministico).
 - **Falsa partenza**: pressione prima della comparsa dell'indizio ⇒ blocco di 1 s per quel giocatore.
-- Dopo la prenotazione: indizi congelati, pulsante avversario spento/grigio, pannello di risposta orientato verso chi ha premuto, con **tastiera pixel integrata** (mai la tastiera di sistema: non copre lo schermo e non mostra suggerimenti del sistema operativo).
+- Dopo la prenotazione: indizi congelati, pulsante avversario spento/grigio, campo di risposta al centro (sui dispositivi touch la scrittura avviene nella barra in alto, §0.6).
 - Feedback: flash laterale + `navigator.vibrate` dove disponibile.
 
 ---
@@ -241,152 +282,87 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 1. Modalità e dispositivi (§2), con abbinamento via codice stanza/QR (§12).
 2. Nomi dei due giocatori.
 3. **Filtro anno**: "Domande sul calcio a partire dall'anno: [ANNO]" (default: nessun filtro). Si applica secondo la tabella §3.3.
-4. **Argomento libero** di ciascun giocatore (obbligatorio), con riga di riepilogo dell'interpretazione (§7).
-5. Sorteggio dei 4 giochi (§5.2) — mostrato con animazione "slot machine".
+4. Sorteggio dei 5 giochi (§5.2), mostrato con carte che si scoprono una alla volta.
 
 ### 3.2 Turni
 
 - Gioco 1: inizia chi vince il sorteggio iniziale (lancio di moneta animato).
-- Dal gioco 2 alla Cassaforte: **inizia chi è in svantaggio** nel punteggio generale. A parità inizia chi **non** ha iniziato il gioco precedente.
-- I punteggi possono essere negativi.
+- Dal gioco 2 in poi: **inizia chi è in svantaggio** nel punteggio generale. A parità inizia chi **non** ha iniziato il gioco precedente.
 
 ### 3.3 Applicazione del filtro anno
 
-Regola generale: **elenchi e classifiche usano statistiche di tutte le epoche e ignorano il filtro**; i giochi su singolo fatto o singola persona lo rispettano; i giochi su argomento libero lo ignorano.
+Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il filtro**; i giochi su singolo fatto o singola persona lo rispettano.
 
 | Gioco | Filtro | Criterio di ammissibilità |
 |---|---|---|
 | Tiro Secco | ✅ | Tutti i fatti della domanda hanno data ≥ ANNO (`year_min ≥ ANNO`) |
+| Prima Pagina | ✅ | Data della partita ≥ ANNO |
 | Il Mercato | ✅ | Data del trasferimento ≥ ANNO |
 | La Formazione | ✅ | Data della partita ≥ ANNO |
 | Il Frame | ✅ | Data della partita ≥ ANNO |
-| Il Mappamondo | ✅ | Data della partita/evento ≥ ANNO |
 | La Maglia | ✅ | Stagione ≥ ANNO |
-| Il Giramondo | ✅ | Il giocatore ha almeno una stagione ≥ ANNO (la carriera precedente si mostra comunque) |
-| Il Filo Rosso | ✅ | Giocatori di partenza e arrivo con almeno una stagione ≥ ANNO; anelli intermedi di qualsiasi epoca |
-| L'Intruso | ✅ | I 4 nomi hanno almeno una stagione ≥ ANNO |
-| La Decina | ❌ | Insiemi di tutte le epoche |
-| Dal Dischetto | ❌ | Top 10 di tutte le epoche |
-| L'Asta | ❌ | Insiemi di tutte le epoche |
-| Prima Pagina | ❌ | Argomento libero del giocatore |
-| La Cassaforte | ❌ | Argomento libero del giocatore |
+| Il Giramondo | ✅ | Il giocatore ha almeno un trasferimento ≥ ANNO (la carriera precedente si mostra comunque) |
+| La Decina | ❌ | Tutte le stagioni coperte |
+| Dal Dischetto | ❌ | Tutte le stagioni coperte |
+| L'Asta | ❌ | Tutte le stagioni coperte |
 
-"Stagione ≥ ANNO": la stagione 2005/06 vale come 2005.
+"Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
 
 ---
 
 ## 4. Catalogo dei giochi
 
-I nomi dei giochi originali sono **provvisori** (§19). Ogni gioco ha un `id` stabile usato nel codice.
-Default dei timer configurabili nelle impostazioni avanzate.
+I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web/src/rules.ts`). Ogni gioco ha un `id` stabile usato nel codice. Tutte le istanze sono calcolate sul dataset (§0.5, §0.6).
 
 ### 4.1 `tiro_secco` — Tiro Secco
-- 4 domande a testa (8 totali), risposta multipla A/B/C/D, a turno alternato. Nessuna possibilità di rubare.
-- Timer: 20 s.
-- Punti: **+2** esatta, 0 errata.
-- Fonte: archivio redazionale + estrattori dal grafo (§8.6). Distrattori **verificati come errati** dal grafo.
+- **2 domande a testa** (4 totali), risposta multipla A/B/C/D, a turno alternato. Nessuna possibilità di rubare.
+- Timer: 20 s. Punti: **+2** esatta, 0 errata.
+- Curiosità "da maniaco" calcolate sui dati, con distrattori **verificati come errati**.
 
 ### 4.2 `prima_pagina` — Prima Pagina
-- Un ritaglio di quotidiano vintage a testa (§11), generato da una partita **dell'argomento del giocatore**, con **2 elementi oscurati** di tipo diverso (marcatore, portiere, stadio, città, arbitro, allenatore, minuto…).
-- Timer: 45 s per ritaglio.
-- Punti: **+2 per elemento** indovinato (0 / +2 / +4).
+- Una prima pagina di quotidiano vintage a testa (§11), generata da una partita famosa, con **2 nomi oscurati** (un marcatore noto e un secondo elemento: altro marcatore, allenatore o arbitro).
+- Timer: 45 s. Punti: **+2 per nome** indovinato (0 / +2 / +4).
 
 ### 4.3 `mercato` — Il Mercato
-- **3 profili** per gioco. Un trasferimento legato alla Serie A (in entrata, uscita o interno) da indovinare con 6 indizi progressivi:
-
-  | # | Indizio | Punti |
-  |---|---|---|
-  | 1 | Prezzo (valuta dell'epoca: lire o euro; formula: definitivo / prestito / prestito con obbligo) | 20 |
-  | 2 | Sessione e anno | 15 |
-  | 3 | Ruolo | 10 |
-  | 4 | Nazionalità (bandiera pixel) | 5 |
-  | 5 | Squadra cedente | 3 |
-  | 6 | Squadra acquirente | 2 |
-
-- Prenotazione col pulsante. **Un solo tentativo per giocatore per profilo.** Chi sbaglia è fuori per quel profilo (0 punti, nessuna penalità); l'avversario ha via libera e può farsi scoprire gli indizi successivi prima di rispondere, prendendo i punti dell'indizio corrente.
-- Modalità A: il conduttore scopre gli indizi. Modalità B: un indizio ogni 8 s; dopo un errore l'avversario rimasto scopre gli indizi a comando.
-- Tempo di risposta dopo la prenotazione: 10 s.
-- Prezzo: mostrato arrotondato (0,5 mln € / 1 mld lire); ammesso solo se le due famiglie di fonti concordano entro ±5% (§8.3).
+- **2 trasferimenti** legati alla Serie A, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
+- Prenotazione col pulsante. **Un solo tentativo per giocatore per profilo.** Chi sbaglia è fuori per quel profilo (nessuna penalità); l'avversario può farsi scoprire gli altri indizi prima di rispondere, prendendo i punti dell'ultimo indizio scoperto.
+- Con conduttore: gli indizi li scopre la Regia. Senza: un indizio ogni 8 s; dopo un errore l'avversario li scopre a comando. Tempo di risposta dopo la prenotazione: 10 s.
 
 ### 4.4 `decina` — La Decina
-- Categoria con **14–17 risposte valide** (es. doppi ex di due club, stranieri di una nazionalità in un club). Si devono dire **10 risposte in totale**, una a testa a turno alternato.
-- Timer: 30 s per turno.
-- Punti: **+2** per risposta valida.
-- Chiusura:
-  1. alla **10ª risposta esatta complessiva** il gioco termina subito;
-  2. errore o tempo scaduto: nessuna penalità, la parola passa all'altro;
-  3. ogni giocatore ha **2 errori/scene mute** a disposizione: al secondo esce, e l'altro continua da solo;
-  4. il gioco termina quando entrambi sono usciti o si arriva a 10.
-- Ripetere un nome già detto (da chiunque) = errore.
+- **Una** categoria con **14–17 risposte valide**. Si devono dire **10 risposte in totale**, una a testa a turno alternato. Timer: 30 s per turno. Punti: **+2** per risposta valida.
+- Errore o tempo scaduto: la parola passa all'altro. Ogni giocatore ha **2 errori**: al secondo esce, e l'altro continua da solo. Il gioco termina alla 10ª risposta esatta o quando entrambi sono usciti. Ripetere un nome già detto è un errore.
 
 ### 4.5 `dischetto` — Dal Dischetto
-- **Top 10 statistica di tutte le epoche** (es. marcatori di una nazionalità in Serie A). Il sistema dichiara il valore del 1° e del 10° posto ("Il 1° ha 55 gol, il 10° ne ha 22"), con definizione e data di aggiornamento.
-- **5 tiri a testa**, a turno alternato, senza oltranza. Timer 30 s a tiro.
-- Punti: **+2** per ogni nome nella Top 10 (max +10 a testa).
-- Pari merito al 10° posto: basta uno dei nomi a pari merito; detto quello, la 10ª casella si chiude.
+- **Una** Top 10 statistica (competizione e stagioni dichiarate nel titolo). Il sistema dichiara il valore del 1° e del 10° posto.
+- **5 tiri a testa**, a turno alternato. Timer 30 s a tiro. Punti: **+2** per ogni nome in classifica.
+- Pari merito all'ultimo posto utile: i nomi a pari merito valgono finché restano posti nella Top 10.
 - Nome fuori classifica, già detto o tempo scaduto = tiro sbagliato.
-- Audio: gol ⇒ "GOOOL!" + rete che si gonfia; errore ⇒ palo/traversa o fischi.
 
 ### 4.6 `formazione` — La Formazione
-- Partita storica con i moduli di entrambe le squadre: **6 titolari visibili, 5 oscurati** per squadra.
+- **Una** partita con i moduli di entrambe le squadre: **6 titolari visibili, 5 oscurati** per squadra (solo giocatori noti di movimento).
 - Chi è in svantaggio **sceglie quale squadra completare**; l'avversario completa l'altra. **60 s** a testa.
-- Un nome vale se è uno dei 5 titolari oscurati di quella squadra (lo slot cliccato non deve coincidere).
 - Punti: 5/5 = **15**, 4/5 = **10**, 3/5 = **5**, 2/5 = **3**, 1/5 = **2**, 0/5 = **0**.
 
-### 4.7 `cassaforte` — La Cassaforte (finale, sempre presente)
-- Ogni giocatore ha 3 domande sul **proprio argomento**: Facile, Media, Difficile. Ne deve giocare **2 su 3**.
-- Ordine delle scelte: 1ª di chi è in svantaggio → 1ª dell'altro → 2ª del primo → 2ª del secondo.
-- Timer 30 s; non si può passare.
-- Punti:
+### 4.7 `giramondo` — Il Giramondo
+- **2 carriere**, rivelate in **ordine cronologico** (anno del trasferimento → squadra), in 5 indizi.
+- Prenotazione col pulsante, un tentativo per giocatore per profilo (stesse regole del Mercato).
+- Punti per indizio: **12 / 9 / 6 / 3 / 1**.
 
-  | Livello | Esatta | Sbagliata |
-  |---|---|---|
-  | Facile | +10 | −30 |
-  | Media | +20 | −20 |
-  | Difficile | +30 | −10 |
+### 4.8 `frame` — Il Frame
+- **2 domande a testa**: "Partita X, minuto Y: qual era il risultato?". Inserimento con due selettori numerici.
+- Bonus: chi aveva segnato l'ultimo gol prima di quel minuto (se 0-0 il bonus non c'è). Timer 30 s.
+- Punti: risultato esatto **+3**; solo segno corretto **+1**; bonus **+2**.
+- Ammesse solo partite in cui i minuti di tutti i gol tornano con il risultato, con il minuto Y lontano da ogni gol.
 
-- La Difficile può chiedere **2 elementi** (es. due marcatori): se ne manca uno è errore (−10).
-- Audio: errore ⇒ tromba triste.
-
-### 4.8 `giramondo` — Il Giramondo
-- **2 profili**. Carriera di un giocatore rivelata club per club, **dal più oscuro al più noto** (giovanili, prestiti… fino al club di massima fama), ogni indizio con club, anni, presenze e gol.
-- Prenotazione col pulsante, **un tentativo per giocatore per profilo** (stesse regole del Mercato).
-- Punti per indizio: **12 / 9 / 6 / 3 / 1** (carriere con più di 5 club: gli indizi in eccesso si accorpano nei primi).
-
-### 4.9 `frame` — Il Frame
-- 2 domande a testa, a turno: "Partita X, minuto Y: qual era il risultato?". Inserimento con due selettori numerici.
-- Bonus: chi aveva segnato l'ultimo gol prima di quel minuto (se 0-0: domanda bonus non posta).
-- Timer 30 s.
-- Punti: risultato esatto **+3**; solo segno 1X2 corretto **+1**; bonus **+2**.
-- Ammesse solo partite con minuti di **tutti** i gol concordanti tra due famiglie di fonti, e minuto Y lontano almeno 2' da ogni gol.
-
-### 4.10 `intruso` — L'Intruso
-- 3 domande a testa, a turno. 4 nomi: 3 condividono una proprietà nascosta, 1 no.
-- Fase 1: individuare l'intruso (**+3**). Fase 2: indicare il legame tra i 3 (**+2**) — in Modalità B a scelta tra 4 legami, tutti generati dal grafo e **verificati come falsi** per il terzetto, tranne quello vero.
-- Timer 30 s.
-- Il generatore garantisce che **nessun'altra proprietà** del catalogo renda "intruso" un nome diverso (controllo di ambiguità).
-
-### 4.11 `asta` — L'Asta
-- 2 categorie (insiemi come La Decina, dimensione annunciata).
-- Per ogni categoria: asta a rilanci alternati (inizia chi è in svantaggio), puntata da 1 a min(10, dimensione); "passo" assegna l'asta all'altro alla puntata corrente.
+### 4.9 `asta` — L'Asta
+- **2 categorie** (insiemi come La Decina). Per ognuna: asta a rilanci alternati, puntata da 1 a min(10, dimensione); "passo" assegna l'asta all'altro alla puntata corrente.
 - Chi vince l'asta deve dire **tanti nomi validi quanto la puntata** in 60 s.
 - Punti: successo **+puntata**; fallimento **+5 all'avversario**.
 
-### 4.12 `filo_rosso` — Il Filo Rosso
-- 1 sfida a testa: collegare il giocatore A al giocatore B con una catena di **compagni di squadra** (stesso club, stessa stagione, entrambi con almeno una presenza ufficiale).
-- Timer 60 s; massimo 6 anelli.
-- Punti: catena di lunghezza ottimale **+10**; ottimale +1 **+5**; valida più lunga **+2**; non valida 0. Lunghezza ottimale calcolata con BFS sul grafo dei compagni.
-
-### 4.13 `mappamondo` — Il Mappamondo
-- 3 domande a testa, a turno: "Dove si è giocata…?", con segnaposto su una mappa pixel.
-- Distanza calcolata dalle coordinate dello stadio (fonte: Wikidata + seconda famiglia).
-- Punti: < 25 km **+5**; < 100 km **+3**; < 300 km **+1**.
-- Gioco naturale per i trabocchetti geografici (archetipo 6).
-
-### 4.14 `maglia` — La Maglia
-- 3 domande a testa, a turno: club + stagione + numero ⇒ chi lo indossava?
+### 4.10 `maglia` — La Maglia
+- **2 domande a testa**: giocatore + squadra + stagione ⇒ **che numero aveva?** Risposta con tastierino numerico.
 - Timer 30 s. Punti: **+3**.
-- Numeri di maglia ammessi solo se concordanti tra due famiglie.
+- Solo giocatori con un unico numero in quella stagione e almeno 25 presenze (10 per i numeri iconici).
 
 ---
 
@@ -396,30 +372,26 @@ Default dei timer configurabili nelle impostazioni avanzate.
 
 | Gioco | Max a testa | Note |
 |---|---|---|
-| tiro_secco | 8 | |
+| tiro_secco | 4 | |
 | prima_pagina | 4 | |
-| mercato | 60 | 3 profili × 20; tipicamente 10–25 |
+| mercato | 40 | 2 profili × 20; tipicamente 5–20 |
 | decina | 20 | se l'altro esce subito |
 | dischetto | 10 | |
 | formazione | 15 | |
 | giramondo | 24 | 2 profili × 12 |
 | frame | 10 | |
-| intruso | 15 | |
 | asta | 20 | |
-| filo_rosso | 10 | |
-| mappamondo | 15 | |
-| maglia | 9 | |
-| cassaforte | +50 / −50 | sempre decisiva |
+| maglia | 6 | |
 
-### 5.2 Regole di sorteggio (4 giochi + Cassaforte)
+### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: 13 giochi (tutti tranne `cassaforte`).
+- Pool: i 10 giochi.
 - Vincoli:
   - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
   - al massimo 1 tra {`decina`, `dischetto`, `asta`} (elenchi);
-  - lo slot 1 è pescato tra i giochi rapidi {`tiro_secco`, `frame`, `maglia`, `intruso`, `mappamondo`};
-  - un gioco è escluso se il pacchetto non ha abbastanza istanze ammissibili con il filtro corrente.
-- Ordine: slot 1 vincolato, slot 2–4 casuali, `cassaforte` sempre per ultima.
+  - il primo gioco è pescato tra i rapidi {`tiro_secco`, `frame`, `maglia`};
+  - un gioco è escluso se non ha abbastanza istanze ammissibili con il filtro corrente.
+- Le domande di ogni gioco sono pescate **alternando i tipi di domanda** (un generatore alla volta).
 - Sorteggio deterministico dal seme della partita (riproducibile nei test).
 
 ---
@@ -429,46 +401,25 @@ Default dei timer configurabili nelle impostazioni avanzate.
 - Da **4 a 12** giocatori. Dispositivo "Direzione Torneo" (qualsiasi ruolo Schermo) gestisce calendario e classifica.
 - **Fase 1 — Classifica Generale**
   - ≤ 6 giocatori: girone all'italiana. > 6: abbinamenti svizzeri, K turni (default 3, configurabile), evitando ripetizioni.
-  - I **punti segnati in ogni sfida si sommano** (anche negativi). Se il numero di sfide disputate non è uguale per tutti, si ordina per **media punti per sfida**.
-  - Spareggi: vittorie → scontro diretto → miglior punteggio in una singola sfida → saldo totale della Cassaforte → sorteggio.
+  - I **punti segnati in ogni sfida si sommano**. Se il numero di sfide disputate non è uguale per tutti, si ordina per **media punti per sfida**.
+  - Spareggi: vittorie → scontro diretto → miglior punteggio in una singola sfida → ordine di iscrizione.
 - **Fase 2 — Eliminazione diretta**: i **primi 4** vanno in semifinale (1ª–4ª, 2ª–3ª), poi **finale**. Ogni partita riparte da 0.
-- Il filtro anno è fissato a livello di torneo. Ogni giocatore dichiara un argomento per ogni sfida.
+- Il filtro anno è fissato a livello di torneo.
 - **Nessuna domanda si ripete** in tutto il torneo (insieme delle istanze usate a livello di torneo); inoltre storico per dispositivo delle istanze già viste.
-- Persistenza server-side (codice torneo) + esportazione/importazione JSON.
+- Persistenza sul dispositivo + esportazione/importazione JSON.
 - UI: classifica stile "HI-SCORE" tra una sfida e l'altra.
 
 ---
 
 ## 7. Argomento libero
 
-### 7.1 Flusso
-
-1. **Input libero** (testo). Esempi: "La Juve di Conte 2011/12", "Il Mondiale Under-20 del 2005", "L'Udinese degli anni 2000".
-2. **Interpretazione → entità del grafo**
-   - Prima un parser deterministico: dizionario di alias (club, competizioni, persone), espressioni per stagioni ("2011/12", "2011-12"), decenni ("anni 2000"), allenatori ("di Conte"), ruoli.
-   - Se il parser non basta: un LLM (servizio `topic`, server-side) **sceglie solo tra ID candidati** recuperati dal nostro indice, con output strutturato e validato. L'LLM non produce fatti né testo mostrato al giocatore.
-   - Output: `perimetro = {club?, nazionale?, competizione?, stagioni?, persone?, partite?}`.
-3. **Riga di riepilogo** non bloccante: "Argomento: Juventus · Serie A 2011/12 · all. Antonio Conte". Il giocatore può riscrivere se l'interpretazione è sbagliata.
-4. **Espansione nel grafo** finché ci sono abbastanza istanze per Prima Pagina (≥ 2 partite con tabellino completo) e Cassaforte (≥ 1 domanda per livello):
-   - livello 0: fatti diretti del perimetro (partite, rose, marcatori, trasferimenti di quella stagione/competizione);
-   - livello 1: persone e club collegati (es. giocatori che hanno disputato quel torneo) e i loro fatti nello stesso periodo;
-   - livello 2: carriere successive/precedenti di quelle persone, trasferimenti, aneddoti redazionali etichettati con quelle entità.
-5. **Generazione deterministica** nel perimetro espanso, con gli stessi generatori dei giochi e l'archivio redazionale.
-6. **Unico rifiuto**: testo che non corrisponde ad alcuna entità calcistica ⇒ "Non riconosco un argomento calcistico, riscrivilo".
-
-### 7.2 Garanzie
-
-- Ogni fatto delle domande proviene da righe verificate del grafo o da istanze redazionali pubblicate (P1).
-- Il filtro anno non si applica.
-- **Esclusa** la generazione al volo da documenti trovati in quel momento (rischio di fraintendimento senza revisione).
-
-### 7.3 Difficoltà nella Cassaforte
-
-- Facile / Media / Difficile da percentili di **fama** dell'entità-risposta (§8.5) e dal tipo di domanda (es. Difficile = due elementi, o entità nel quartile più basso di fama).
+**Rimosso con la v5 (§0.6).** Non esistono più l'argomento a piacere né i giochi che lo usavano.
 
 ---
 
 ## 8. Architettura dati
+
+> **Nota storica.** Le sezioni §8 e §9 descrivono il progetto iniziale (grafo su Postgres, due famiglie di fonti, archivio redazionale) e non sono più in vigore: valgono §0.5 e §0.6. Restano come riferimento per §8.6 (archetipi delle domande "da maniaco") e per le regole sui generatori deterministici.
 
 ### 8.1 Fonti
 
@@ -677,40 +628,41 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 
 ---
 
-## 12. Tempo reale, abbinamento, orientamento
+## 12. Più dispositivi, abbinamento, orientamento
 
-### 12.1 Stanze
+### 12.1 Stanze senza server
 
-- Un **Durable Object per stanza** (Cloudflare), WebSocket con ibernazione.
-- **Stato autorevole sul server**: il motore di gioco (`packages/engine`) gira nel DO; i client inviano **intenzioni** e ricevono **viste filtrate per ruolo**.
-- Intenzioni principali: `JOIN`, `READY`, `START_GAME`, `REVEAL_CLUE`, `START_TIMER`, `BUZZ`, `SUBMIT_ANSWER`, `HOST_VALIDATE`, `CHOOSE_TEAM`, `CHOOSE_LEVEL`, `BID`, `PASS`, `NEXT`.
-- Viste: `screen` (mai soluzioni prima della rivelazione), `host` (soluzioni, varianti, fonti, Copione), `controller` (solo i dati del proprio giocatore).
-- B1 offline: lo stesso motore gira nel browser, senza server.
+- **Lo Schermo è l'autorità**: `apps/web/src/runtime/roomCore.ts` esegue il motore (`packages/engine`) nel browser dello Schermo, applica i permessi per ruolo, arma i timer e produce le viste. Nessun server nostro.
+- I telefoni inviano **intenzioni** (`START`, `BEGIN_GAME`, `NEXT`, `BUZZ`, `REVEAL_CLUE`, `CHOOSE`, `ANSWER`, `VERDICT`, `BID`, `PASS`, `FINISH`) e ricevono **viste filtrate**:
+  - canale `pub` (pulsantiere): la stessa vista dello Schermo, **mai le soluzioni prima della rivelazione**;
+  - canale `host` (Regia): soluzioni e copione del solo gioco in corso.
+- Permessi: la Regia può tutto; le pulsantiere agiscono solo per il proprio giocatore; se c'è una Regia, solo lei fa avanzare il gioco; i `TIMEOUT` li genera solo lo Schermo.
+- Trasporto (`transport.ts`, `mqtt.ts`): MQTT 3.1.1 su WebSocket sicuro verso **più relay pubblici gratuiti in parallelo** (deduplica per mittente+sequenza). Payload cifrato AES-GCM con chiave derivata dal codice stanza; il topic è un hash del codice. `?relay=ws://…` usa un relay proprio, `?relay=local` collega le schede dello stesso browser (demo e test).
+- Schermo singolo: lo stesso motore gira in locale senza alcuna rete.
 
 ### 12.2 Abbinamento
 
-- Lo Schermo crea la stanza: **codice di 4 lettere** (alfabeto senza caratteri ambigui) + **QR per ruolo** (`/join/ABCD?r=host|p1|p2`).
-- Token di sessione in `localStorage` per rientrare dopo blocco schermo o perdita di rete; lo Schermo mostra la lobby con lo stato dei dispositivi.
+- Lo Schermo crea la stanza: **codice di 5 lettere** (alfabeto senza caratteri ambigui) + **QR per ruolo** (`#/join/ABCDE?r=host|p1|p2`). In alternativa: «ENTRA CON CODICE» sul telefono.
+- Sala d'attesa con scelta della modalità (senza conduttore: 2 pulsantiere; con conduttore: Regia) e stato dei dispositivi. La partita parte quando i telefoni richiesti sono collegati.
+- Presenza: ogni telefono manda un battito ogni 3 s; dopo 12 s di silenzio è considerato scollegato. Un telefono che si ricollega riceve subito la vista corrente.
 
 ### 12.3 Equità del pulsante tra dispositivi
 
-- Sincronizzazione orologio stile NTP (più ping all'ingresso e periodici) ⇒ offset per client.
-- Il client invia `performance.now()` della pressione convertito in ora server.
-- Il server raccoglie le pressioni per **150 ms** dalla prima ricevuta e assegna al timestamp corretto più basso.
+- Sincronizzazione dell'orologio (ping ripetuti, mediana degli scarti) ⇒ ogni telefono conosce lo scarto rispetto allo Schermo.
+- Il telefono invia l'istante della pressione già convertito nell'ora dello Schermo.
+- Lo Schermo raccoglie le pressioni per **250 ms** dalla prima ricevuta e assegna al tempo più basso.
 
 ### 12.4 Orientamento e schermo
 
-- Overlay bloccante "Ruota il dispositivo" (pixel art animata) via `@media (orientation: …)`: Schermo solo orizzontale; Regia e Controller solo verticali.
-- `screen.orientation.lock()` dove supportato (Android a schermo intero); campo `orientation` nel manifest PWA.
+- Schermo: orizzontale; sui telefoni in verticale compare l'invito a ruotare. Regia e pulsantiere funzionano in entrambi gli orientamenti.
 - Wake Lock API per evitare lo spegnimento.
-- Sviluppo in rete locale: HTTPS obbligatorio per Wake Lock/Service Worker su IP di LAN ⇒ certificati locali (`mkcert`) o tunnel HTTPS.
 
 ---
 
 ## 13. Audio
 
 - **Sblocco**: la schermata "PREMI START" è il gesto che sblocca l'`AudioContext`. Su iOS: Audio Session API impostata su riproduzione + avviso sull'interruttore silenzioso.
-- **Musica dinamica a livelli**: tracce chiptune composte in un tracker ed esportate in livelli (base, percussioni, tensione). Timer attivo ⇒ entra il livello percussioni; Cassaforte ⇒ entra il livello tensione. Transizioni con dissolvenza a tempo.
+- **Musica dinamica a livelli**: tracce chiptune composte in un tracker ed esportate in livelli (base, percussioni, tensione). Timer attivo ⇒ entra il livello percussioni; ultimo gioco ⇒ entra il livello tensione. Transizioni con dissolvenza a tempo.
 - **Effetti sintetizzati** (procedurali, stile sfxr): bip menu, comparsa indizio, pulsante, risposta esatta, risposta errata, tic del timer (accelera negli ultimi 5 s), sirena tempo scaduto, slot machine del sorteggio.
 - **Tromba triste**: 4 note cromatiche discendenti sintetizzate (dente di sega + filtro "wah", vibrato sull'ultima).
 - **Campioni** (registrati in proprio o CC0, passati in bitcrusher): "GOOOL!", rete che si gonfia, palo/traversa, fischi dello stadio.
@@ -734,41 +686,31 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 
 | Strato | Scelta |
 |---|---|
-| Linguaggi | TypeScript (app, motore, realtime); Python 3.12 (dati, generatori, servizio topic) |
-| Monorepo JS | pnpm workspaces |
-| Frontend | React + Vite, PWA (`vite-plugin-pwa`), CSS con variabili |
-| Motore | `packages/engine`: TS puro, deterministico, RNG con seme, nessun accesso a orologio/rete |
-| Tempo reale | Cloudflare Workers + Durable Objects |
-| Hosting web | Cloudflare |
-| Database grafo | Postgres gestito (provider da scegliere in M0) |
-| Pipeline dati | Python + `uv`, DuckDB per le trasformazioni, notebook per analisi di qualità |
-| Servizio topic | Python (API HTTP) con accesso in lettura a Postgres; hosting da scegliere in M0 |
-| Archivio redazionale | YAML in `content/`, validatore in CI, revisione via PR |
-| Test | Vitest (motore, matcher), Playwright con più contesti browser (Schermo + Regia + Controller), pytest (dati) |
-| CI | GitHub Actions |
+| Linguaggi | TypeScript (app, motore, stanze); Python 3.12 (dati e generatori) |
+| App | React + Vite, PWA statica pubblicata su GitHub Pages |
+| Motore | `packages/engine`: TypeScript puro e deterministico (RNG con seme) |
+| Più dispositivi | Nessun server nostro: lo Schermo ospita la stanza, messaggi cifrati via relay MQTT pubblici (§12) |
+| Dati | DuckDB sul dataset Transfermarkt; pacchetti JSON statici, uno per gioco, scaricati a richiesta |
+| Audio | Web Audio API, tutto sintetizzato |
 
 ```
 trivela/
-├─ apps/
-│  ├─ web/              # PWA: Schermo, Regia, Controller, B1
-│  └─ realtime/         # Worker + Durable Objects (stanze, tornei)
+├─ apps/web/               # PWA: schermo singolo, Schermo/Regia/pulsantiere, torneo
+│  ├─ src/components/      # palco adattivo, tabellone, sprite, campi di testo
+│  ├─ src/games/           # viste dei 10 giochi
+│  ├─ src/runtime/         # caricamento pacchetti, stanza (roomCore), trasporto MQTT
+│  ├─ src/screens/         # nuova sfida, partita, sala d'attesa, telefoni, torneo
+│  └─ public/data/         # manifest, indice dei nomi, un pacchetto per gioco (versionati)
 ├─ packages/
-│  ├─ engine/           # 14 giochi, punteggi, turni, sorteggio, torneo
-│  ├─ matcher/          # normalizzazione, accettazione, aiuto ortografico
-│  ├─ ui-arcade/        # componenti pixel, Prima Pagina, mappa, tastiera
-│  ├─ audio/            # musica a livelli, effetti sintetizzati
-│  └─ protocol/         # tipi condivisi: intenzioni, viste, pacchetti
+│  ├─ protocol/            # tipi condivisi
+│  ├─ engine/              # 10 giochi, sorteggio, torneo
+│  ├─ matcher/             # normalizzazione, accettazione, correttore a zero informazione
+│  └─ audio/               # musica ed effetti sintetizzati
 ├─ data/
-│  ├─ ingest/           # connettori fonti livello A/B
-│  ├─ graph/            # schema Postgres, migrazioni, riconciliazione
-│  ├─ generators/       # generatori per gioco + estrattori archetipi
-│  ├─ packs/            # build dei pacchetti
-│  └─ notebooks/        # qualità e copertura dati
-├─ services/topic/      # API argomento libero
-├─ content/             # archivio redazionale YAML
-├─ tools/review/        # coda di verifica e revisione
-├─ SPEC.md · CLAUDE.md · README.md
-└─ .github/workflows/
+│  ├─ trivela_data/        # tm_core (strato dei fatti), gen_lists, gen_matches, gen_players, gen_quiz, managers, postprocess, generate, sync
+│  ├─ static/managers.json # date di nascita degli allenatori (Wikidata)
+│  └─ tests/               # invarianti dei pacchetti (≥ 1000 domande per gioco, ecc.)
+└─ tools/                  # e2e.mjs (stanze con relay locale), shots.mjs (controllo visivo)
 ```
 
 ---
@@ -795,6 +737,8 @@ trivela/
 
 ## 18. Roadmap
 
+> **Nota storica.** La tabella che segue è la roadmap iniziale; lo stato attuale è descritto in §0.6.
+
 | Milestone | Contenuto | Criteri di accettazione |
 |---|---|---|
 | **M0 — Fondamenta e dati** | Scaffolding monorepo + CI. Schema del grafo su Postgres. Ingestione livello A (Wikidata, Wikipedia, openfootball, StatsBomb) per la Serie A e le coppe europee. Scelta provider livello B. Regola delle due famiglie. Generatori: `mercato`, `dischetto`, `decina`, `giramondo`, `maglia`. | ≥ 1.000 istanze generate con soli campi `concordant`; report di copertura per anno; revisione a campione senza errori. |
@@ -807,7 +751,7 @@ trivela/
 
 ## 19. Questioni aperte
 
-1. Nomi definitivi dei 7 giochi originali (provvisori: Tiro Secco, Prima Pagina, Il Mercato, La Decina, Dal Dischetto, La Formazione, La Cassaforte) e della testata della Prima Pagina.
+1. Nomi definitivi dei giochi (provvisori: Tiro Secco, Prima Pagina, Il Mercato, La Decina, Dal Dischetto, La Formazione, Il Giramondo, Il Frame, L'Asta, La Maglia) e della testata della Prima Pagina.
 2. Provider Postgres e hosting del servizio `topic`.
 3. Provider di livello B.
 4. Chi compone la redazione/revisione (autore ≠ revisore).

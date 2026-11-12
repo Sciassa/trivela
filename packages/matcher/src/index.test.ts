@@ -3,7 +3,6 @@ import type { EntityRecord } from "@trivela/protocol";
 import {
   buildIndex,
   editDistance,
-  haversineKm,
   judgeInSet,
   judgeText,
   normalize,
@@ -32,9 +31,14 @@ const entities: EntityRecord[] = [
   P("p9", "Cesare Maldini", 40, "Maldini"),
   P("p10", "Nikola Bjelanović", 2, "Bjelanović"),
   P("p11", "Martin Ødegaard", 50, "Ødegaard"),
-  { id: "c1", kind: "city", name: "Torino", aliases: ["Turin"], fame: 50 },
+  P("m1", "Thiago Motta", 70, "Motta"),
+  P("m2", "Thiago Motta", 55, "Motta"),
 ];
 const index = buildIndex(entities, 10);
+
+it("suggests one entry per person even when two profiles share a name", () => {
+  expect(suggest("Thiago Mota", index).map((s) => s.name)).toEqual(["Thiago Motta"]);
+});
 
 describe("normalize", () => {
   it("strips diacritics and special letters", () => {
@@ -77,7 +81,9 @@ describe("judge", () => {
   it("judges entity answers through the global index", () => {
     expect(judgeText("calhanoglu", { kind: "entity", ids: ["p2"], display: "Çalhanoğlu" }, index)).toBe(true);
     expect(judgeText("Szczesny", { kind: "entity", ids: ["p2"], display: "Çalhanoğlu" }, index)).toBe(false);
-    expect(judgeText("Turin", { kind: "entity", ids: ["c1"], display: "Torino" }, index)).toBe(true);
+    // two people with exactly the same name (player and manager): either is accepted
+    expect(judgeText("Thiago Motta", { kind: "entity", ids: ["m2"], display: "Thiago Motta" }, index)).toBe(true);
+    expect(judgeText("7", { kind: "number", value: 7, display: "7" }, index)).toBe(true);
     expect(judgeText("3", { kind: "number", value: 3, display: "3" }, index)).toBe(true);
   });
 
@@ -106,7 +112,7 @@ describe("speller: zero information", () => {
   it("is a pure function of the typed text and the global index", () => {
     // The signature has no slot for the question/context: verify arity and determinism.
     expect(suggest.length).toBe(2);
-    const inputs = ["Calhanolgu", "Szczesni", "Odegard", "Kvaratskhelja", "Bjelanovich", "Maldin", "Turino"];
+    const inputs = ["Calhanolgu", "Szczesni", "Odegard", "Kvaratskhelja", "Bjelanovich", "Maldin", "Tiago Motta"];
     const first = inputs.map((t) => suggest(t, index));
     // Simulate other activity (judging other questions) between calls.
     judgeText("Maldini", { kind: "entity", ids: ["p8"], display: "Maldini" }, index);
@@ -119,12 +125,5 @@ describe("speller: zero information", () => {
     const twins = buildIndex([P("a", "Marco Rossi", 1), P("b", "Mario Rossi", 99)]);
     const out = suggest("Marc Rossi", twins).map((s) => s.name);
     expect(out[0]).toBe("Marco Rossi");
-  });
-});
-
-describe("geo", () => {
-  it("computes great-circle distances", () => {
-    expect(Math.round(haversineKm(45.4642, 9.19, 41.9028, 12.4964))).toBeGreaterThan(470);
-    expect(Math.round(haversineKm(45.4642, 9.19, 41.9028, 12.4964))).toBeLessThan(490);
   });
 });

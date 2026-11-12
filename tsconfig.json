@@ -1,11 +1,20 @@
 {
   "files": [],
   "references": [
-    { "path": "packages/protocol" },
-    { "path": "packages/matcher" },
-    { "path": "packages/engine" },
-    { "path": "packages/audio" },
-    { "path": "apps/web" },
-    { "path": "apps/realtime" }
+    {
+      "path": "packages/protocol"
+    },
+    {
+      "path": "packages/matcher"
+    },
+    {
+      "path": "packages/engine"
+    },
+    {
+      "path": "packages/audio"
+    },
+    {
+      "path": "apps/web"
+    }
   ]
 }

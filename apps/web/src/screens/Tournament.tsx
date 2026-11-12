@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { createTournament, recordResult, standings, usedIds, type EngineCtx, type MatchState, type TournamentState } from "@trivela/engine";
-import type { Packs } from "@trivela/protocol";
+import { createTournament, recordResult, standings, usedIds, winnerOfMatch, type EngineCtx, type MatchState, type TournamentState } from "@trivela/engine";
 import { LocalMatch } from "./LocalMatch";
 import { Setup } from "./Setup";
+import { Page } from "../components/ui";
 
 const KEY = "trivela.tournament";
 
@@ -23,7 +23,7 @@ function save(t: TournamentState | null) {
   }
 }
 
-export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCtx; onBack: () => void }) {
+export function Tournament({ onBack }: { onBack: () => void }) {
   const [t, setT] = useState<TournamentState | null>(load);
   const [names, setNames] = useState("");
   const [year, setYear] = useState("");
@@ -39,11 +39,8 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
         tableMode={playing.tableMode}
         onExit={(s) => {
           const m = t.matches.find((x) => x.id === playing.matchId)!;
-          const cassa = s.gamePoints[s.order.length - 1] ?? [0, 0];
           const flip = s.config.players[0] !== t.players[m.a];
-          const sa = flip ? s.scores[1] : s.scores[0];
-          const sb = flip ? s.scores[0] : s.scores[1];
-          setT(recordResult(t, m.id, sa, sb, { cassaA: flip ? cassa[1] : cassa[0], cassaB: flip ? cassa[0] : cassa[1], usedIds: usedIds(s) }));
+          setT(recordResult(t, m.id, flip ? s.scores[1] : s.scores[0], flip ? s.scores[0] : s.scores[1], { usedIds: usedIds(s) }));
           setPlaying(null);
         }}
       />
@@ -53,8 +50,6 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
     const m = t.matches.find((x) => x.id === setupFor)!;
     return (
       <Setup
-        packs={packs}
-        ctx={ctx}
         presetPlayers={[t.players[m.a]!, t.players[m.b]!]}
         yearFrom={t.yearFrom}
         excludeIds={t.usedIds}
@@ -70,82 +65,80 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
   if (!t) {
     const list = names.split(/[\n,]/).map((s) => s.trim()).filter(Boolean);
     return (
-      <div className="phone-ui" style={{ maxWidth: 900 }}>
-        <div className="row">
-          <button className="btn ghost" onClick={onBack}>
-            ◀
-          </button>
-          <span className="px c-accent">NUOVO TORNEO</span>
-        </div>
+      <Page title="NUOVO TORNEO" onBack={onBack}>
         <div className="field">
-          <label>GIOCATORI (da 4 a 12, uno per riga o separati da virgola)</label>
+          <label>GIOCATORI (DA 4 A 12, UNO PER RIGA O SEPARATI DA VIRGOLA)</label>
           <textarea className="input" rows={6} value={names} onChange={(e) => setNames(e.target.value)} />
         </div>
         <div className="field">
-          <label>DOMANDE A PARTIRE DALL'ANNO (vuoto = tutte)</label>
-          <input className="input" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} />
+          <label>SOLO DOMANDE DALL'ANNO… (VUOTO = TUTTE)</label>
+          <input className="input" inputMode="numeric" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="es. 2018" />
         </div>
-        <div className="dim">Fase 1: Classifica Generale (punti sommati, anche negativi). Fase 2: semifinali 1ª-4ª e 2ª-3ª, poi finale.</div>
-        <button className="btn" disabled={list.length < 4 || list.length > 12} onClick={() => setT(createTournament(list, { yearFrom: year ? Number(year) : null }))}>
-          CREA TORNEO
+        <div className="note">Fase 1: Classifica Generale (si sommano i punti di tutte le sfide). Fase 2: semifinali 1ª-4ª e 2ª-3ª, poi finale.</div>
+        <button className="btn big" disabled={list.length < 4 || list.length > 12} onClick={() => setT(createTournament(list, { yearFrom: year ? Number(year) : null }))}>
+          CREA IL TORNEO ({list.length} GIOCATORI)
         </button>
-      </div>
+      </Page>
     );
   }
 
   const table = standings(t);
   const next = t.matches.find((m) => m.scoreA === null);
-  const label = { league: "Classifica Generale", semi: "Semifinali", final: "Finale", done: "Torneo concluso" }[t.phase];
+  const label = { league: "CLASSIFICA GENERALE", semi: "SEMIFINALI", final: "FINALE", done: "CONCLUSO" }[t.phase];
   const finalMatch = t.matches.find((m) => m.stage === "final" && m.scoreA !== null);
   return (
-    <div className="phone-ui" style={{ maxWidth: 1000 }}>
-      <div className="row">
-        <button className="btn ghost" onClick={onBack}>
-          ◀
-        </button>
-        <span className="px c-accent">TORNEO · {label}</span>
-      </div>
-      <table className="panel" style={{ width: "100%", borderCollapse: "collapse", fontSize: 26 }}>
-        <thead>
-          <tr className="px" style={{ fontSize: 11, textAlign: "left" }}>
-            <th>#</th>
-            <th>NOME</th>
-            <th>G</th>
-            <th>V</th>
-            <th>PUNTI</th>
-          </tr>
-        </thead>
-        <tbody>
-          {table.map((r, i) => (
-            <tr key={r.player} style={{ color: i < 4 ? "var(--accent)" : undefined }}>
-              <td>{i + 1}</td>
-              <td>{r.name}</td>
-              <td>{r.played}</td>
-              <td>{r.wins}</td>
-              <td>{r.points}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <Page title={`TORNEO · ${label}`} onBack={onBack} wide>
+      {t.phase === "done" && finalMatch && (
+        <div className="panel center">
+          <span className="code">🏆 {t.players[winnerOfMatch(finalMatch)]}</span>
+        </div>
+      )}
       {next && (
-        <div className="panel col">
-          <div className="px" style={{ fontSize: 14 }}>
-            PROSSIMA SFIDA ({next.stage === "league" ? `turno ${next.round}` : next.stage === "semi" ? "semifinale" : "finale"})
-          </div>
+        <div className="panel col" style={{ gap: 10 }}>
+          <span className="label">PROSSIMA SFIDA · {next.stage === "league" ? `TURNO ${next.round}` : next.stage === "semi" ? "SEMIFINALE" : "FINALE"}</span>
           <div style={{ fontSize: 34 }}>
-            <span className="c-p1">{t.players[next.a]}</span> vs <span className="c-p2">{t.players[next.b]}</span>
+            <span className="c-p1">{t.players[next.a]}</span> <span className="dim">vs</span> <span className="c-p2">{t.players[next.b]}</span>
           </div>
-          <button className="btn" onClick={() => setSetupFor(next.id)}>
+          <button className="btn big" onClick={() => setSetupFor(next.id)}>
             GIOCA ▶
           </button>
         </div>
       )}
-      {t.phase === "done" && finalMatch && (
-        <div className="title-logo" style={{ fontSize: 40, textAlign: "center" }}>
-          CAMPIONE: {t.players[(finalMatch.scoreA ?? 0) >= (finalMatch.scoreB ?? 0) ? finalMatch.a : finalMatch.b]}
-        </div>
-      )}
-      <div className="row">
+      <div className="panel">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>NOME</th>
+              <th>GIOCATE</th>
+              <th>VINTE</th>
+              <th>PUNTI</th>
+            </tr>
+          </thead>
+          <tbody>
+            {table.map((r, i) => (
+              <tr key={r.player} className={i < 4 ? "top" : ""}>
+                <td>{i + 1}</td>
+                <td>{r.name}</td>
+                <td>{r.played}</td>
+                <td>{r.wins}</td>
+                <td>{r.points}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="panel col" style={{ gap: 4 }}>
+        <span className="label">RISULTATI</span>
+        {t.matches
+          .filter((m) => m.scoreA !== null)
+          .map((m) => (
+            <div key={m.id}>
+              <span className="dim">{m.stage === "league" ? `T${m.round}` : m.stage === "semi" ? "SF" : "F"}</span> {t.players[m.a]} {m.scoreA} - {m.scoreB} {t.players[m.b]}
+            </div>
+          ))}
+      </div>
+      <div className="row wrap">
         <button
           className="btn ghost"
           onClick={() => {
@@ -158,7 +151,7 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
         >
           ESPORTA
         </button>
-        <label className="btn ghost">
+        <label className="btn ghost" style={{ display: "inline-flex", alignItems: "center" }}>
           IMPORTA
           <input
             type="file"
@@ -175,6 +168,6 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
           CANCELLA
         </button>
       </div>
-    </div>
+    </Page>
   );
 }

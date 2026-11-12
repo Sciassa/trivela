@@ -1,4 +1,4 @@
-import type { GameId, PlayerIdx, PoolGameId, Role, TeammateGraph } from "@trivela/protocol";
+import type { GameId, PlayerIdx, PoolGameId, Role } from "@trivela/protocol";
 import type { MatchIndex } from "@trivela/matcher";
 
 export type Judging = "auto" | "host";
@@ -9,8 +9,6 @@ export interface MatchConfig {
   players: [string, string];
   /** "Domande a partire dall'anno"; null = no filter. */
   yearFrom: number | null;
-  /** Free topic typed by each player. */
-  topics: [string, string];
   seed: number;
   /** Instance ids that must not be used (tournament / device history). */
   excludeIds?: string[];
@@ -20,7 +18,6 @@ export interface MatchConfig {
 
 export interface EngineCtx {
   index: MatchIndex;
-  teammates: TeammateGraph;
 }
 
 export interface Timer {
@@ -66,9 +63,6 @@ export interface AnswerPayload {
   score?: [number, number];
   scorer?: string;
   scorerCorrect?: boolean;
-  chain?: string[];
-  lat?: number;
-  lon?: number;
 }
 
 export interface VerdictPayload {
@@ -79,14 +73,6 @@ export interface VerdictPayload {
 }
 
 export type Phase = "draw" | "intro" | "playing" | "game_over" | "match_over";
-
-export interface TopicResolution {
-  text: string;
-  status: "ok" | "broadened" | "unknown";
-  summary: string;
-  seeds: string[];
-  years: [number, number] | null;
-}
 
 export interface MatchState {
   config: MatchConfig;
@@ -102,7 +88,6 @@ export interface MatchState {
   game: GameStateAny | null;
   /** Items selected for every game at creation (deterministic). */
   content: Partial<Record<GameId, unknown[]>>;
-  topics: [TopicResolution, TopicResolution];
   timer: Timer | null;
   timerSeq: number;
   events: EngineEvent[];

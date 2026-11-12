@@ -1,4 +1,6 @@
-import type { AnswerKey, EntityKind, EntityRecord } from "@trivela/protocol";
+import type { AnswerKey, EntityRecord } from "@trivela/protocol";
+
+type EntityKind = EntityRecord["kind"];
 
 /* ------------------------------------------------------------------ */
 /* Normalisation                                                       */
@@ -111,7 +113,7 @@ export interface MatchIndex {
   fameThreshold: number;
 }
 
-export function buildIndex(entities: EntityRecord[], fameThreshold = 10): MatchIndex {
+export function buildIndex(entities: EntityRecord[], fameThreshold = 45): MatchIndex {
   const keys: IndexKey[] = [];
   const byId = new Map<string, number>();
   entities.forEach((e, i) => {
@@ -144,7 +146,7 @@ export function buildIndex(entities: EntityRecord[], fameThreshold = 10): MatchI
 }
 
 export type ResolveResult =
-  | { status: "ok"; id: string; name: string }
+  | { status: "ok"; id: string; name: string; ids?: string[] }
   | { status: "ambiguous_surname" }
   | { status: "none" };
 
@@ -197,6 +199,11 @@ export function resolve(text: string, index: MatchIndex, kinds?: EntityKind[]): 
     const ent = index.entities[[...strong][0]!]!;
     return { status: "ok", id: ent.id, name: ent.name };
   }
+  if (strong.size > 1) {
+    // Several people share exactly the same name (e.g. a player and a manager): the text cannot say more.
+    const list = [...strong].map((i) => index.entities[i]!).sort((a, b) => b.fame - a.fame);
+    return { status: "ok", id: list[0]!.id, name: list[0]!.name, ids: list.map((e) => e.id) };
+  }
   return { status: "ambiguous_surname" };
 }
 
@@ -222,7 +229,7 @@ export function judgeText(text: string, key: AnswerKey, index: MatchIndex): bool
           .map((id) => index.entities[index.byId.get(id) ?? -1]?.kind)
           .filter((k): k is EntityKind => !!k);
         const r = resolve(text, index, kinds);
-        return r.status === "ok" && key.ids.includes(r.id);
+        return r.status === "ok" && (r.ids ?? [r.id]).some((id) => key.ids.includes(id));
       }
       const n = normalize(key.display);
       return editDistance(q, n, tolerance(n.length)) <= tolerance(n.length);
@@ -279,17 +286,4 @@ export function suggest(text: string, index: MatchIndex): Suggestion[] {
     .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, "it"))
     .filter((s, i, arr) => arr.findIndex((o) => o.name === s.name) === i)
     .slice(0, SPELLER_MAX);
-}
-
-/* ------------------------------------------------------------------ */
-/* Geo                                                                 */
-/* ------------------------------------------------------------------ */
-
-export function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371;
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 2 * R * Math.asin(Math.sqrt(a));
 }
