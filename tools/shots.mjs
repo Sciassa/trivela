@@ -37,8 +37,9 @@ try {
       await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-setup.png` });
       await p.getByText("GIOCA ▶").click();
-      await p.getByText("SI PARTE ▶").click({ timeout: 15000 });
+      await p.getByText("SI PARTE ▶").waitFor({ timeout: 15000 });
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-draw.png` });
+      await p.getByText("SI PARTE ▶").click();
       for (const g of chunk) {
         await p.getByText("VIA! ▶").waitFor();
         await p.waitForTimeout(1300);
