@@ -6,8 +6,12 @@
  */
 import { MqttLite } from "./mqtt";
 
-/** Free public brokers with MQTT over secure WebSocket. */
-export const PUBLIC_RELAYS = ["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt", "wss://test.mosquitto.org:8081/mqtt"];
+/**
+ * Free public brokers with MQTT over secure WebSocket, all used at once: one
+ * that answers is enough. The last one listens on the standard HTTPS port, for
+ * networks that block the others.
+ */
+export const PUBLIC_RELAYS = ["wss://broker.emqx.io:8084/mqtt", "wss://broker.hivemq.com:8884/mqtt", "wss://test.mosquitto.org:8081/mqtt", "wss://mqtt.eclipseprojects.io/mqtt"];
 
 export interface Bus {
   subscribe(topic: string): void;
