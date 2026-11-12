@@ -6,7 +6,7 @@ import email.utils
 import urllib.request
 
 from . import generate
-from .gen_tm import TM_DB, TM_DB_URL, USER_AGENT, ensure_db
+from .tm_core import TM_DB, TM_DB_URL, USER_AGENT, ensure_db
 
 
 def refresh_tm() -> None:
