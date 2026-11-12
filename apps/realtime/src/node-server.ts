@@ -17,7 +17,7 @@ import { RoomCore, roomCode, type ClientMsg, type ClientRole, type Conn } from "
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const WEB = resolve(here, "../../web/dist");
-const PACKS = resolve(here, "../../web/public/packs");
+const PACKS = resolve(here, "../../web/public/data");
 const PORT = Number(process.env.PORT ?? 8787);
 
 async function json<T>(name: string, fallback: T): Promise<T> {
@@ -30,7 +30,7 @@ async function json<T>(name: string, fallback: T): Promise<T> {
 
 async function loadPacks(): Promise<Packs> {
   const items = emptyPackItems();
-  for (const g of GAME_IDS) (items as Record<GameId, unknown[]>)[g] = await json(`${g}.json`, []);
+  for (const g of GAME_IDS) (items as Record<GameId, unknown[]>)[g] = await json(`games/${g}.json`, []);
   return {
     manifest: await json("manifest.json", { version: "empty", generatedAt: "", snapshot: "", counts: {}, sources: [] }),
     items,

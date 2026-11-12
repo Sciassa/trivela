@@ -76,7 +76,9 @@ export function RoomScreen({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
       </div>
       {!room.connected && (
         <div className="panel">
-          Per giocare su più dispositivi avvia il server gratuito sul PC (<code>pnpm build && pnpm server</code>) e apri l'indirizzo mostrato su tutti i dispositivi della stessa Wi-Fi.
+          {location.hostname.endsWith("github.io")
+            ? "Su GitHub Pages c'è solo la versione a schermo singolo: per Regia e pulsantiere apri l'app dal server gratuito avviato sul PC (pnpm build && pnpm server) e usa l'indirizzo che stampa, con tutti i dispositivi sulla stessa Wi-Fi."
+            : "Per giocare su più dispositivi avvia il server gratuito sul PC (pnpm build && pnpm server) e apri l'indirizzo mostrato su tutti i dispositivi della stessa Wi-Fi."}
         </div>
       )}
       {room.code && (

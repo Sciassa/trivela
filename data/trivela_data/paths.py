@@ -7,7 +7,7 @@ REPO = ROOT.parent
 CACHE = ROOT / "cache"
 OF_DIR = CACHE / "openfootball"
 BUILD = ROOT / "build"
-PACKS_OUT = REPO / "apps" / "web" / "public" / "packs"
+PACKS_OUT = REPO / "apps" / "web" / "public" / "data"
 SB_RAW = "https://raw.githubusercontent.com/statsbomb/open-data/master"
 
 # FIFA World Cup final tournaments (men).

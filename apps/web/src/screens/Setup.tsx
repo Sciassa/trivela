@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { createMatch, parseTopic, type EngineCtx, type MatchState } from "@trivela/engine";
+import { parseTopic, type EngineCtx, type MatchState } from "@trivela/engine";
 import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
-import { seenIds } from "../runtime/packs";
+import { prepareMatch, seenIds } from "../runtime/packs";
 
 export interface SetupResult {
   state: MatchState;
   tableMode: boolean;
+  ctx: EngineCtx;
 }
 
 export function TopicField({ label, value, onChange, ctx, color }: { label: string; value: string; onChange: (v: string) => void; ctx: EngineCtx; color: string }) {
@@ -55,7 +56,8 @@ export function Setup({
   const [error, setError] = useState("");
   const yearLocked = presetYear !== undefined;
 
-  const start = () => {
+  const [loading, setLoading] = useState(false);
+  const start = async () => {
     audio.play("select");
     const yearFrom = year.trim() ? Number(year) : null;
     if (yearFrom !== null && (!Number.isFinite(yearFrom) || yearFrom < 1850 || yearFrom > 2100)) {
@@ -72,13 +74,15 @@ export function Setup({
       topics: [t1, t2] as [string, string],
       seed: (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0,
     };
-    let r = createMatch({ ...base, excludeIds: [...seenIds(), ...(excludeIds ?? [])] }, packs, ctx);
-    if (!r.ok && !r.reason.startsWith("Argomento")) r = createMatch({ ...base, excludeIds }, packs, ctx);
+    setLoading(true);
+    let r = await prepareMatch({ ...base, excludeIds: [...seenIds(), ...(excludeIds ?? [])] });
+    if (!r.ok && !r.reason.startsWith("Argomento")) r = await prepareMatch({ ...base, excludeIds });
+    setLoading(false);
     if (!r.ok) {
       setError(r.reason);
       return;
     }
-    onStart({ state: r.state, tableMode });
+    onStart({ state: r.state, tableMode, ctx: r.ctx });
   };
 
   return (
@@ -122,8 +126,8 @@ export function Setup({
         </div>
       )}
       {error && <div className="c-ko">{error}</div>}
-      <button className="btn" onClick={start} disabled={!t1.trim() || !t2.trim()}>
-        GIOCA ▶
+      <button className="btn" onClick={() => void start()} disabled={loading || !t1.trim() || !t2.trim()}>
+        {loading ? "CARICO I GIOCHI…" : "GIOCA ▶"}
       </button>
     </div>
   );

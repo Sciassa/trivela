@@ -52,6 +52,8 @@ try {
   await p.waitForTimeout(4500);
   await p.screenshot({ path: "test-results/draw.png" });
   await p.getByText("SI PARTE ▶").click();
+  const gameRequests = await p.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => n.includes("/data/games/")));
+  check(gameRequests.length <= 6, `screen downloads only the drawn games (${gameRequests.length} game files)`);
   await p.getByText("VIA! ▶").click();
   await p.waitForTimeout(800);
   await p.screenshot({ path: "test-results/game1.png" });
@@ -65,6 +67,8 @@ try {
   await screen.getByText(/STANZA [A-Z]{4}/).waitFor();
   const code = (await screen.getByText(/STANZA [A-Z]{4}/).textContent()).match(/STANZA ([A-Z]{4})/)[1];
   const host = await page({ viewport: { width: 400, height: 860 }, hasTouch: true });
+  const phoneDataRequests = [];
+  host.on("request", (r) => r.url().includes("/data/") && phoneDataRequests.push(r.url()));
   await host.goto(`${BASE}/#/join/${code}?r=host`);
   await host.getByText("In attesa").waitFor();
   const sIn = screen.locator("input.input");
@@ -86,6 +90,7 @@ try {
   check(!!code, `room ${code} created`);
   check(!answerLine || !shown.includes(answerLine.replace(/^Risposta: (\w\) )?/, "")) || answerLine.length < 12, "screen does not show the answer before the reveal");
   check(errors.length === 0, `no page errors in rooms (${errors.join(" | ")})`);
+  check(phoneDataRequests.length === 0, `the Regia phone downloads no question data (${phoneDataRequests.length} requests)`);
 } catch (e) {
   failed = true;
   console.error(e);

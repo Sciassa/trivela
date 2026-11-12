@@ -1104,7 +1104,11 @@ def main() -> None:
     from .gen_tm import generate_all as tm_generate
     from .intl import delta_all, intl_entities
     tm_packs, tm_ents, tm_graph, tm_topic_nb = tm_generate()
-    for src_packs in (tm_packs, delta_all()):
+    from .gen_hist import generate_hist, hist_entities
+    from .postprocess import notable_tm_ids
+    from .gen_tm import TM as _TM
+    hist_packs = generate_hist(notable_tm_ids(_TM()))
+    for src_packs in (tm_packs, delta_all(), hist_packs):
         for game, items in src_packs.items():
             packs.setdefault(game, []).extend(items)
     # every instance must cite at least one source
@@ -1119,7 +1123,7 @@ def main() -> None:
     used = {e for items in packs.values() for it in items for e in it["entities"]}
     entities, topics = build_entities(g, used)
     known = {e["id"] for e in entities}
-    for e in tm_ents + intl_entities():
+    for e in tm_ents + intl_entities() + hist_entities(hist_packs):
         if e["id"] in known:
             continue
         known.add(e["id"])
@@ -1129,9 +1133,13 @@ def main() -> None:
     tm["groups"].update(tm_graph["groups"])
     for p, gs in tm_graph["byPerson"].items():
         tm["byPerson"].setdefault(p, []).extend(gs)
-    PACKS_OUT.mkdir(parents=True, exist_ok=True)
+    from .postprocess import finalize
+    from . import gen_tm as _gen_tm
+    qmap = dict(_gen_tm.LAST_QMAP)
+    packs, entities, filter_report = finalize(packs, entities, graph["people"], qmap)
+    (PACKS_OUT / "games").mkdir(parents=True, exist_ok=True)
     for game, items in packs.items():
-        (PACKS_OUT / f"{game}.json").write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        (PACKS_OUT / "games" / f"{game}.json").write_text(json.dumps(items, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (PACKS_OUT / "entities.json").write_text(json.dumps(entities, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (PACKS_OUT / "teammates.json").write_text(json.dumps(tm, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     (PACKS_OUT / "topics.json").write_text(json.dumps(topics, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -1144,7 +1152,10 @@ def main() -> None:
         "coverage": {"goals_complete_team_editions": len(goals_ok), "squads_complete_team_editions": len(squad_ok)},
     }
     (PACKS_OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
+    manifest["filters"] = filter_report
+    (PACKS_OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(manifest["counts"], indent=2))
+    print(json.dumps(filter_report))
     print(json.dumps(manifest["coverage"]))
 
 

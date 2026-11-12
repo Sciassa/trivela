@@ -27,7 +27,7 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
   const [t, setT] = useState<TournamentState | null>(load);
   const [names, setNames] = useState("");
   const [year, setYear] = useState("");
-  const [playing, setPlaying] = useState<{ matchId: string; state: MatchState; tableMode: boolean } | null>(null);
+  const [playing, setPlaying] = useState<{ matchId: string; state: MatchState; tableMode: boolean; ctx: EngineCtx } | null>(null);
   const [setupFor, setSetupFor] = useState<string | null>(null);
   useEffect(() => save(t), [t]);
 
@@ -35,7 +35,7 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
     return (
       <LocalMatch
         initial={playing.state}
-        ctx={ctx}
+        ctx={playing.ctx}
         tableMode={playing.tableMode}
         onExit={(s) => {
           const m = t.matches.find((x) => x.id === playing.matchId)!;
@@ -60,7 +60,7 @@ export function Tournament({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCt
         excludeIds={t.usedIds}
         onBack={() => setSetupFor(null)}
         onStart={(r) => {
-          setPlaying({ matchId: m.id, state: r.state, tableMode: r.tableMode });
+          setPlaying({ matchId: m.id, state: r.state, tableMode: r.tableMode, ctx: r.ctx });
           setSetupFor(null);
         }}
       />

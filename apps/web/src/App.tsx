@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { MatchState, EngineCtx } from "@trivela/engine";
 import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
-import { loadPacks } from "./runtime/packs";
+import { emptyCtx, loadCore } from "./runtime/packs";
 import { Stage } from "./components/ui";
 import { Setup } from "./screens/Setup";
 import { LocalMatch } from "./screens/LocalMatch";
@@ -14,7 +14,7 @@ type Route =
   | { name: "start" }
   | { name: "menu" }
   | { name: "setup" }
-  | { name: "local"; state: MatchState; tableMode: boolean }
+  | { name: "local"; state: MatchState; tableMode: boolean; ctx: EngineCtx }
   | { name: "tournament" }
   | { name: "room-screen" }
   | { name: "join" }
@@ -31,14 +31,15 @@ export function App() {
   const [route, setRoute] = useState<Route>({ name: "start" });
   const [remote, setRemote] = useState(hashRoute);
   useEffect(() => {
-    void loadPacks().then(setData);
+    if (!hashRoute()) void loadCore().then(setData);
     const h = () => setRemote(hashRoute());
     window.addEventListener("hashchange", h);
     return () => window.removeEventListener("hashchange", h);
   }, []);
 
-  if (remote && data) {
-    return remote.role === "host" ? <HostRoom code={remote.code} ctx={data.ctx} /> : <PadRoom code={remote.code} role={remote.role} ctx={data.ctx} />;
+  if (remote) {
+    // phones never download question packs nor the entity index
+    return remote.role === "host" ? <HostRoom code={remote.code} ctx={emptyCtx} /> : <PadRoom code={remote.code} role={remote.role} ctx={emptyCtx} />;
   }
   if (!data) {
     return (
@@ -117,9 +118,9 @@ export function App() {
         </Stage>
       );
     case "setup":
-      return <Setup packs={packs} ctx={ctx} onBack={() => go({ name: "menu" })} onStart={(r) => setRoute({ name: "local", state: r.state, tableMode: r.tableMode })} />;
+      return <Setup packs={packs} ctx={ctx} onBack={() => go({ name: "menu" })} onStart={(r) => setRoute({ name: "local", state: r.state, tableMode: r.tableMode, ctx: r.ctx })} />;
     case "local":
-      return <LocalMatch initial={route.state} ctx={ctx} tableMode={route.tableMode} onExit={() => go({ name: "menu" })} />;
+      return <LocalMatch initial={route.state} ctx={route.ctx} tableMode={route.tableMode} onExit={() => go({ name: "menu" })} />;
     case "tournament":
       return <Tournament packs={packs} ctx={ctx} onBack={() => go({ name: "menu" })} />;
     case "room-screen":

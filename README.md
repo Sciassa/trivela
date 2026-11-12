@@ -2,7 +2,7 @@
 
 Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 14 mini-giochi, tornei tra amici. Si gioca su 1, 2, 3 o 4 schermi: con un conduttore che usa il telefono come Regia, oppure in modalità automatica con le pulsantiere.
 
-Ogni domanda nasce da fatti confermati da **almeno due famiglie di fonti indipendenti e gratuite** (openfootball, Wikipedia/Wikidata, StatsBomb Open Data). Se le fonti non concordano, il dato non entra nel gioco. Niente contestazioni, niente dati inventati.
+Ogni domanda nasce da fonti gratuite e autorevoli per il loro dominio (Transfermarkt via dataset pubblici, openfootball, Wikipedia/Wikidata, StatsBomb, martj42, open-matchday, engsoccerdata, Fjelstul), calcolata sui dati: niente domande inventate né prese dalla TV, e solo su giocatori noti.
 
 - [`SPEC.md`](SPEC.md): specifica di prodotto e architettura (fonte di verità; vedi §0.1 per le decisioni della v1)
 - [`CLAUDE.md`](CLAUDE.md): istruzioni operative per lo sviluppo
@@ -35,7 +35,7 @@ Il server stampa l'indirizzo da aprire (es. `http://192.168.1.10:8787`). Sullo S
 
 ## Dati
 
-I pacchetti di domande sono già in `apps/web/public/packs/`. Per rigenerarli dalle fonti (richiede rete; Wikipedia e Wikidata limitano le richieste, quindi la prima volta servono decine di minuti):
+I dati delle domande sono già in `apps/web/public/data/` (un file per gioco, scaricato solo quando il gioco viene sorteggiato). Per rigenerarli dalle fonti (richiede rete; Wikipedia e Wikidata limitano le richieste, quindi la prima volta servono decine di minuti):
 
 ```bash
 pnpm data:build

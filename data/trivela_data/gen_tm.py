@@ -22,6 +22,7 @@ from .paths import CACHE
 TM_DB = CACHE / "tm" / "transfermarkt-datasets.duckdb"
 TM_DB_URL = "https://pub-e682421888d945d684bcae8890b0ec20.r2.dev/data/transfermarkt-datasets.duckdb"
 TM_DATASET = "https://github.com/dcaribou/transfermarkt-datasets"
+LAST_QMAP: dict[str, str] = {}
 
 COMP_IT = {
     "IT1": "Serie A", "CL": "Champions League", "CIT": "Coppa Italia", "SCI": "Supercoppa Italiana",
@@ -693,10 +694,12 @@ def gen_maglia(t: TM, limit: int = 2500) -> list[dict]:
     for season, club, pid_, num, n in rows:
         per[(season, club, pid_)][str(num)] += n
     owners = defaultdict(list)
+    counts = {}
     for (season, club, pid_), c in per.items():
         num, n = c.most_common(1)[0]
         if n >= 10 and n / sum(c.values()) >= 0.8 and num.isdigit():
             owners[(season, club, num)].append(pid_)
+            counts[(season, club, pid_)] = n
     out = []
     for (season, club, num), ps in owners.items():
         if len(ps) != 1:
@@ -708,10 +711,11 @@ def gen_maglia(t: TM, limit: int = 2500) -> list[dict]:
         it = base("tm_maglia", (season, club, num), year=int(season), fame=f,
                   entities=["comp:IT1", f"tm:IT1:{season}", f"tm:c:{club}", t.pid(pid_)], sources=[t.src_player(pid_)],
                   script=f"Nella Serie A {season_label(season)} {t.pname(pid_)} indossò il numero {num} del club {t.club_name(club)} (tabellini Transfermarkt).")
-        it.update({"team": t.club_name(club), "season": f"Serie A {season_label(season)}", "number": int(num), "answer": t.answer(pid_)})
+        it.update({"team": t.club_name(club), "season": f"Serie A {season_label(season)}", "number": int(num), "answer": t.answer(pid_),
+                   "_n": counts[(season, club, pid_)]})
         out.append(it)
     out.sort(key=lambda x: -x["fame"])
-    return out[:limit]
+    return out
 
 
 def teammates(t: TM, played_by_club_season: bool = True) -> dict:
@@ -914,6 +918,8 @@ def generate_all(qmap_extra: dict[str, str] | None = None) -> tuple[dict[str, li
     tm_ids = [pid_ for pid_ in pre.players if pre.fame(pid_) >= 45]
     wd = wikidata_by_tm(tm_ids)
     qmap = {k: v["qid"] for k, v in wd.items()}
+    global LAST_QMAP
+    LAST_QMAP = qmap
     if qmap_extra:
         qmap.update(qmap_extra)
     t = TM(qmap)

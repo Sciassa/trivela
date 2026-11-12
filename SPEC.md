@@ -106,6 +106,44 @@ Contenuti dopo la v2:
 | maglia | 5000 |
 | **Totale** | **27237** |
 
+## 0.4 Decisione v3: fonti storiche, domande inedite, notorietà, caricamento a richiesta
+
+**Fonti aggiunte** (tutte gratuite, su GitHub):
+
+| Fonte | Uso | Limiti verificati |
+|---|---|---|
+| `ewenme/transfers` (Transfermarkt, 1992–2022) | Il Mercato 1992–2011 | serve la nazionalità dai profili salimt: abbinamento nome + anno di nascita, scartati i casi ambigui |
+| `salimt/football-datasets` (Transfermarkt) | Il Giramondo (carriere storiche), nazionalità, valore di mercato massimo | presenze stagionali, presenze in Nazionale e compagni di squadra **incompleti** (es. Serie A 1995/96 con 236 gol totali; Baggio, Riva, Meazza, Piola assenti dalle presenze azzurre; nessun dato compagni per Totti/Maldini/Zanetti): **non usati per classifiche** |
+| StatsBomb Open Data | finali di Champions 1999–2019, Europei 2020/2024 (fase a eliminazione), Serie A 1986/87 e 2015/16 (big match) | solo le partite pubblicate da StatsBomb |
+| `jalapic/engsoccerdata` | calendario Serie A 1929–2011: "unica partita giocata di …" | solo risultati e date |
+| `jfjelstul/worldcup` | CT e premi individuali di ogni Mondiale | — |
+
+**Domande inedite.** L'archivio `content/` è stato svuotato. Un filtro (`postprocess.SHOW_FINGERPRINTS`) scarta ogni domanda generata che riproduce i casi già visti negli episodi usati come ispirazione.
+
+**Filtro notorietà.** Un giocatore può essere protagonista di una domanda solo se: valore di mercato massimo ≥ 10 milioni €, oppure ≥ 80 presenze o ≥ 20 gol tra Top 5 campionati e Champions League, oppure ≥ 15 sitelink su Wikidata. Per La Maglia servono anche ≥ 25 partite con quel numero (≥ 10 per i numeri iconici 7, 9, 10, 11, 45, 77, 80, 88, 99); si tengono le 1.200 domande sui giocatori più noti.
+
+**Caricamento a richiesta.** I dati sono in `apps/web/public/data/`: `manifest.json`, `entities.json`, `topics.json`, `teammates.json` e `games/<id>.json`. Lo Schermo scarica all'avvio solo manifest, indice e argomenti; dopo il sorteggio scarica i 5 giochi estratti. Regia e pulsantiere non scaricano dati di gioco (le risposte le giudica il server).
+
+**GitHub Pages.** `.github/workflows/pages.yml` pubblica `apps/web/dist` a ogni push su `main`. Su Pages è disponibile la modalità a schermo singolo; la modalità multi-dispositivo richiede il server locale (WebSocket).
+
+| Gioco | Istanze |
+|---|---|
+| tiro_secco | 9174 |
+| prima_pagina | 1625 |
+| mercato | 1401 |
+| decina | 39 |
+| dischetto | 64 |
+| formazione | 751 |
+| cassaforte | 5761 |
+| giramondo | 1542 |
+| frame | 1325 |
+| intruso | 316 |
+| asta | 241 |
+| filo_rosso | 280 |
+| mappamondo | 1220 |
+| maglia | 1200 |
+| **Totale** | **24939** |
+
 ---
 
 ## 1. Glossario
