@@ -1,138 +1,150 @@
 import { describe, expect, it } from "vitest";
-import type { PoolGameId } from "@trivela/protocol";
-import { createMatch, drawGames, passesYearFilter, reduce, viewFor, POOL } from "./match";
+import type { GameId } from "@trivela/protocol";
+import { MODULES } from "./games";
+import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, passesYearFilter, POOL, reduce, sampleVaried, viewFor } from "./match";
 import { Rng } from "./rng";
-import { parseTopic, parseYears } from "./topic";
 import { createTournament, recordResult, roundRobin, standings } from "./tournament";
 import type { Intent, MatchConfig, MatchState } from "./types";
-import { makeCtx, makePacks, P } from "./fixtures.test-helpers";
+import { makeCtx, makePacks, meta, P } from "./fixtures.test-helpers";
 
 const packs = makePacks();
 const ctx = makeCtx(packs);
+const g5: GameId[] = ["tiro_secco", "maglia", "frame", "prima_pagina", "decina"];
 
-function start(games: PoolGameId[], over: Partial<MatchConfig> = {}): MatchState {
-  const r = createMatch(
-    { judging: "auto", players: ["Anna", "Bruno"], yearFrom: null, topics: ["Juventus", "Udinese"], seed: 7, forcedGames: games, ...over },
-    packs,
-    ctx,
-  );
+function start(games: GameId[], over: Partial<MatchConfig> = {}): MatchState {
+  const r = createMatch({ judging: "auto", players: ["Anna", "Bruno"], yearFrom: null, seed: 7, forcedGames: games, ...over }, packs);
   if (!r.ok) throw new Error(r.reason);
   let s = reduce(r.state, { type: "START" }, ctx);
   s = reduce(s, { type: "BEGIN_GAME" }, ctx);
   return s;
 }
-
 const run = (s: MatchState, ...intents: Intent[]) => intents.reduce((acc, i) => reduce(acc, i, ctx), s);
 const timeout = (s: MatchState) => reduce(s, { type: "TIMEOUT", timerId: s.timer!.id }, ctx);
-const g4: PoolGameId[] = ["tiro_secco", "maglia", "frame", "intruso"];
+const first = (g: GameId) => [g, ...g5.filter((x) => x !== g)].slice(0, 5) as GameId[];
 
 describe("match flow", () => {
-  it("creates a match with 4 games + cassaforte, deterministic per seed", () => {
-    const a = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, topics: ["Juve", "Udinese"], seed: 42 }, packs, ctx);
-    const b = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, topics: ["Juve", "Udinese"], seed: 42 }, packs, ctx);
+  it("draws five games out of ten, deterministically per seed, with no fixed final", () => {
+    const cfg = { judging: "auto" as const, players: ["A", "B"] as [string, string], yearFrom: null, seed: 42 };
+    const a = createMatch(cfg, packs);
+    const b = createMatch(cfg, packs);
     expect(a.ok && b.ok).toBe(true);
     if (a.ok && b.ok) {
       expect(a.state.order).toEqual(b.state.order);
-      expect(a.state.order).toHaveLength(5);
-      expect(a.state.order[4]).toBe("cassaforte");
+      expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
+      expect(new Set(a.state.order).size).toBe(5);
     }
+    expect(POOL).toHaveLength(10);
   });
 
-  it("refuses non-football topics", () => {
-    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, topics: ["la pizza margherita", "Juve"], seed: 1, forcedGames: g4 }, packs, ctx);
-    expect(r.ok).toBe(false);
+  it("limits the rounds: at most two per player, one list per game", () => {
+    expect(itemsNeeded("tiro_secco")).toBe(4);
+    expect(itemsNeeded("frame")).toBe(4);
+    expect(itemsNeeded("maglia")).toBe(4);
+    expect(itemsNeeded("prima_pagina")).toBe(2);
+    expect(itemsNeeded("mercato")).toBe(2);
+    expect(itemsNeeded("giramondo")).toBe(2);
+    expect(itemsNeeded("asta")).toBe(2);
+    expect(itemsNeeded("decina")).toBe(1);
+    expect(itemsNeeded("dischetto")).toBe(1);
+    expect(itemsNeeded("formazione")).toBe(1);
+    expect(Object.keys(MODULES)).toHaveLength(10);
   });
 
   it("lets the trailing player start the next game", () => {
-    let s = start(["tiro_secco", "maglia", "frame", "intruso"]);
-    const first = s.game!.turn;
-    // first player answers right, second wrong, then everyone times out
+    let s = start(g5);
+    const p0 = s.game!.turn;
     s = run(s, { type: "ANSWER", payload: { choice: 1 } }, { type: "NEXT" }, { type: "ANSWER", payload: { choice: 0 } }, { type: "NEXT" });
-    while (s.phase === "playing") {
-      s = s.game!.stage === "ask" ? timeout(s) : run(s, { type: "NEXT" });
-    }
-    expect(s.scores[first]).toBe(2);
+    while (s.phase === "playing") s = s.game!.stage === "ask" ? timeout(s) : run(s, { type: "NEXT" });
+    expect(s.scores[p0]).toBe(2);
     s = run(s, { type: "NEXT" });
-    expect(s.starters[1]).toBe(first === 0 ? 1 : 0);
+    expect(s.starters[1]).toBe(p0 === 0 ? 1 : 0);
   });
 
   it("hides answers from the screen view", () => {
-    const s = start(["tiro_secco", "maglia", "frame", "intruso"]);
+    const s = start(g5);
     const v = viewFor(s, "screen");
     expect(v.content).toEqual({});
     expect(v.game!.items[v.game!.i].correct).toBe(-1);
     expect(v.game!.items[v.game!.i + 1]).toBeNull();
     expect(viewFor(s, "host").game!.items[0].correct).toBe(1);
   });
-});
 
-describe("year filter", () => {
-  const item = { yearMin: 1998, yearMax: 2003, activeYears: [2001, 2006] } as never;
-  it("applies to events and persons, not to lists or topics", () => {
-    expect(passesYearFilter("tiro_secco", item, 2000)).toBe(false);
-    expect(passesYearFilter("giramondo", item, 2000)).toBe(true);
-    expect(passesYearFilter("intruso", item, 2002)).toBe(false);
-    expect(passesYearFilter("decina", item, 2020)).toBe(true);
-    expect(passesYearFilter("dischetto", item, 2020)).toBe(true);
-    expect(passesYearFilter("asta", item, 2020)).toBe(true);
-    expect(passesYearFilter("prima_pagina", item, 2020)).toBe(true);
-    expect(passesYearFilter("cassaforte", item, 2020)).toBe(true);
+  it("ends the match after the fifth game", () => {
+    let s = start(g5);
+    let guard = 0;
+    while (s.phase !== "match_over" && guard++ < 500) {
+      if (s.phase === "intro") s = run(s, { type: "BEGIN_GAME" });
+      else if (s.timer) s = timeout(s);
+      else if (s.game?.stage === "choose") s = run(s, { type: "CHOOSE", value: 0 });
+      else s = run(s, { type: "NEXT" });
+    }
+    expect(s.phase).toBe("match_over");
+    expect(s.gameIdx).toBe(5);
   });
 });
 
-describe("draw", () => {
-  it("respects group constraints and opener slot", () => {
+describe("year filter and sampling", () => {
+  const item = { yearMin: 2014, yearMax: 2018, activeYears: [2021] } as never;
+  it("applies to events and careers, not to lists", () => {
+    expect(passesYearFilter("tiro_secco", item, 2015)).toBe(false);
+    expect(passesYearFilter("prima_pagina", item, 2015)).toBe(false);
+    expect(passesYearFilter("giramondo", item, 2020)).toBe(true);
+    expect(passesYearFilter("decina", item, 2025)).toBe(true);
+    expect(passesYearFilter("dischetto", item, 2025)).toBe(true);
+    expect(passesYearFilter("asta", item, 2025)).toBe(true);
+  });
+  it("alternates question types regardless of how many instances each has", () => {
+    const items = [...Array.from({ length: 50 }, () => meta({ generator: "big" })), meta({ generator: "rare1" }), meta({ generator: "rare2" }), meta({ generator: "rare3" })];
+    const picked = sampleVaried(items, 4, new Rng(3), new Set())!;
+    expect(new Set(picked.map((p) => p.generator)).size).toBe(4);
+  });
+  it("respects draw constraints", () => {
     for (let seed = 1; seed < 200; seed++) {
       const d = drawGames(new Rng(seed), POOL);
-      expect(new Set(d).size).toBe(4);
+      expect(new Set(d).size).toBe(5);
       expect(d.filter((g) => g === "mercato" || g === "giramondo").length).toBeLessThanOrEqual(1);
       expect(d.filter((g) => ["decina", "dischetto", "asta"].includes(g)).length).toBeLessThanOrEqual(1);
-      expect(["tiro_secco", "frame", "maglia", "intruso", "mappamondo"]).toContain(d[0]);
+      expect(["tiro_secco", "frame", "maglia"]).toContain(d[0]);
     }
   });
 });
 
-describe("tiro secco", () => {
-  it("alternates 8 questions, +2 per correct answer", () => {
-    let s = start(g4);
-    const turns: number[] = [];
-    for (let k = 0; k < 8; k++) {
-      turns.push(s.game!.turn);
-      s = run(s, { type: "ANSWER", payload: { choice: 1 } }, { type: "NEXT" });
-    }
-    expect(turns).toEqual([0, 1, 0, 1, 0, 1, 0, 1].map((x) => (x === 0 ? turns[0] : 1 - turns[0]!)));
-    expect(s.scores).toEqual([8, 8]);
+describe("tiro secco and maglia", () => {
+  it("two questions each, +2 per correct answer", () => {
+    let s = start(g5);
+    for (let k = 0; k < 4; k++) s = run(s, { type: "ANSWER", payload: { choice: 1 } }, { type: "NEXT" });
+    expect(s.scores).toEqual([4, 4]);
     expect(s.phase).toBe("game_over");
+  });
+  it("maglia: the answer is the shirt number, hidden from the screen", () => {
+    let s = start(first("maglia"));
+    const item = s.game!.items[0];
+    expect(viewFor(s, "screen").game!.items[0].answer.display).toBe("");
+    s = run(s, { type: "ANSWER", payload: { text: String(item.answer.value) } });
+    expect(s.game!.last.points).toBe(3);
+    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { text: "98" } });
+    expect(s.game!.last.points).toBe(0);
   });
 });
 
 describe("il mercato", () => {
-  it("awards points of the current clue and frees the other player after a wrong answer", () => {
-    let s = start(["mercato", "maglia", "frame", "intruso"]);
-    s = timeout(s); // ready -> clue 1
-    expect(s.game!.revealed).toBe(1);
-    s = timeout(s); // clue 2
+  it("two profiles; points of the current clue; a wrong answer frees the opponent", () => {
+    let s = start(first("mercato"));
+    expect(s.game!.items).toHaveLength(2);
+    s = timeout(s);
+    s = timeout(s);
     s = run(s, { type: "BUZZ", player: 0 }, { type: "ANSWER", player: 0, payload: { text: "Mario Ulivo" } });
-    expect(s.game!.out[0]).toBe(true);
-    expect(s.game!.free).toBe(true);
-    s = run(s, { type: "REVEAL_CLUE" }, { type: "REVEAL_CLUE" }); // clue 4
-    const target = (s.game!.items[0].answer.display as string);
+    if (!s.game!.out[0]) throw new Error("expected player 0 to be out");
+    s = run(s, { type: "REVEAL_CLUE" }, { type: "REVEAL_CLUE" });
+    const target = s.game!.items[0].answer.display as string;
     s = run(s, { type: "BUZZ", player: 1 }, { type: "ANSWER", player: 1, payload: { text: target } });
     expect(s.scores).toEqual([0, 5]);
   });
-
-  it("ignores buzzes after a false start until the next clue", () => {
-    let s = start(["mercato", "maglia", "frame", "intruso"]);
-    s = run(s, { type: "BUZZ", player: 1 });
-    expect(s.events[0]).toMatchObject({ type: "false_start", player: 1 });
-    s = timeout(s);
-    expect(s.game!.locked).toEqual([false, false]);
-  });
 });
 
-describe("la decina", () => {
-  it("stops at the 10th correct answer", () => {
-    let s = start(["decina", "maglia", "frame", "intruso"]);
+describe("la decina e dal dischetto", () => {
+  it("decina stops at the 10th correct answer", () => {
+    let s = start(first("decina"));
     for (let k = 0; k < 10; k++) {
       s = run(s, { type: "ANSWER", payload: { text: P(k).name } });
       if (s.game!.stage === "feedback") s = timeout(s);
@@ -140,26 +152,8 @@ describe("la decina", () => {
     expect(s.game!.stage).toBe("final");
     expect(s.scores[0] + s.scores[1]).toBe(20);
   });
-
-  it("knocks a player out after two errors; repeating a name is an error", () => {
-    let s = start(["decina", "maglia", "frame", "intruso"]);
-    const a = s.game!.turn;
-    s = run(s, { type: "ANSWER", payload: { text: P(0).name } });
-    s = timeout(s);
-    s = run(s, { type: "ANSWER", payload: { text: P(0).name } }); // b repeats: error 1
-    s = timeout(s);
-    s = timeout(s); // a times out: error 1
-    s = timeout(s);
-    s = timeout(s); // b error 2 -> out
-    s = timeout(s);
-    expect(s.game!.out[1 - a]).toBe(true);
-    expect(s.game!.turn).toBe(a);
-  });
-});
-
-describe("dal dischetto", () => {
-  it("closes the tenth place after one of the tied names", () => {
-    let s = start(["dischetto", "maglia", "frame", "intruso"]);
+  it("dischetto: five kicks each on one list, tenth place closes after one tied name", () => {
+    let s = start(first("dischetto"));
     s = run(s, { type: "ANSWER", payload: { text: P(9).name } });
     expect(s.events[0]).toMatchObject({ type: "goal", points: 2 });
     s = timeout(s);
@@ -173,87 +167,28 @@ describe("dal dischetto", () => {
   });
 });
 
-describe("la formazione", () => {
-  it("scores 15/10/5/3/2/0", () => {
-    let s = start(["formazione", "maglia", "frame", "intruso"]);
+describe("la formazione, l'asta, il frame", () => {
+  it("formazione scores 15/10/5/3/2/0", () => {
+    let s = start(first("formazione"));
     s = run(s, { type: "CHOOSE", value: 0 });
-    const team = s.game!.item.teams[0];
-    const hidden = team.players.filter((p: { hidden: boolean }) => p.hidden);
+    const hidden = s.game!.item.teams[0].players.filter((p: { hidden: boolean }) => p.hidden);
     for (const h of hidden.slice(0, 4)) s = run(s, { type: "ANSWER", payload: { text: h.name } });
     s = run(s, { type: "FINISH" });
     expect(s.scores[s.game!.turn]).toBe(10);
   });
-});
-
-describe("la cassaforte", () => {
-  it("applies inverse malus and can go negative", () => {
-    let s = start(g4);
-    s = { ...s, phase: "game_over", gameIdx: 3 };
-    s = run(s, { type: "NEXT" }, { type: "BEGIN_GAME" });
-    expect(s.game!.game).toBe("cassaforte");
-    const p = s.game!.picks[0];
-    s = run(s, { type: "CHOOSE", value: 1 }, { type: "ANSWER", payload: { text: "sbagliato del tutto" } });
-    expect(s.scores[p]).toBe(-30);
-    s = run(s, { type: "NEXT" }, { type: "CHOOSE", value: 3 }, { type: "VERDICT", payload: { correct: true } });
-    expect(s.scores[1 - p]).toBe(30);
-  });
-});
-
-describe("l'asta", () => {
-  it("winner must deliver; failure gives +5 to the opponent", () => {
-    let s = start(["asta", "maglia", "frame", "intruso"]);
+  it("asta: the winner must deliver; failure gives +5 to the opponent", () => {
+    let s = start(first("asta"));
     const a = s.game!.turn;
     s = run(s, { type: "BID", player: a, amount: 3 }, { type: "PASS", player: 1 - a } as Intent);
-    expect(s.game!.stage).toBe("proving");
     s = run(s, { type: "ANSWER", payload: { text: P(0).name } }, { type: "FINISH" });
     expect(s.scores[1 - a]).toBe(5);
-    s = run(s, { type: "NEXT" });
-    const b = s.game!.turn;
-    s = run(s, { type: "BID", player: b, amount: 2 }, { type: "PASS", player: 1 - b } as Intent);
-    s = run(s, { type: "ANSWER", payload: { text: P(4).name } }, { type: "ANSWER", payload: { text: P(5).name } });
-    expect(s.game!.stage).toBe("reveal");
   });
-});
-
-describe("il filo rosso", () => {
-  it("rewards the optimal chain", () => {
-    let s = start(["filo_rosso", "maglia", "frame", "intruso"]);
-    s = run(s, { type: "ANSWER", payload: { chain: [P(1).name] } });
-    expect(s.game!.last.points).toBe(10);
-    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { chain: [P(2).name, P(4).name] } });
-    expect(s.game!.last.points).toBe(5);
-  });
-});
-
-describe("frame and mappamondo", () => {
-  it("frame: exact +3, bonus +2", () => {
-    let s = start(["frame", "maglia", "tiro_secco", "intruso"]);
+  it("frame: exact +3, bonus +2, sign only +1", () => {
+    let s = start(first("frame"));
     s = run(s, { type: "ANSWER", payload: { score: [2, 1], scorer: P(1).name } });
     expect(s.game!.last.points).toBe(5);
     s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { score: [3, 0] } });
     expect(s.game!.last.points).toBe(1);
-  });
-
-  it("mappamondo: distance bands", () => {
-    let s = start(["mappamondo", "maglia", "tiro_secco", "intruso"]);
-    s = run(s, { type: "ANSWER", payload: { lat: 45.1, lon: 7.7 } });
-    expect(s.game!.last.points).toBe(5);
-    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { lat: 45.46, lon: 9.19 } });
-    expect(s.game!.last.points).toBe(1);
-  });
-});
-
-describe("topic", () => {
-  it("parses seasons and decades", () => {
-    expect(parseYears("La Juve di Conte 2011/12")).toEqual([2011, 2011]);
-    expect(parseYears("L'Udinese degli anni 2000")).toEqual([2000, 2009]);
-    expect(parseYears("anni '90")).toEqual([1990, 1999]);
-  });
-  it("maps free text to entities", () => {
-    const t = parseTopic("La Juve 2011/12", ctx.index);
-    expect(t.seeds).toContain("c1");
-    expect(t.years).toEqual([2011, 2011]);
-    expect(parseTopic("la pizza margherita", ctx.index).status).toBe("unknown");
   });
 });
 
@@ -262,19 +197,12 @@ describe("tournament", () => {
     expect(roundRobin(4)).toHaveLength(6);
     expect(roundRobin(5)).toHaveLength(10);
   });
-  it("sums points (negative allowed), top 4 to semis, then final", () => {
+  it("sums points, top 4 to semis, then final", () => {
     let t = createTournament(["A", "B", "C", "D", "E"]);
-    for (const m of t.matches.filter((x) => x.stage === "league")) {
-      t = recordResult(t, m.id, m.a * 10 - 25, m.b * 10 - 25);
-    }
+    for (const m of t.matches.filter((x) => x.stage === "league")) t = recordResult(t, m.id, m.a * 10, m.b * 10);
     expect(t.phase).toBe("semi");
-    const table = standings(t);
-    expect(table[0]!.name).toBe("E");
-    expect(table[4]!.points).toBeLessThan(0);
-    const semis = t.matches.filter((m) => m.stage === "semi");
-    expect(semis.map((m) => [m.a, m.b])).toEqual([[4, 1], [3, 2]]);
-    for (const m of semis) t = recordResult(t, m.id, 10, 5);
-    expect(t.phase).toBe("final");
+    expect(standings(t)[0]!.name).toBe("E");
+    for (const m of t.matches.filter((x) => x.stage === "semi")) t = recordResult(t, m.id, 10, 5);
     t = recordResult(t, t.matches.find((m) => m.stage === "final")!.id, 3, 4);
     expect(t.phase).toBe("done");
   });

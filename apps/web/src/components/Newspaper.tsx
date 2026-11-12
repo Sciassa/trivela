@@ -20,7 +20,7 @@ function Fill({ text, slots, revealed }: { text: string; slots: PrimaPaginaSlot[
         }
         return (
           <span key={i} className={`redact b${slot.lengthBucket}`}>
-            <span className="tag">{k + 1}</span>
+            <span className="tagn">{k + 1}</span>
           </span>
         );
       })}

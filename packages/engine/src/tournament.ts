@@ -11,9 +11,6 @@ export interface TournamentMatch {
   b: number;
   scoreA: number | null;
   scoreB: number | null;
-  /** Points scored in the Cassaforte by a and b (tie-breaker). */
-  cassaA?: number;
-  cassaB?: number;
 }
 
 export interface TournamentState {
@@ -34,7 +31,6 @@ export interface Standing {
   average: number;
   wins: number;
   best: number;
-  cassa: number;
 }
 
 export function createTournament(players: string[], opts: { rounds?: number; yearFrom?: number | null } = {}): TournamentState {
@@ -99,15 +95,13 @@ export function recordResult(
   matchId: string,
   scoreA: number,
   scoreB: number,
-  extra: { cassaA?: number; cassaB?: number; usedIds?: string[] } = {},
+  extra: { usedIds?: string[] } = {},
 ): TournamentState {
   const next: TournamentState = structuredClone(t);
   const m = next.matches.find((x) => x.id === matchId);
   if (!m) throw new Error("Partita inesistente");
   m.scoreA = scoreA;
   m.scoreB = scoreB;
-  m.cassaA = extra.cassaA;
-  m.cassaB = extra.cassaB;
   next.usedIds.push(...(extra.usedIds ?? []));
   return advance(next);
 }
@@ -135,14 +129,11 @@ function advance(t: TournamentState): TournamentState {
   return t;
 }
 
-/** Knock-out ties are broken by the Cassaforte balance, then by the better league position. */
+/** Knock-out ties go to the better-placed player of the league phase (listed first). */
 export function winnerOfMatch(m: TournamentMatch): number {
   const a = m.scoreA ?? 0;
   const b = m.scoreB ?? 0;
   if (a !== b) return a > b ? m.a : m.b;
-  const ca = m.cassaA ?? 0;
-  const cb = m.cassaB ?? 0;
-  if (ca !== cb) return ca > cb ? m.a : m.b;
   return m.a;
 }
 
@@ -155,7 +146,6 @@ export function standings(t: TournamentState): Standing[] {
     average: 0,
     wins: 0,
     best: -Infinity,
-    cassa: 0,
   }));
   for (const m of t.matches) {
     if (m.stage !== "league" || m.scoreA === null || m.scoreB === null) continue;
@@ -165,8 +155,6 @@ export function standings(t: TournamentState): Standing[] {
     rb.played++;
     ra.points += m.scoreA;
     rb.points += m.scoreB;
-    ra.cassa += m.cassaA ?? 0;
-    rb.cassa += m.cassaB ?? 0;
     ra.best = Math.max(ra.best, m.scoreA);
     rb.best = Math.max(rb.best, m.scoreB);
     if (m.scoreA > m.scoreB) ra.wins++;
@@ -192,7 +180,6 @@ export function standings(t: TournamentState): Standing[] {
       y.wins - x.wins ||
       -h2h(x.player, y.player) ||
       y.best - x.best ||
-      y.cassa - x.cassa ||
       x.player - y.player,
   );
 }

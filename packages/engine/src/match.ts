@@ -1,63 +1,50 @@
-import {
-  GAME_IDS,
-  type CassaforteItem,
-  type GameId,
-  type InstanceMeta,
-  type Packs,
-  type PlayerIdx,
-  type PoolGameId,
-  type Role,
-} from "@trivela/protocol";
+import { GAME_IDS, type GameId, type InstanceMeta, type Packs, type PlayerIdx, type Role } from "@trivela/protocol";
 import { MODULES } from "./games";
 import { Rng } from "./rng";
-import { parseTopic, rankByTopic } from "./topic";
-import {
-  other,
-  type EngineCtx,
-  type EngineEvent,
-  type Env,
-  type Intent,
-  type MatchConfig,
-  type MatchState,
-  type TopicResolution,
-} from "./types";
+import { other, type EngineCtx, type EngineEvent, type Env, type Intent, type MatchConfig, type MatchState } from "./types";
 
-export const POOL: PoolGameId[] = GAME_IDS.filter((g): g is PoolGameId => g !== "cassaforte");
+export const POOL: GameId[] = [...GAME_IDS];
+/** Games drawn for every match. */
+export const GAMES_PER_MATCH = 5;
 
 /* ------------------------------------------------------------------ */
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "frame", "mappamondo", "maglia"];
-const PERSON_GAMES: GameId[] = ["giramondo", "filo_rosso", "intruso"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "prima_pagina", "mercato", "formazione", "frame", "maglia"];
+const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
   if (yearFrom === null) return true;
   if (EVENT_GAMES.includes(game)) return item.yearMin >= yearFrom;
   if (PERSON_GAMES.includes(game)) return (item.activeYears ?? [item.yearMax]).every((y) => y >= yearFrom);
-  return true; // lists (decina, dischetto, asta) and free-topic games ignore the filter
+  return true; // lists and rankings (decina, dischetto, asta) ignore the filter
 }
 
 export function eligibleItems(game: GameId, packs: Packs, config: MatchConfig): InstanceMeta[] {
   const exclude = new Set(config.excludeIds ?? []);
-  return (packs.items[game] as InstanceMeta[]).filter(
-    (it) => !exclude.has(it.id) && passesYearFilter(game, it, config.yearFrom),
-  );
+  return (packs.items[game] as InstanceMeta[]).filter((it) => !exclude.has(it.id) && passesYearFilter(game, it, config.yearFrom));
+}
+
+/** How many instances a game consumes in one match. */
+export function itemsNeeded(game: GameId): number {
+  const m = MODULES[game];
+  return m.perPlayer ? m.count * 2 : m.count;
 }
 
 /* ------------------------------------------------------------------ */
-/* Draw (SPEC §5.2)                                                     */
+/* Draw                                                                 */
 /* ------------------------------------------------------------------ */
 
-const BUZZER_GROUP: PoolGameId[] = ["mercato", "giramondo"];
-const LIST_GROUP: PoolGameId[] = ["decina", "dischetto", "asta"];
-const OPENERS: PoolGameId[] = ["tiro_secco", "frame", "maglia", "intruso", "mappamondo"];
+const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
+const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
+const OPENERS: GameId[] = ["tiro_secco", "frame", "maglia"];
 
-export function drawGames(rng: Rng, available: PoolGameId[]): PoolGameId[] {
+export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): GameId[] {
   const avail = new Set(available);
   const openers = OPENERS.filter((g) => avail.has(g));
-  const out: PoolGameId[] = [];
-  const ok = (g: PoolGameId) => {
+  const out: GameId[] = [];
+  const ok = (g: GameId) => {
     if (out.includes(g)) return false;
     if (BUZZER_GROUP.includes(g) && out.some((x) => BUZZER_GROUP.includes(x))) return false;
     if (LIST_GROUP.includes(g) && out.some((x) => LIST_GROUP.includes(x))) return false;
@@ -65,15 +52,40 @@ export function drawGames(rng: Rng, available: PoolGameId[]): PoolGameId[] {
   };
   if (openers.length) out.push(rng.pick(openers));
   for (const g of rng.shuffle([...avail])) {
-    if (out.length >= 4) break;
+    if (out.length >= n) break;
     if (ok(g)) out.push(g);
   }
-  // If constraints left us short, relax them (never repeat a game).
+  // If the constraints left us short, relax them (never repeat a game).
   for (const g of rng.shuffle([...avail])) {
-    if (out.length >= 4) break;
+    if (out.length >= n) break;
     if (!out.includes(g)) out.push(g);
   }
   return out;
+}
+
+/**
+ * Pick n items evenly across generators: question types alternate instead of
+ * being proportional to how many instances each type has.
+ */
+export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng: Rng, used: Set<string>): T[] | null {
+  const groups = new Map<string, T[]>();
+  for (const it of rng.shuffle(items)) {
+    if (used.has(it.id)) continue;
+    const g = groups.get(it.generator) ?? [];
+    g.push(it);
+    groups.set(it.generator, g);
+  }
+  const order = rng.shuffle([...groups.keys()]);
+  const picked: T[] = [];
+  while (picked.length < n && order.some((k) => groups.get(k)!.length)) {
+    for (const k of order) {
+      const g = groups.get(k)!;
+      if (g.length && picked.length < n) picked.push(g.pop()!);
+    }
+  }
+  if (picked.length < n) return null;
+  picked.forEach((it) => used.add(it.id));
+  return rng.shuffle(picked);
 }
 
 /* ------------------------------------------------------------------ */
@@ -82,82 +94,21 @@ export function drawGames(rng: Rng, available: PoolGameId[]): PoolGameId[] {
 
 export type CreateResult = { ok: true; state: MatchState } | { ok: false; reason: string };
 
-export function resolveTopics(config: MatchConfig, ctx: EngineCtx): [TopicResolution, TopicResolution] {
-  return [parseTopic(config.topics[0], ctx.index), parseTopic(config.topics[1], ctx.index)];
-}
-
-export function createMatch(config: MatchConfig, packs: Packs, ctx: EngineCtx): CreateResult {
+export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx): CreateResult {
   const rng = new Rng(config.seed);
-  const topics = resolveTopics(config, ctx);
-  for (const [i, t] of topics.entries()) {
-    if (t.status === "unknown") {
-      return { ok: false, reason: `Argomento di ${config.players[i]} non riconosciuto: riscrivilo.` };
-    }
+  const used = new Set<string>();
+  const available = POOL.filter((g) => eligibleItems(g, packs, config).length >= itemsNeeded(g));
+  const games = config.forcedGames ?? drawGames(rng, available);
+  if (games.length < GAMES_PER_MATCH && !config.forcedGames) {
+    return { ok: false, reason: `Contenuti insufficienti per sorteggiare ${GAMES_PER_MATCH} giochi.` };
   }
   const content: Partial<Record<GameId, unknown[]>> = {};
-  const used = new Set<string>();
-  const take = (game: GameId, list: InstanceMeta[], n: number) => {
-    const picked: InstanceMeta[] = [];
-    for (const it of list) {
-      if (picked.length >= n) break;
-      if (used.has(it.id)) continue;
-      used.add(it.id);
-      picked.push(it);
-    }
-    return picked.length === n ? picked : null;
-  };
-
-  const selectTopicItems = (game: GameId): unknown[] | null => {
-    const pool = eligibleItems(game, packs, config);
-    const perPlayer: unknown[] = [];
-    for (const p of [0, 1] as const) {
-      const ranked = rankByTopic(pool, topics[p], packs.topics, (a) => rng.shuffle(a));
-      if (game === "cassaforte") {
-        const levels: CassaforteItem[] = [];
-        for (const level of [1, 2, 3] as const) {
-          const hit = ranked.candidates.find(
-            (it) => (it as CassaforteItem).level === level && !used.has(it.id),
-          ) as CassaforteItem | undefined;
-          if (!hit) return null;
-          used.add(hit.id);
-          levels.push(hit);
-          if (ranked.levels[ranked.candidates.indexOf(hit)]! >= 3) topics[p].status = "broadened";
-        }
-        perPlayer.push(levels);
-      } else {
-        const hit = ranked.candidates.find((it) => !used.has(it.id));
-        if (!hit) return null;
-        used.add(hit.id);
-        if (ranked.levels[ranked.candidates.indexOf(hit)]! >= 3) topics[p].status = "broadened";
-        perPlayer.push(hit);
-      }
-    }
-    return perPlayer;
-  };
-
-  const available = POOL.filter((g) => {
-    if (g === "prima_pagina") return eligibleItems(g, packs, config).length >= 2;
-    return eligibleItems(g, packs, config).length >= MODULES[g].count;
-  });
-  const games = config.forcedGames ?? drawGames(rng, available);
-  if (games.length < 4) return { ok: false, reason: "Contenuti insufficienti per sorteggiare 4 giochi." };
-
   for (const g of games) {
-    if (g === "prima_pagina") {
-      const items = selectTopicItems(g);
-      if (!items) return { ok: false, reason: "Contenuti insufficienti per Prima Pagina." };
-      content[g] = items;
-      continue;
-    }
-    const items = take(g, rng.shuffle(eligibleItems(g, packs, config)), MODULES[g].count);
+    const items = sampleVaried(eligibleItems(g, packs, config), itemsNeeded(g), rng, used);
     if (!items) return { ok: false, reason: `Contenuti insufficienti per ${g}.` };
     content[g] = items;
   }
-  const cassa = selectTopicItems("cassaforte");
-  if (!cassa) return { ok: false, reason: "Contenuti insufficienti per la Cassaforte." };
-  content.cassaforte = cassa;
-
-  const order: GameId[] = [...games, "cassaforte"];
+  const order: GameId[] = [...games];
   const state: MatchState = {
     config,
     scores: [0, 0],
@@ -168,7 +119,6 @@ export function createMatch(config: MatchConfig, packs: Packs, ctx: EngineCtx): 
     gamePoints: order.map(() => [0, 0] as [number, number]),
     game: null,
     content,
-    topics,
     timer: null,
     timerSeq: 0,
     events: [],

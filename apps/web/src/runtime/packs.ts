@@ -1,12 +1,12 @@
-import { emptyPackItems, type GameId, type PackItems, type Packs, type PoolGameId } from "@trivela/protocol";
+import { emptyPackItems, type GameId, type Packs } from "@trivela/protocol";
 import { buildIndex } from "@trivela/matcher";
-import { createMatch, drawGames, MODULES, POOL, Rng, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
+import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, POOL, Rng, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
 
 /**
  * Lazy data loading (SPEC §0.4):
- *  - core (manifest + entity index + topic graph) is loaded only by the device that runs the match;
+ *  - the core (manifest + people index) is loaded only by the device that runs the match;
  *  - each game pack (data/games/<id>.json) is fetched only when that game is drawn;
- *  - Regia and controllers never download packs.
+ *  - Regia and controllers never download game data.
  */
 
 const BASE = "./data";
@@ -28,67 +28,66 @@ export interface Core {
 
 let core: Promise<Core> | null = null;
 const gameCache = new Map<GameId, Promise<unknown[]>>();
-let teammates: Promise<Packs["teammates"]> | null = null;
 
 export function loadCore(): Promise<Core> {
   if (!core) {
     core = (async () => {
-      const [manifest, entities, topics] = await Promise.all([
+      const [manifest, entities] = await Promise.all([
         getJson<Packs["manifest"]>("manifest.json", { version: "empty", generatedAt: "", snapshot: "", counts: {}, sources: [] }),
         getJson<Packs["entities"]>("entities.json", []),
-        getJson<Packs["topics"]>("topics.json", { neighbors: {} }),
       ]);
-      const packs: Packs = { manifest, items: emptyPackItems(), entities, teammates: { groups: {}, byPerson: {} }, topics };
-      return { packs, ctx: { index: buildIndex(entities), teammates: packs.teammates } };
+      const packs: Packs = { manifest, items: emptyPackItems(), entities };
+      return { packs, ctx: { index: buildIndex(entities) } };
     })();
   }
   return core;
 }
 
-/** Empty context for phones (no index download: the server judges the answers). */
-export const emptyCtx: EngineCtx = { index: buildIndex([]), teammates: { groups: {}, byPerson: {} } };
+/** Empty context for phones: no index download, the Screen device judges the answers. */
+export const emptyCtx: EngineCtx = { index: buildIndex([]) };
 
 function loadGame(g: GameId): Promise<unknown[]> {
   if (!gameCache.has(g)) gameCache.set(g, getJson<unknown[]>(`games/${g}.json`, []));
   return gameCache.get(g)!;
 }
 
-async function ensureGames(c: Core, games: GameId[]): Promise<void> {
-  await Promise.all(
-    games.map(async (g) => {
-      (c.packs.items as Record<GameId, unknown[]>)[g] = await loadGame(g);
-    }),
-  );
-  if (games.includes("filo_rosso")) {
-    teammates ??= getJson<Packs["teammates"]>("teammates.json", { groups: {}, byPerson: {} });
-    const tm = await teammates;
-    c.packs.teammates = tm;
-    c.ctx = { ...c.ctx, teammates: tm };
-  }
-}
+export type PrepareResult = { ok: true; state: MatchState; ctx: EngineCtx } | { ok: false; reason: string };
 
 /** Draw the games from the manifest, download only those packs, then create the match. */
-export async function prepareMatch(
-  config: Omit<MatchConfig, "forcedGames">,
-): Promise<{ ok: true; state: MatchState; ctx: EngineCtx } | { ok: false; reason: string }> {
+export async function prepareMatch(config: MatchConfig): Promise<PrepareResult> {
   const c = await loadCore();
   const counts = c.packs.manifest.counts;
-  const forced = (config as MatchConfig & { forcedGames?: PoolGameId[] }).forcedGames;
-  let available = POOL.filter((g) => (counts[g] ?? 0) >= (g === "prima_pagina" ? 2 : MODULES[g].count));
+  let available = POOL.filter((g) => (counts[g] ?? 0) >= itemsNeeded(g));
   const rng = new Rng(config.seed ^ 0x5eed);
   let lastReason = "Contenuti insufficienti.";
   for (let attempt = 0; attempt < 8; attempt++) {
-    const games = forced ?? drawGames(rng, available);
-    if (games.length < 4) break;
-    await ensureGames(c, [...games, "cassaforte"]);
-    const r = createMatch({ ...config, forcedGames: games }, c.packs, c.ctx);
+    const games = config.forcedGames ?? drawGames(rng, available);
+    if (games.length < GAMES_PER_MATCH && !config.forcedGames) break;
+    await Promise.all(
+      games.map(async (g) => {
+        (c.packs.items as Record<GameId, unknown[]>)[g] = await loadGame(g);
+      }),
+    );
+    const r = createMatch({ ...config, forcedGames: games }, c.packs);
     if (r.ok) return { ok: true, state: r.state, ctx: c.ctx };
     lastReason = r.reason;
-    if (r.reason.startsWith("Argomento") || forced) return r;
-    const bad = games.find((g) => r.reason.includes(g) || r.reason.toLowerCase().includes(g.replace("_", " ")));
+    if (config.forcedGames) break;
+    // e.g. the year filter leaves too few questions for one game: draw again without it
+    const bad = games.find((g) => r.reason.includes(g));
     available = available.filter((g) => g !== (bad ?? games[games.length - 1]));
   }
   return { ok: false, reason: lastReason };
+}
+
+/** Debug aid: ?games=a,b,c,d,e forces the drawn games (used by visual checks). */
+export function forcedGamesFromUrl(): GameId[] | undefined {
+  const raw = new URLSearchParams(location.search).get("games");
+  const list = raw?.split(",").filter((g): g is GameId => (POOL as string[]).includes(g));
+  return list?.length ? list : undefined;
+}
+
+export function newSeed(): number {
+  return (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0;
 }
 
 /** Device history of seen instances (per-viewer convenience, safe if storage fails). */
@@ -102,11 +101,15 @@ export function seenIds(): string[] {
 
 export function rememberSeen(ids: string[]): void {
   try {
-    const all = Array.from(new Set([...seenIds(), ...ids])).slice(-5000);
+    const all = Array.from(new Set([...seenIds(), ...ids])).slice(-6000);
     localStorage.setItem("trivela.seen", JSON.stringify(all));
   } catch {
     /* ignore */
   }
 }
 
-export type { PackItems };
+/** Create a match avoiding questions already seen on this device, when possible. */
+export async function prepareFreshMatch(config: MatchConfig): Promise<PrepareResult> {
+  const r = await prepareMatch({ ...config, excludeIds: [...seenIds(), ...(config.excludeIds ?? [])] });
+  return r.ok ? r : prepareMatch(config);
+}

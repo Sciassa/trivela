@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { parseTopic, type EngineCtx, type MatchState } from "@trivela/engine";
-import type { Packs } from "@trivela/protocol";
+import { useState } from "react";
+import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
-import { prepareMatch, seenIds } from "../runtime/packs";
+import { forcedGamesFromUrl, newSeed, prepareFreshMatch } from "../runtime/packs";
+import { Page } from "../components/ui";
 
 export interface SetupResult {
   state: MatchState;
@@ -10,125 +10,103 @@ export interface SetupResult {
   ctx: EngineCtx;
 }
 
-export function TopicField({ label, value, onChange, ctx, color }: { label: string; value: string; onChange: (v: string) => void; ctx: EngineCtx; color: string }) {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const t = window.setTimeout(() => setDebounced(value), 300);
-    return () => window.clearTimeout(t);
-  }, [value]);
-  const res = useMemo(() => (debounced.trim().length >= 3 ? parseTopic(debounced, ctx.index) : null), [debounced, ctx]);
+/** Parse the "from year" field; undefined when it is not a plausible year. */
+export function parseYear(text: string): number | null | undefined {
+  if (!text.trim()) return null;
+  const y = Number(text);
+  return Number.isInteger(y) && y >= 1900 && y <= 2100 ? y : undefined;
+}
+
+export function PlayersFields({ p1, p2, setP1, setP2, locked }: { p1: string; p2: string; setP1: (v: string) => void; setP2: (v: string) => void; locked?: boolean }) {
+  return (
+    <div className="grid2">
+      <div className="field">
+        <label className="c-p1">GIOCATORE 1</label>
+        <input className="input" value={p1} maxLength={14} disabled={locked} placeholder="Nome" onChange={(e) => setP1(e.target.value)} style={{ borderColor: "var(--p1)" }} />
+      </div>
+      <div className="field">
+        <label className="c-p2">GIOCATORE 2</label>
+        <input className="input" value={p2} maxLength={14} disabled={locked} placeholder="Nome" onChange={(e) => setP2(e.target.value)} style={{ borderColor: "var(--p2)" }} />
+      </div>
+    </div>
+  );
+}
+
+export function YearField({ year, setYear, locked }: { year: string; setYear: (v: string) => void; locked?: boolean }) {
   return (
     <div className="field">
-      <label>{label}</label>
-      <input className="input" value={value} onChange={(e) => onChange(e.target.value)} placeholder="Scrivi quello che vuoi: una squadra, un torneo, un'epoca…" style={{ borderColor: color }} />
-      <span style={{ fontSize: 20, minHeight: 24 }} className={res?.status === "unknown" ? "c-ko" : "dim"}>
-        {res ? (res.status === "unknown" ? "Non riconosco un argomento calcistico: riscrivilo." : `Argomento: ${res.summary}`) : " "}
-      </span>
+      <label>SOLO DOMANDE DALL'ANNO… (VUOTO = TUTTE LE STAGIONI)</label>
+      <input className="input" inputMode="numeric" value={year} disabled={locked} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="es. 2018" />
+      <span className="note">I dati partono dalla stagione 2012/13. Elenchi e classifiche (Decina, Dischetto, Asta) usano sempre tutte le stagioni.</span>
     </div>
   );
 }
 
 export function Setup({
-  packs,
-  ctx,
   onStart,
   onBack,
   presetPlayers,
   yearFrom: presetYear,
   excludeIds,
-  judging = "auto",
 }: {
-  packs: Packs;
-  ctx: EngineCtx;
   onStart: (r: SetupResult) => void;
   onBack: () => void;
   presetPlayers?: [string, string];
   yearFrom?: number | null;
   excludeIds?: string[];
-  judging?: "auto" | "host";
 }) {
   const [p1, setP1] = useState(presetPlayers?.[0] ?? "");
   const [p2, setP2] = useState(presetPlayers?.[1] ?? "");
   const [year, setYear] = useState(presetYear ? String(presetYear) : "");
-  const [t1, setT1] = useState("");
-  const [t2, setT2] = useState("");
   const [tableMode, setTableMode] = useState(false);
   const [error, setError] = useState("");
-  const yearLocked = presetYear !== undefined;
-
   const [loading, setLoading] = useState(false);
+
   const start = async () => {
     audio.play("select");
-    const yearFrom = year.trim() ? Number(year) : null;
-    if (yearFrom !== null && (!Number.isFinite(yearFrom) || yearFrom < 1850 || yearFrom > 2100)) {
+    const yearFrom = parseYear(year);
+    if (yearFrom === undefined) {
       setError("Anno non valido.");
       return;
     }
-    // Debug aid: ?games=a,b,c,d forces the four drawn games (used by visual checks).
-    const forced = new URLSearchParams(location.search).get("games")?.split(",").filter(Boolean) as never;
-    const base = {
-      ...(forced ? { forcedGames: forced } : {}),
-      judging,
-      players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"] as [string, string],
-      yearFrom,
-      topics: [t1, t2] as [string, string],
-      seed: (Date.now() ^ Math.floor(performance.now() * 1000)) >>> 0,
-    };
     setLoading(true);
-    let r = await prepareMatch({ ...base, excludeIds: [...seenIds(), ...(excludeIds ?? [])] });
-    if (!r.ok && !r.reason.startsWith("Argomento")) r = await prepareMatch({ ...base, excludeIds });
+    const r = await prepareFreshMatch({
+      judging: "auto",
+      players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"],
+      yearFrom,
+      seed: newSeed(),
+      excludeIds,
+      forcedGames: forcedGamesFromUrl(),
+    });
     setLoading(false);
     if (!r.ok) {
-      setError(r.reason);
+      setError(yearFrom ? `${r.reason} Prova con un anno precedente.` : r.reason);
       return;
     }
     onStart({ state: r.state, tableMode, ctx: r.ctx });
   };
 
   return (
-    <div className="phone-ui" style={{ maxWidth: 900 }}>
-      <div className="row">
-        <button className="btn ghost" onClick={onBack}>
-          ◀
-        </button>
-        <span className="px c-accent" style={{ fontSize: 20 }}>
-          NUOVA SFIDA
-        </span>
-      </div>
-      <div className="row" style={{ flexWrap: "wrap" }}>
-        <div className="field grow">
-          <label>GIOCATORE 1</label>
-          <input className="input" value={p1} onChange={(e) => setP1(e.target.value)} style={{ borderColor: "var(--p1)" }} />
-        </div>
-        <div className="field grow">
-          <label>GIOCATORE 2</label>
-          <input className="input" value={p2} onChange={(e) => setP2(e.target.value)} style={{ borderColor: "var(--p2)" }} />
-        </div>
-      </div>
+    <Page title="NUOVA SFIDA · UN SOLO SCHERMO" onBack={onBack}>
+      <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
+      <YearField year={year} setYear={setYear} locked={presetYear !== undefined} />
       <div className="field">
-        <label>DOMANDE SUL CALCIO A PARTIRE DALL'ANNO (vuoto = tutte le epoche)</label>
-        <input className="input" inputMode="numeric" value={year} disabled={yearLocked} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} placeholder="es. 2005" />
-        <span className="dim" style={{ fontSize: 18 }}>
-          Elenchi e classifiche (Decina, Dischetto, Asta) e gli argomenti a piacere usano sempre tutte le epoche.
-        </span>
-      </div>
-      <TopicField label={`ARGOMENTO A PIACERE DI ${p1 || "GIOCATORE 1"}`} value={t1} onChange={setT1} ctx={ctx} color="var(--p1)" />
-      <TopicField label={`ARGOMENTO A PIACERE DI ${p2 || "GIOCATORE 2"}`} value={t2} onChange={setT2} ctx={ctx} color="var(--p2)" />
-      {judging === "auto" && (
-        <div className="row">
-          <span className="dim">Schermo singolo:</span>
-          <button className={`btn ${!tableMode ? "" : "ghost"}`} onClick={() => setTableMode(false)}>
-            LEGGIO
+        <label>DOVE STA LO SCHERMO?</label>
+        <div className="seg">
+          <button className={`btn ${tableMode ? "ghost" : ""}`} onClick={() => setTableMode(false)}>
+            DI FRONTE
           </button>
           <button className={`btn ${tableMode ? "" : "ghost"}`} onClick={() => setTableMode(true)}>
-            TAVOLO
+            SUL TAVOLO
           </button>
         </div>
-      )}
-      {error && <div className="c-ko">{error}</div>}
-      <button className="btn" onClick={() => void start()} disabled={loading || !t1.trim() || !t2.trim()}>
+        <span className="note">{tableMode ? "Sul tavolo tra i due giocatori: i pulsanti di prenotazione sono girati verso i lati." : "TV, PC o tablet davanti a entrambi i giocatori."}</span>
+      </div>
+      <div className="panel note">5 giochi sorteggiati su 10 · al massimo 2 domande a testa per gioco · vince chi fa più punti.</div>
+      {error && <div className="err">{error}</div>}
+      <button className="btn big" onClick={() => void start()} disabled={loading}>
         {loading ? "CARICO I GIOCHI…" : "GIOCA ▶"}
       </button>
-    </div>
+    </Page>
   );
 }

@@ -1,11 +1,29 @@
-import { useEffect, useMemo, useState } from "react";
-import { usedIds, viewFor, type EngineCtx, type MatchState } from "@trivela/engine";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { usedIds, viewFor, type EngineCtx, type Intent, type MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
-import { NextButton, Scoreboard, Stage, useWakeLock } from "../components/ui";
+import { Confetti, Fit, NextButton, PlayCtx, Scoreboard, Stage, useWakeLock, type PlayMode } from "../components/ui";
+import { GAME_COLORS, GameIcon, Sprite } from "../components/sprites";
 import { ClueBuzzer, GameView, isBuzzerGame } from "../games/GameView";
 import { GAME_NAMES, GAME_RULES } from "../rules";
+
+const LOCAL: PlayMode = { readonly: false, flow: true, pad: false };
+
+/** Green/red flash (and confetti) after every judged answer. */
+function useFx(state: MatchState) {
+  const [fx, setFx] = useState<{ kind: "ok" | "ko"; id: number; party: boolean } | null>(null);
+  useEffect(() => {
+    const ev = state.events;
+    const scored = ev.some((e) => (e.type === "correct" && e.points > 0) || e.type === "goal");
+    const kind = scored || ev.some((e) => e.type === "notice") ? "ok" : ev.some((e) => e.type === "wrong" || e.type === "miss" || e.type === "false_start") ? "ko" : null;
+    if (!kind) return;
+    setFx({ kind, id: Date.now(), party: scored });
+    const t = window.setTimeout(() => setFx(null), 1100);
+    return () => window.clearTimeout(t);
+  }, [state.events]);
+  return fx;
+}
 
 export function MatchShell({
   state,
@@ -14,71 +32,95 @@ export function MatchShell({
   start,
   onExit,
   tableMode,
-  readonly,
+  mode = LOCAL,
 }: {
   state: MatchState;
-  dispatch: ReturnType<typeof useLocalMatch>["dispatch"];
+  dispatch: (i: Intent) => void;
   ctx: EngineCtx;
   start: number;
   onExit: (s: MatchState) => void;
   tableMode?: boolean;
-  readonly?: boolean;
+  mode?: PlayMode;
 }) {
   const view = useMemo(() => viewFor(state, "screen"), [state]);
   const g = state.order[state.gameIdx];
+  const fx = useFx(state);
+  const buzzer = state.phase === "playing" && !!view.game && isBuzzerGame(view.game.game);
   return (
     <Stage>
-      <div className={readonly ? "readonly" : undefined}>
-      <Scoreboard state={state} />
-      {state.phase === "draw" && <Draw state={state} onStart={() => dispatch({ type: "START" })} />}
-      {state.phase === "intro" && g && (
-        <div className="game center">
-          <div className="col center" style={{ maxWidth: 1100, textAlign: "center" }}>
-            <div className="title-logo" style={{ fontSize: 56 }}>
-              {GAME_NAMES[g]}
-            </div>
-            {GAME_RULES[g].map((r) => (
-              <div key={r} style={{ fontSize: 34 }}>
-                {r}
+      <PlayCtx.Provider value={mode}>
+        <Scoreboard state={state} />
+        <main className={`arena ${fx ? `fx-${fx.kind}` : ""}`}>
+          {fx?.party && <Confetti key={fx.id} />}
+          {state.phase === "draw" && (
+            <Fit center>
+              <Draw state={state} onStart={() => dispatch({ type: "START" })} />
+            </Fit>
+          )}
+          {state.phase === "intro" && g && (
+            <Fit center key={`intro${state.gameIdx}`}>
+              <div className="splash enter" style={{ "--game": GAME_COLORS[g] } as CSSProperties}>
+                <div className="px dim">
+                  GIOCO {state.gameIdx + 1} DI {state.order.length}
+                </div>
+                <div className="game-card">
+                  <GameIcon game={g} size={150} />
+                  <h2>{GAME_NAMES[g]}</h2>
+                </div>
+                <div className="rules">
+                  {GAME_RULES[g].map((r, k) => (
+                    <div key={r} style={{ "--i": k } as CSSProperties}>
+                      {r}
+                    </div>
+                  ))}
+                </div>
+                <div className={`px ${state.starters[state.gameIdx] === 0 ? "c-p1" : "c-p2"}`}>
+                  {isBuzzerGame(g) ? "MANO AI PULSANTI!" : `INIZIA ${state.config.players[state.starters[state.gameIdx]!]}`}
+                </div>
+                <NextButton label="VIA! ▶" onClick={() => dispatch({ type: "BEGIN_GAME" })} />
               </div>
+            </Fit>
+          )}
+          {state.phase === "playing" &&
+            view.game &&
+            (buzzer ? (
+              <ClueBuzzer state={state} g={view.game} dispatch={dispatch} ctx={ctx} start={start} tableMode={tableMode} />
+            ) : (
+              <Fit key={`game${state.gameIdx}`}>
+                <div className="view enter">
+                  <GameView state={state} g={view.game} dispatch={dispatch} ctx={ctx} start={start} />
+                </div>
+              </Fit>
             ))}
-            <div className={`px ${state.starters[state.gameIdx] === 0 ? "c-p1" : "c-p2"}`} style={{ fontSize: 18, marginTop: 20 }}>
-              {g === "mercato" || g === "giramondo" ? "Mano ai pulsanti!" : `Inizia ${state.config.players[state.starters[state.gameIdx]!]}`}
-            </div>
-            <NextButton label="VIA! ▶" onClick={() => dispatch({ type: "BEGIN_GAME" })} />
-          </div>
-        </div>
-      )}
-      {state.phase === "playing" && view.game && (
-        isBuzzerGame(view.game.game) ? (
-          <ClueBuzzer state={state} g={view.game} dispatch={dispatch} ctx={ctx} start={start} tableMode={tableMode} />
-        ) : (
-          <div className="game">
-            <GameView state={state} g={view.game} dispatch={dispatch} ctx={ctx} start={start} />
-          </div>
-        )
-      )}
-      {state.phase === "game_over" && g && (
-        <div className="game center">
-          <div className="col center">
-            <div className="px c-accent" style={{ fontSize: 28 }}>
-              FINE {GAME_NAMES[g]}
-            </div>
-            <div className="px" style={{ fontSize: 22 }}>
-              <span className="c-p1">
-                {state.config.players[0]} +{state.gamePoints[state.gameIdx]![0]}
-              </span>
-              {"   "}
-              <span className="c-p2">
-                {state.config.players[1]} +{state.gamePoints[state.gameIdx]![1]}
-              </span>
-            </div>
-            <NextButton onClick={() => dispatch({ type: "NEXT" })} />
-          </div>
-        </div>
-      )}
-      {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} />}
-      </div>
+          {state.phase === "game_over" && g && (
+            <Fit center key={`over${state.gameIdx}`}>
+              <div className="splash enter" style={{ "--game": GAME_COLORS[g] } as CSSProperties}>
+                <div className="px c-accent" style={{ fontSize: 30 }}>
+                  FINE · {GAME_NAMES[g]}
+                </div>
+                <div className="vs">
+                  {([0, 1] as const).map((p) => (
+                    <div key={p} className={`col center ${p === 0 ? "c-p1" : "c-p2"}`} style={{ gap: 12 }}>
+                      <Sprite name="face" size={110} />
+                      <span>{state.config.players[p]}</span>
+                      <span className="led big" style={{ color: "inherit" }}>
+                        +{state.gamePoints[state.gameIdx]![p]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                {state.order[state.gameIdx + 1] && (
+                  <div className="row dim">
+                    Prossimo gioco: <GameIcon game={state.order[state.gameIdx + 1]!} size={44} /> {GAME_NAMES[state.order[state.gameIdx + 1]!]}
+                  </div>
+                )}
+                <NextButton label={state.order[state.gameIdx + 1] ? "AVANTI ▶" : "RISULTATO FINALE ▶"} onClick={() => dispatch({ type: "NEXT" })} />
+              </div>
+            </Fit>
+          )}
+          {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} />}
+        </main>
+      </PlayCtx.Provider>
     </Stage>
   );
 }
@@ -87,34 +129,39 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
     if (shown >= state.order.length) return;
-    audio.play("slot");
-    const t = window.setTimeout(() => setShown((s) => s + 1), 700);
+    const t = window.setTimeout(() => {
+      audio.play("slot");
+      setShown((s) => s + 1);
+    }, 650);
     return () => window.clearTimeout(t);
   }, [shown, state.order.length]);
+  const done = shown >= state.order.length;
   return (
-    <div className="game center">
-      <div className="col center">
-        <div className="px c-accent" style={{ fontSize: 26 }}>
-          IL SORTEGGIO
-        </div>
-        {state.order.map((g, k) => (
-          <div key={g} className="px" style={{ fontSize: 30, opacity: k < shown ? 1 : 0.15 }}>
-            {k + 1}. {k < shown ? GAME_NAMES[g] : "????????"}
-          </div>
-        ))}
-        <div className="dim" style={{ marginTop: 10 }}>
-          Argomenti: <span className="c-p1">{state.topics[0].summary || state.topics[0].text}</span> ·{" "}
-          <span className="c-p2">{state.topics[1].summary || state.topics[1].text}</span>
-          {state.topics.some((t) => t.status === "broadened") && " (argomento allargato per mancanza di dati verificati)"}
-        </div>
-        {shown >= state.order.length && (
-          <div className="col center" style={{ gap: 6 }}>
-            <div className="px" style={{ fontSize: 16 }}>
-              Moneta: inizia <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
+    <div className="splash enter">
+      <div className="px c-accent" style={{ fontSize: 34 }}>
+        IL SORTEGGIO
+      </div>
+      <div className="draw-grid">
+        {state.order.map((g, k) =>
+          k < shown ? (
+            <div key={g} className="draw-card open" style={{ "--game": GAME_COLORS[g] } as CSSProperties}>
+              <span className="n">GIOCO {k + 1}</span>
+              <GameIcon game={g} size={96} />
+              {GAME_NAMES[g]}
             </div>
-            <NextButton label="SI PARTE ▶" onClick={onStart} />
-          </div>
+          ) : (
+            <div key={g} className="draw-card closed">
+              ?
+            </div>
+          ),
         )}
+      </div>
+      {state.config.yearFrom !== null && <div className="dim">Domande dal {state.config.yearFrom} in poi (elenchi e classifiche usano tutte le stagioni).</div>}
+      <div className="px" style={{ visibility: done ? "visible" : "hidden" }}>
+        MONETA: INIZIA <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
+      </div>
+      <div style={{ visibility: done ? "visible" : "hidden" }}>
+        <NextButton label="SI PARTE ▶" onClick={onStart} />
       </div>
     </div>
   );
@@ -124,22 +171,37 @@ function MatchOver({ state, onExit }: { state: MatchState; onExit: () => void })
   const [a, b] = state.scores;
   const winner = a === b ? null : a > b ? 0 : 1;
   return (
-    <div className="game center">
-      <div className="col center">
-        <div className="title-logo" style={{ fontSize: 60 }}>
-          {winner === null ? "PAREGGIO!" : "VINCE"}
-        </div>
-        {winner !== null && (
-          <div className={`px ${winner === 0 ? "c-p1" : "c-p2"}`} style={{ fontSize: 44 }}>
-            {state.config.players[winner]}
+    <>
+      <Confetti rain count={60} />
+      <Fit center>
+        <div className="splash enter">
+          <Sprite name="trophy" size={150} className="blink-slow" />
+          <div className="px c-accent" style={{ fontSize: 34 }}>
+            {winner === null ? "PAREGGIO!" : "VINCE"}
           </div>
-        )}
-        <div className="px" style={{ fontSize: 30 }}>
-          {a} — {b}
+          {winner !== null && <div className={`winner-name ${winner === 0 ? "c-p1" : "c-p2"}`}>{state.config.players[winner]}</div>}
+          <div className="final-score">
+            <span className="c-p1">{state.config.players[0]}</span>
+            <span className="led big">
+              {a} - {b}
+            </span>
+            <span className="c-p2">{state.config.players[1]}</span>
+          </div>
+          <div className="breakdown">
+            {state.order.map((g, k) => (
+              <div key={g} style={{ display: "contents" }}>
+                <span className="c-p1" style={{ textAlign: "right" }}>
+                  +{state.gamePoints[k]![0]}
+                </span>
+                <span className="px dim">{GAME_NAMES[g]}</span>
+                <span className="c-p2">+{state.gamePoints[k]![1]}</span>
+              </div>
+            ))}
+          </div>
+          <NextButton label="FINE" onClick={onExit} />
         </div>
-        <NextButton label="FINE" onClick={onExit} />
-      </div>
-    </div>
+      </Fit>
+    </>
   );
 }
 

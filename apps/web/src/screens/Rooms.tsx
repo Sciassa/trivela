@@ -1,163 +1,201 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
-import type { EngineCtx, GameStateAny, MatchState } from "@trivela/engine";
-import type {
-  CassaforteItem,
-  DischettoItem,
-  FiloRossoItem,
-  FormazioneItem,
-  FrameItem,
-  IntrusoItem,
-  MagliaItem,
-  MappamondoItem,
-  PlayerIdx,
-  PrimaPaginaItem,
-  Packs,
-  SetItem,
-  TiroSeccoItem,
-} from "@trivela/protocol";
+import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
+import type { DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, PrimaPaginaItem, SetItem, TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
-import { useRoom, type Role } from "../runtime/room";
+import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
+import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
+import { emptyCtx, forcedGamesFromUrl, newSeed, prepareFreshMatch, rememberSeen } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
-import { TopicField } from "./Setup";
-import { AnswerBox, RotateOverlay, ScorePicker, useWakeLock } from "../components/ui";
+import { parseYear, PlayersFields, YearField } from "./Setup";
+import { AnswerBox, Page, PlayCtx, ScorePicker, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
-import { WorldMap } from "../components/WorldMap";
 import { GAME_NAMES } from "../rules";
 
-function joinUrl(code: string, role: Role) {
-  return `${location.origin}${location.pathname}#/join/${code}?r=${role}`;
-}
+const ROLE_LABEL: Record<ClientRole, string> = { host: "REGIA", p1: "GIOCATORE 1", p2: "GIOCATORE 2" };
+const ROLE_COLOR: Record<ClientRole, string> = { host: "var(--accent)", p1: "var(--p1)", p2: "var(--p2)" };
 
-function Qr({ url, label, color }: { url: string; label: string; color: string }) {
+function QrCard({ code, role, joined, label }: { code: string; role: ClientRole; joined: boolean; label: string }) {
   const [src, setSrc] = useState("");
   useEffect(() => {
-    void QRCode.toDataURL(url, { margin: 1, width: 220, color: { dark: "#0b0b1a", light: "#f2f2ff" } }).then(setSrc);
-  }, [url]);
+    void QRCode.toDataURL(joinUrl(code, role), { margin: 1, width: 380, color: { dark: "#0b0b1a", light: "#f2f2ff" } }).then(setSrc);
+  }, [code, role]);
   return (
-    <div className="col center" style={{ gap: 8 }}>
-      {src && <img src={src} width={220} height={220} alt={`QR ${label}`} style={{ imageRendering: "pixelated", border: `6px solid ${color}` }} />}
-      <span className="px" style={{ fontSize: 13, color }}>
-        {label}
-      </span>
+    <div className={`qr-card ${joined ? "joined" : ""}`} style={{ color: ROLE_COLOR[role] }} data-role={role}>
+      {src && <img src={src} alt={`QR ${label}`} />}
+      <span className="px">{label}</span>
     </div>
   );
 }
 
-/* ------------------------------------------------------------ Screen */
+/* ------------------------------------------------------------ Screen: lobby + match */
 
-export function RoomScreen({ packs, ctx, onBack }: { packs: Packs; ctx: EngineCtx; onBack: () => void }) {
-  const room = useRoom("screen");
+type Mode = "host" | "pads";
+
+export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void }) {
+  const room = useHostedRoom(ctx);
+  const [mode, setMode] = useState<Mode>("pads");
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
-  const [t1, setT1] = useState("");
-  const [t2, setT2] = useState("");
   const [year, setYear] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [matchCtx, setMatchCtx] = useState(ctx);
   useWakeLock(true);
-  void packs;
+  const { roster } = room;
+  // a phone that joins as Regia switches the lobby to "con conduttore"
+  useEffect(() => {
+    if (roster.host) setMode("host");
+  }, [roster.host]);
+
   if (room.state) {
     return (
-      <div className="readonly-wrap">
-        <MatchShell state={room.state} dispatch={room.dispatch} ctx={ctx} start={room.timerStart} onExit={onBack} readonly={room.roster.host || room.roster.p1 || room.roster.p2} />
-      </div>
+      <MatchShell
+        state={room.state}
+        dispatch={room.dispatch}
+        ctx={matchCtx}
+        start={room.timerStart}
+        mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host, pad: false }}
+        onExit={(s) => {
+          rememberSeen(usedIds(s));
+          room.start(null);
+        }}
+      />
     );
   }
+
+  const ready = mode === "host" ? roster.host : roster.p1 && roster.p2;
+  const start = async () => {
+    audio.play("select");
+    const yearFrom = parseYear(year);
+    if (yearFrom === undefined) {
+      setError("Anno non valido.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    const r = await prepareFreshMatch({
+      judging: room.judging(),
+      players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"],
+      yearFrom,
+      seed: newSeed(),
+      forcedGames: forcedGamesFromUrl(),
+    });
+    setLoading(false);
+    if (!r.ok) {
+      setError(yearFrom ? `${r.reason} Prova con un anno precedente.` : r.reason);
+      return;
+    }
+    setMatchCtx(r.ctx);
+    room.start(r.state, r.ctx);
+  };
+
   return (
-    <div className="phone-ui" style={{ maxWidth: 1200 }}>
-      <div className="row">
-        <button className="btn ghost" onClick={onBack}>
-          ◀
-        </button>
-        <span className="px c-accent" style={{ fontSize: 22 }}>
-          STANZA {room.code || "…"}
-        </span>
+    <Page title="SCHERMO + TELEFONI" onBack={onBack} wide>
+      <div className="row wrap">
+        <span className="label">STANZA</span>
+        <span className="code">{room.code}</span>
         <span className="grow" />
-        <span className={room.connected ? "c-ok" : "c-ko"}>{room.connected ? "connesso" : "server non raggiungibile"}</span>
+        <span className={`status-dot ${room.connected ? "on" : ""}`}>{room.connected ? "IN LINEA" : "MI COLLEGO…"}</span>
       </div>
-      {!room.connected && (
-        <div className="panel">
-          {location.hostname.endsWith("github.io")
-            ? "Su GitHub Pages c'è solo la versione a schermo singolo: per Regia e pulsantiere apri l'app dal server gratuito avviato sul PC (pnpm build && pnpm server) e usa l'indirizzo che stampa, con tutti i dispositivi sulla stessa Wi-Fi."
-            : "Per giocare su più dispositivi avvia il server gratuito sul PC (pnpm build && pnpm server) e apri l'indirizzo mostrato su tutti i dispositivi della stessa Wi-Fi."}
-        </div>
-      )}
-      {room.code && (
-        <div className="row" style={{ justifyContent: "space-around", flexWrap: "wrap" }}>
-          <Qr url={joinUrl(room.code, "host")} label={`REGIA ${room.roster.host ? "✔" : ""}`} color="var(--accent)" />
-          <Qr url={joinUrl(room.code, "p1")} label={`PULSANTIERA 1 ${room.roster.p1 ? "✔" : ""}`} color="var(--p1)" />
-          <Qr url={joinUrl(room.code, "p2")} label={`PULSANTIERA 2 ${room.roster.p2 ? "✔" : ""}`} color="var(--p2)" />
-        </div>
-      )}
-      <div className="dim">Modalità A: collega la Regia (il conduttore valida le risposte a voce). Modalità B: collega le due pulsantiere.</div>
-      <div className="row">
-        <input className="input" placeholder="Giocatore 1" value={p1} onChange={(e) => setP1(e.target.value)} style={{ borderColor: "var(--p1)" }} />
-        <input className="input" placeholder="Giocatore 2" value={p2} onChange={(e) => setP2(e.target.value)} style={{ borderColor: "var(--p2)" }} />
-        <input className="input" placeholder="Dal anno (facolt.)" value={year} onChange={(e) => setYear(e.target.value.replace(/\D/g, "").slice(0, 4))} style={{ maxWidth: 260 }} />
+      <div className="mode-pick">
+        <button className={mode === "pads" ? "on" : ""} onClick={() => setMode("pads")}>
+          <b>SENZA CONDUTTORE · 2 TELEFONI</b>
+          Ogni giocatore usa il proprio telefono per prenotarsi e rispondere. L'app corregge da sola.
+        </button>
+        <button className={mode === "host" ? "on" : ""} onClick={() => setMode("host")}>
+          <b>CON CONDUTTORE · 1 TELEFONO</b>
+          Il conduttore vede soluzioni e copione sul telefono e convalida le risposte date a voce.
+        </button>
       </div>
-      <TopicField label="ARGOMENTO GIOCATORE 1" value={t1} onChange={setT1} ctx={ctx} color="var(--p1)" />
-      <TopicField label="ARGOMENTO GIOCATORE 2" value={t2} onChange={setT2} ctx={ctx} color="var(--p2)" />
-      {room.error && <div className="c-ko">{room.error}</div>}
-      <button
-        className="btn"
-        disabled={!room.connected || !t1.trim() || !t2.trim()}
-        onClick={() =>
-          room.setup({ players: [p1 || "Giocatore 1", p2 || "Giocatore 2"], yearFrom: year ? Number(year) : null, topics: [t1, t2] })
-        }
-      >
-        CREA LA PARTITA ▶
+      <div className="panel col">
+        <span className="label">INQUADRA IL QR CON LA FOTOCAMERA DEL TELEFONO</span>
+        <div className={mode === "host" ? "grid3" : "grid2"} style={mode === "host" ? { gridTemplateColumns: "minmax(0, 260px)", justifyContent: "center" } : { maxWidth: 520, margin: "0 auto", width: "100%" }}>
+          {mode === "host" ? (
+            <QrCard code={room.code} role="host" joined={roster.host} label="REGIA (CONDUTTORE)" />
+          ) : (
+            <>
+              <QrCard code={room.code} role="p1" joined={roster.p1} label={p1.trim() || "GIOCATORE 1"} />
+              <QrCard code={room.code} role="p2" joined={roster.p2} label={p2.trim() || "GIOCATORE 2"} />
+            </>
+          )}
+        </div>
+        <span className="note">
+          Senza fotocamera: sul telefono apri questo stesso sito, tocca «ENTRA CON CODICE» e scrivi <b className="c-accent">{room.code}</b>. Non serve la stessa Wi-Fi: basta una connessione a internet su ogni dispositivo.
+        </span>
+      </div>
+      <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} />
+      <YearField year={year} setYear={setYear} />
+      {error && <div className="err">{error}</div>}
+      <button className="btn big" disabled={loading || !ready} onClick={() => void start()}>
+        {loading ? "CARICO I GIOCHI…" : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
       </button>
-    </div>
+    </Page>
   );
 }
 
-export function RoomJoin() {
+export function RoomJoin({ onBack }: { onBack: () => void }) {
   const [code, setCode] = useState("");
+  const ok = isRoomCode(code);
   return (
-    <div className="phone-ui">
-      <div className="px c-accent">ENTRA IN UNA STANZA</div>
-      <input className="input" value={code} onChange={(e) => setCode(e.target.value.toUpperCase().slice(0, 4))} placeholder="CODICE" />
-      {(["host", "p1", "p2"] as const).map((r) => (
-        <button key={r} className="btn" disabled={code.length !== 4} onClick={() => (location.hash = `#/join/${code}?r=${r}`)}>
-          {r === "host" ? "REGIA" : r === "p1" ? "PULSANTIERA 1" : "PULSANTIERA 2"}
+    <Page title="ENTRA CON CODICE" onBack={onBack}>
+      <div className="field">
+        <label>CODICE DELLA STANZA (È SULLO SCHERMO PRINCIPALE)</label>
+        <input className="input code" style={{ textAlign: "center", fontSize: 30 }} value={code} autoCapitalize="characters" autoComplete="off" onChange={(e) => setCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, CODE_LENGTH))} placeholder={"·".repeat(CODE_LENGTH)} />
+      </div>
+      <span className="label">QUESTO TELEFONO È…</span>
+      {(["p1", "p2", "host"] as const).map((r) => (
+        <button key={r} className="btn big" style={{ background: ROLE_COLOR[r] }} disabled={!ok} onClick={() => (location.hash = `#/join/${code}?r=${r}`)}>
+          {r === "host" ? "LA REGIA (CONDUTTORE)" : `LA PULSANTIERA DEL ${ROLE_LABEL[r]}`}
         </button>
       ))}
-    </div>
+    </Page>
   );
 }
 
 /* ------------------------------------------------------------ Shared phone frame */
 
-function PhoneFrame({ title, room, children }: { title: string; room: ReturnType<typeof useRoom>; children: ReactNode }) {
+function PhoneFrame({ role, room, children }: { role: ClientRole; room: RoomClient; children: ReactNode }) {
   const s = room.state;
+  const g = s?.order[s.gameIdx];
   return (
-    <div className="need-portrait" style={{ minHeight: "100%" }}>
-      <RotateOverlay to="verticale" />
-      <div className="phone-ui">
-        <div className="row">
-          <span className="px c-accent" style={{ fontSize: 12 }}>
-            {title} · {room.code}
-          </span>
+    <div className="page">
+      <div className="page-bg" aria-hidden />
+      <div className="page-body">
+        <div className="phone-top">
+          <span style={{ color: ROLE_COLOR[role] }}>{role === "host" ? "REGIA" : s ? s.config.players[role === "p1" ? 0 : 1] : ROLE_LABEL[role]}</span>
+          <span className="dim">· STANZA {room.code}</span>
           <span className="grow" />
-          <span className={room.connected ? "c-ok" : "c-ko"}>{room.connected ? "●" : "○"}</span>
+          <span className={`status-dot ${room.live ? "on" : ""}`}>{room.live ? "COLLEGATO" : room.connected ? "CERCO LO SCHERMO…" : "MI COLLEGO…"}</span>
         </div>
         {s && (
-          <div className="row px" style={{ fontSize: 14, justifyContent: "space-between" }}>
+          <div className="phone-score">
             <span className="c-p1">
               {s.config.players[0]} {s.scores[0]}
             </span>
-            <span className="dim">{s.order[s.gameIdx] ? GAME_NAMES[s.order[s.gameIdx]!] : ""}</span>
-            <span className="c-p2">
+            <span className="mid">{g ? GAME_NAMES[g] : "FINE"}</span>
+            <span className="c-p2 r">
               {s.scores[1]} {s.config.players[1]}
             </span>
           </div>
         )}
-        {children}
+        {!room.live && !s ? (
+          <div className="panel waiting">
+            <span className="blink">CERCO LA STANZA {room.code}…</span>
+            <span className="note">Controlla che lo schermo principale sia acceso sulla pagina della stanza e che il codice sia giusto.</span>
+            <button className="btn ghost" onClick={() => (location.hash = "")}>
+              CAMBIA CODICE
+            </button>
+          </div>
+        ) : (
+          children
+        )}
       </div>
     </div>
   );
 }
 
-/* ------------------------------------------------------------ Host (Regia) */
+/* ------------------------------------------------------------ Regia */
 
 function solutionOf(g: GameStateAny): string[] {
   switch (g.game) {
@@ -167,7 +205,7 @@ function solutionOf(g: GameStateAny): string[] {
     }
     case "prima_pagina": {
       const it = g.items[g.turn] as PrimaPaginaItem;
-      return it.slots.map((s, k) => `${k + 1}. ${s.label}: ${s.answer.display}`);
+      return [it.page.headline.replace(/\{\{\d\}\}/g, "▒▒▒"), ...it.slots.map((s, k) => `${k + 1}. ${s.label}: ${s.answer.display}`)];
     }
     case "mercato":
     case "giramondo": {
@@ -176,34 +214,22 @@ function solutionOf(g: GameStateAny): string[] {
     }
     case "decina":
     case "asta":
-      return [(g.item as SetItem).title, `${(g.item as SetItem).members.length} risposte valide`];
-    case "dischetto":
-      return (g.item as DischettoItem).ranking.filter((r) => r.rank <= 10).map((r) => `${r.rank}. ${r.name} (${r.value})`);
+      return [(g.item as SetItem).title, (g.item as SetItem).description, `${(g.item as SetItem).members.length} risposte valide: tocca il nome detto dal giocatore.`];
+    case "dischetto": {
+      const it = g.item as DischettoItem;
+      return [it.title, it.hint, ...it.ranking.filter((r) => r.rank <= 10).map((r) => `${r.rank}. ${r.name} (${r.label ?? r.value})`)];
+    }
     case "formazione": {
       const it = g.item as FormazioneItem;
-      return it.teams.map((t) => `${t.name}: ${t.players.filter((p) => p.hidden).map((p) => p.name).join(", ")}`);
+      return [`${it.title} · ${it.competition}`, ...it.teams.map((t) => `${t.name}: ${t.players.filter((p) => p.hidden).map((p) => p.name).join(", ")}`)];
     }
-    case "cassaforte":
-      return g.current ? [(g.current.item as CassaforteItem).question, `Risposta: ${(g.current.item as CassaforteItem).parts.map((p) => p.display).join(" + ")}`] : [];
     case "frame": {
       const it = g.items[g.i] as FrameItem;
-      return [`${it.match} al ${it.minute}': ${it.scoreAt.join("-")}`, it.lastScorer ? `Ultimo marcatore: ${it.lastScorer.display}` : ""];
-    }
-    case "intruso": {
-      const it = g.items[g.i] as IntrusoItem;
-      return [`Intruso: ${it.names[it.intruder]}`, `Legame: ${it.links[it.correctLink]}`];
-    }
-    case "filo_rosso": {
-      const it = g.items[g.i] as FiloRossoItem;
-      return [`Catena ottimale (${it.optimal}): ${it.solution.map((x) => x.name).join(" → ")}`];
-    }
-    case "mappamondo": {
-      const it = g.items[g.i] as MappamondoItem;
-      return [it.question, `Risposta: ${it.target.label}`];
+      return [`${it.match} (${it.date})`, `Al ${it.minute}': ${it.teams[0]} ${it.scoreAt.join("-")} ${it.teams[1]}`, it.lastScorer ? `Ultimo marcatore: ${it.lastScorer.display}` : ""];
     }
     case "maglia": {
       const it = g.items[g.i] as MagliaItem;
-      return [`${it.team} ${it.season} n.${it.number}: ${it.answer.display}`];
+      return [it.question, `Risposta: numero ${it.answer.display}`];
     }
   }
   return [];
@@ -211,11 +237,11 @@ function solutionOf(g: GameStateAny): string[] {
 
 function scriptOf(g: GameStateAny): string {
   if (g.script) return g.script;
-  const it = g.game === "cassaforte" ? g.current?.item : g.item ?? (g.game === "prima_pagina" ? g.items?.[g.turn] : g.items?.[g.i]);
+  const it = g.item ?? (g.game === "prima_pagina" ? g.items?.[g.turn] : g.items?.[g.i]);
   return it?.script ?? "";
 }
 
-export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
+export function HostRoom({ code }: { code: string }) {
   const room = useRoom("host", code);
   useWakeLock(true);
   const s = room.state;
@@ -231,49 +257,52 @@ export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
   }, [g?.i, g?.round, g?.k, g?.turn, g?.stage]);
   if (!s) {
     return (
-      <PhoneFrame title="REGIA" room={room}>
-        <div className="panel">In attesa che lo Schermo crei la partita…</div>
+      <PhoneFrame role="host" room={room}>
+        <div className="panel waiting">
+          <span>SEI LA REGIA</span>
+          <span className="note">Quando lo schermo principale avvia la partita, qui compaiono soluzioni, copione e pulsanti per convalidare le risposte.</span>
+        </div>
       </PhoneFrame>
     );
   }
   const Btn = ({ label, onClick, cls = "" }: { label: string; onClick: () => void; cls?: string }) => (
-    <button className={`btn ${cls}`} onClick={() => (audio.play("blip"), onClick())}>
+    <button className={`btn big ${cls}`} onClick={() => (audio.play("blip"), onClick())}>
       {label}
     </button>
   );
-  const ok = <Btn label="✓ ESATTA" cls="ok" onClick={() => d({ type: "VERDICT", payload: { correct: true } })} />;
-  const ko = <Btn label="✗ SBAGLIATA" cls="ko" onClick={() => d({ type: "VERDICT", payload: { correct: false } })} />;
+  const okKo = (
+    <div className="grid2">
+      <Btn label="✓ ESATTA" cls="ok" onClick={() => d({ type: "VERDICT", payload: { correct: true } })} />
+      <Btn label="✗ SBAGLIATA" cls="ko" onClick={() => d({ type: "VERDICT", payload: { correct: false } })} />
+    </div>
+  );
   let controls: ReactNode = null;
   if (s.phase === "draw") controls = <Btn label="INIZIA ▶" onClick={() => d({ type: "START" })} />;
   else if (s.phase === "intro") controls = <Btn label="VIA AL GIOCO ▶" onClick={() => d({ type: "BEGIN_GAME" })} />;
   else if (s.phase === "game_over") controls = <Btn label="PROSSIMO GIOCO ▶" onClick={() => d({ type: "NEXT" })} />;
-  else if (s.phase === "match_over") controls = <div className="px c-accent">PARTITA FINITA</div>;
+  else if (s.phase === "match_over") controls = <div className="panel waiting c-accent">PARTITA FINITA</div>;
   else if (g) {
-    const reveal = ["reveal", "final"].includes(g.stage);
-    const next = <Btn label="AVANTI ▶" onClick={() => d({ type: "NEXT" })} />;
-    if (reveal) controls = next;
+    if (["reveal", "final"].includes(g.stage)) controls = <Btn label="AVANTI ▶" onClick={() => d({ type: "NEXT" })} />;
     else
       switch (g.game) {
-        case "tiro_secco":
-        case "intruso": {
-          const it = g.items[g.i] as TiroSeccoItem | IntrusoItem;
-          const opts = "options" in it ? it.options : g.phase === 0 ? it.names : it.links;
-          controls = opts.map((o: string, k: number) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls="ghost" onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
+        case "tiro_secco": {
+          const it = g.items[g.i] as TiroSeccoItem;
+          controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
         }
         case "mercato":
         case "giramondo":
           controls =
             g.stage === "answering" ? (
-              <>
-                {ok}
-                {ko}
-              </>
+              okKo
             ) : (
               <>
                 <Btn label="SCOPRI INDIZIO" onClick={() => d({ type: "REVEAL_CLUE" })} />
-                {!room.roster.p1 && <Btn label={`PRENOTA ${s.config.players[0]}`} cls="p1" onClick={() => d({ type: "BUZZ", player: 0 })} />}
-                {!room.roster.p2 && <Btn label={`PRENOTA ${s.config.players[1]}`} cls="p2" onClick={() => d({ type: "BUZZ", player: 1 })} />}
+                <div className="grid2">
+                  {([0, 1] as const).map((p) => (
+                    <Btn key={p} label={g.out[p] ? `${s.config.players[p]} FUORI` : `PRENOTA ${s.config.players[p]}`} cls={p === 0 ? "p1" : "p2"} onClick={() => d({ type: "BUZZ", player: p })} />
+                  ))}
+                </div>
               </>
             );
           break;
@@ -281,31 +310,44 @@ export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
         case "dischetto":
         case "asta": {
           if (g.game === "asta" && g.stage === "bidding") {
+            const from = (g.bid?.amount ?? 0) + 1;
             controls = (
               <>
-                {Array.from({ length: g.max - (g.bid?.amount ?? 0) }, (_, k) => (g.bid?.amount ?? 0) + k + 1).map((n) => (
-                  <Btn key={n} label={`${s.config.players[g.turn as 0 | 1]} dice ${n}`} cls="ghost" onClick={() => d({ type: "BID", player: g.turn, amount: n })} />
-                ))}
-                <Btn label="PASSO" cls="ko" onClick={() => d({ type: "PASS", player: g.turn })} />
+                <span className="label">{s.config.players[g.turn as PlayerIdx]} DICE…</span>
+                <div className="grid3" style={{ gridTemplateColumns: "repeat(5, 1fr)" }}>
+                  {Array.from({ length: Math.max(0, g.max - from + 1) }, (_, k) => from + k).map((n) => (
+                    <button key={n} className="btn ghost" onClick={() => d({ type: "BID", player: g.turn, amount: n })}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+                <Btn label="PASSA" cls="ko" onClick={() => d({ type: "PASS", player: g.turn })} />
               </>
             );
             break;
           }
           const said = new Set((g.said as { id: string }[]).map((x) => x.id));
           const pool = g.game === "dischetto" ? (g.item as DischettoItem).ranking.filter((r) => r.rank <= 10) : (g.item as SetItem).members;
-          controls = (
-            <>
-              {g.stage === "feedback" ? <Btn label="CONTINUA" onClick={() => d({ type: "NEXT" })} /> : <Btn label="✗ ERRATA / NON VALE" cls="ko" onClick={() => d({ type: "VERDICT", payload: { id: null } })} />}
-              {g.game === "asta" && <Btn label="FINE TEMPO / SI ARRENDE" cls="ghost" onClick={() => d({ type: "FINISH" })} />}
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
-                {pool.filter((m) => !said.has(m.id)).map((m) => (
-                  <button key={m.id} className="chip" style={{ background: "transparent", color: "var(--ink)", fontFamily: "var(--term)", fontSize: 20 }} onClick={() => d({ type: "VERDICT", payload: { id: m.id } })}>
-                    {m.name}
-                  </button>
-                ))}
-              </div>
-            </>
-          );
+          controls =
+            g.stage === "feedback" ? (
+              <Btn label="CONTINUA ▶" onClick={() => d({ type: "NEXT" })} />
+            ) : (
+              <>
+                <div className="grid2">
+                  <Btn label="✗ ERRATA" cls="ko" onClick={() => d({ type: "VERDICT", payload: { id: null } })} />
+                  {g.game === "asta" ? <Btn label="SI ARRENDE" cls="ghost" onClick={() => d({ type: "FINISH" })} /> : <span />}
+                </div>
+                <div className="pick-grid">
+                  {pool
+                    .filter((m) => !said.has(m.id))
+                    .map((m) => (
+                      <button key={m.id} onClick={() => d({ type: "VERDICT", payload: { id: m.id } })}>
+                        {m.name}
+                      </button>
+                    ))}
+                </div>
+              </>
+            );
           break;
         }
         case "formazione": {
@@ -317,11 +359,17 @@ export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
           const team = it.teams[g.teamOf[g.turn] as 0 | 1];
           controls = (
             <>
-              {team.players.filter((p) => p.hidden).map((p) => (
-                <button key={p.id} className={`btn ${sel.includes(p.id) ? "ok" : "ghost"}`} onClick={() => setSel((x) => (x.includes(p.id) ? x.filter((y) => y !== p.id) : [...x, p.id]))}>
-                  {p.name}
-                </button>
-              ))}
+              <span className="label">TOCCA I TITOLARI INDOVINATI ({team.name})</span>
+              <div className="pick-grid">
+                {team.players
+                  .filter((p) => p.hidden)
+                  .map((p) => (
+                    <button key={p.id} className={sel.includes(p.id) ? "on" : ""} onClick={() => setSel((x) => (x.includes(p.id) ? x.filter((y) => y !== p.id) : [...x, p.id]))}>
+                      {sel.includes(p.id) ? "✓ " : ""}
+                      {p.name}
+                    </button>
+                  ))}
+              </div>
               <Btn label={`CONFERMA ${sel.length}/5`} onClick={() => d({ type: "VERDICT", payload: { ids: sel } })} />
             </>
           );
@@ -331,9 +379,10 @@ export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
           const it = g.items[g.turn] as PrimaPaginaItem;
           controls = (
             <>
+              <span className="label">TOCCA I NOMI INDOVINATI</span>
               {it.slots.map((sl, k) => (
-                <button key={k} className={`btn ${slots[k] ? "ok" : "ghost"}`} onClick={() => setSlots((x) => x.map((v, i) => (i === k ? !v : v)))}>
-                  {k + 1}. {sl.answer.display}
+                <button key={k} className={`btn big ${slots[k] ? "ok" : "ghost"}`} onClick={() => setSlots((x) => x.map((v, i) => (i === k ? !v : v)))}>
+                  {slots[k] ? "✓" : "✗"} {sl.answer.display}
                 </button>
               ))}
               <Btn label="CONFERMA" onClick={() => d({ type: "VERDICT", payload: { slots } })} />
@@ -341,142 +390,143 @@ export function HostRoom({ code, ctx }: { code: string; ctx: EngineCtx }) {
           );
           break;
         }
-        case "cassaforte":
-          controls =
-            g.stage === "choose" ? (
-              [1, 2, 3].map((l) => <Btn key={l} label={["", "FACILE", "MEDIA", "DIFFICILE"][l]!} cls="ghost" onClick={() => d({ type: "CHOOSE", value: l })} />)
-            ) : (
-              <>
-                {ok}
-                {ko}
-              </>
-            );
-          break;
         case "maglia":
-          controls = (
-            <>
-              {ok}
-              {ko}
-            </>
-          );
+          controls = okKo;
           break;
         case "frame": {
           const it = g.items[g.i] as FrameItem;
           controls = (
-            <ScorePicker teams={it.teams} onSubmit={(score) => d({ type: "ANSWER", payload: { score, scorerCorrect: bonus } })}>
-              {it.lastScorer && (
-                <button className={`btn ${bonus ? "ok" : "ghost"}`} onClick={() => setBonus(!bonus)}>
-                  BONUS MARCATORE {bonus ? "✓" : "✗"}
-                </button>
-              )}
-            </ScorePicker>
+            <>
+              <span className="label">RISULTATO DETTO DAL GIOCATORE</span>
+              <ScorePicker key={g.i} teams={it.teams} onSubmit={(score) => d({ type: "ANSWER", payload: { score, scorerCorrect: bonus } })}>
+                {it.lastScorer && (
+                  <button className={`btn ${bonus ? "ok" : "ghost"}`} onClick={() => setBonus(!bonus)}>
+                    BONUS MARCATORE {bonus ? "✓" : "✗"}
+                  </button>
+                )}
+              </ScorePicker>
+            </>
           );
           break;
         }
-        case "mappamondo":
-          controls = <WorldMap onConfirm={(p) => d({ type: "ANSWER", payload: { lat: p.lat, lon: p.lon } })} />;
-          break;
-        case "filo_rosso":
-          controls = <FiloInput ctx={ctx} onSubmit={(chain) => d({ type: "ANSWER", payload: { chain } })} />;
-          break;
       }
   }
   return (
-    <PhoneFrame title="REGIA" room={room}>
+    <PhoneFrame role="host" room={room}>
       {g && s.phase === "playing" && (
         <>
-          <div className="px" style={{ fontSize: 12 }}>
-            {g.turn !== null && g.turn !== undefined ? `Turno: ${s.config.players[g.turn]}` : ""} · fase: {g.stage}
-          </div>
-          <div className="panel" style={{ fontSize: 22 }}>
-            <div className="px c-ok" style={{ fontSize: 11 }}>
-              SOLUZIONE (solo per te)
+          {g.turn !== null && g.turn !== undefined && (
+            <div className={`px ${g.turn === 0 ? "c-p1" : "c-p2"}`} style={{ fontSize: 12 }}>
+              TOCCA A {s.config.players[g.turn as PlayerIdx]}
             </div>
-            {solutionOf(g).filter(Boolean).map((l, k) => (
-              <div key={k}>{l}</div>
-            ))}
+          )}
+          <div className="solution-box">
+            <span className="label">SOLUZIONE (SOLO PER TE)</span>
+            {solutionOf(g)
+              .filter(Boolean)
+              .map((l, k) => (
+                <div key={k}>{l}</div>
+              ))}
           </div>
-          {scriptOf(g) && <div className="copione" style={{ fontSize: 22 }}>{scriptOf(g)}</div>}
+          {scriptOf(g) && <div className="copione">{scriptOf(g)}</div>}
         </>
       )}
-      <div className="col">{controls}</div>
+      <div className="col" style={{ gap: 10 }}>
+        {controls}
+      </div>
     </PhoneFrame>
   );
 }
 
-function FiloInput({ ctx, onSubmit }: { ctx: EngineCtx; onSubmit: (c: string[]) => void }) {
-  const [chain, setChain] = useState<string[]>([]);
-  return (
-    <>
-      <div>{chain.join(" → ") || "Anelli intermedi:"}</div>
-      <AnswerBox index={ctx.index} keyboard={false} submitLabel="+" onSubmit={(t) => setChain([...chain, t])} />
-      <button className="btn" onClick={() => onSubmit(chain)}>
-        CONFERMA CATENA
-      </button>
-    </>
-  );
-}
+/* ------------------------------------------------------------ Controller */
 
-/* ------------------------------------------------------------ Pad (controller) */
-
-function Scaled({ children }: { children: ReactNode }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [k, setK] = useState(0.5);
+/** Draws the game controls on a 760px virtual canvas scaled to the phone width. */
+function PadCanvas({ children }: { children: ReactNode }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const inner = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
-    const fit = () => ref.current && setK(ref.current.clientWidth / 1100);
+    const o = outer.current!;
+    const i = inner.current!;
+    const fit = () => {
+      const k = o.clientWidth / 760;
+      i.style.transform = `scale(${k})`;
+      o.style.height = `${i.offsetHeight * k}px`;
+    };
     fit();
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    const ro = new ResizeObserver(fit);
+    ro.observe(o);
+    ro.observe(i);
+    return () => ro.disconnect();
   }, []);
   return (
-    <div ref={ref} style={{ width: "100%", overflow: "hidden" }}>
-      <div style={{ width: 1100, transform: `scale(${k})`, transformOrigin: "top left" }}>{children}</div>
+    <div ref={outer} className="pad-scale">
+      <div ref={inner} className="pad-canvas">
+        {children}
+      </div>
     </div>
   );
 }
 
 function myTurn(g: GameStateAny, me: PlayerIdx): boolean {
-  if (g.game === "cassaforte") return g.picks[g.k] === me && g.stage !== "reveal";
   if (g.game === "formazione" && g.stage === "choose") return g.starter === me;
   return g.turn === me && !["reveal", "final", "feedback", "done"].includes(g.stage);
 }
 
-export function PadRoom({ code, role, ctx }: { code: string; role: "p1" | "p2"; ctx: EngineCtx }) {
+export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   const room = useRoom(role, code);
   const me: PlayerIdx = role === "p1" ? 0 : 1;
   const s: MatchState | null = room.state;
   const g = s?.game;
   useWakeLock(true);
-  const turn = !!g && myTurn(g, me);
+  const turn = !!g && s?.phase === "playing" && myTurn(g, me);
   useEffect(() => {
     if (turn) navigator.vibrate?.(80);
   }, [turn]);
   const color = me === 0 ? "var(--p1)" : "var(--p2)";
+  const flow = !room.roster.host;
+  const next = s && flow && s.phase !== "match_over" && (
+    <button className="btn big next" onClick={() => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" })}>
+      {s.phase === "draw" ? "SI PARTE ▶" : s.phase === "intro" ? "VIA! ▶" : "AVANTI ▶"}
+    </button>
+  );
   if (!s || s.phase !== "playing" || !g) {
     return (
-      <PhoneFrame title={`PULSANTIERA ${me + 1}`} room={room}>
-        <div className="panel center" style={{ minHeight: 200, color }}>
-          {s ? "Guarda lo schermo…" : "In attesa della partita…"}
+      <PhoneFrame role={role} room={room}>
+        <div className="panel waiting" style={{ color }}>
+          {!s ? (
+            <>
+              <span>SEI IL {ROLE_LABEL[role]}</span>
+              <span className="note">In attesa che lo schermo principale avvii la partita…</span>
+            </>
+          ) : s.phase === "match_over" ? (
+            "PARTITA FINITA!"
+          ) : (
+            "GUARDA LO SCHERMO"
+          )}
         </div>
-        {s && !room.roster.host && s.phase !== "match_over" && (
-          <button className="btn ghost" onClick={() => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" })}>
-            AVANTI ▶
-          </button>
-        )}
+        {next}
       </PhoneFrame>
     );
   }
   if (g.game === "mercato" || g.game === "giramondo") {
     const can = (g.stage === "clues" || g.stage === "ready") && !g.out[me];
     return (
-      <PhoneFrame title={`PULSANTIERA ${me + 1}`} room={room}>
+      <PhoneFrame role={role} room={room}>
         {g.stage === "answering" && g.buzzer === me ? (
-          <AnswerBox index={ctx.index} keyboard={false} onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+          s.config.judging === "host" ? (
+            <div className="panel waiting" style={{ color }}>
+              RISPONDI A VOCE!
+            </div>
+          ) : (
+            <AnswerBox index={emptyCtx.index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+          )
+        ) : g.stage === "reveal" ? (
+          <div className="panel waiting">GUARDA LO SCHERMO</div>
         ) : (
           <button
-            className="buzz-btn"
+            className="big-buzz"
             disabled={!can}
-            style={{ height: "60vh", background: color, color: "var(--bg)", fontSize: 28 }}
+            style={{ background: color }}
             onPointerDown={(e) => {
               e.preventDefault();
               navigator.vibrate?.(40);
@@ -487,37 +537,31 @@ export function PadRoom({ code, role, ctx }: { code: string; role: "p1" | "p2"; 
           </button>
         )}
         {g.free && !g.out[me] && g.stage === "clues" && (
-          <button className="btn ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
-            SCOPRI INDIZIO
+          <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
+            SCOPRI UN ALTRO INDIZIO
           </button>
         )}
-        {g.stage === "reveal" && !room.roster.host && (
-          <button className="btn" onClick={() => room.dispatch({ type: "NEXT" })}>
-            AVANTI ▶
-          </button>
-        )}
+        {g.stage === "reveal" && next}
       </PhoneFrame>
     );
   }
+  const closed = g.stage === "reveal" || g.stage === "final";
   return (
-    <PhoneFrame title={`PULSANTIERA ${me + 1}`} room={room}>
-      {turn ? (
-        <Scaled>
-          <div className="col" style={{ gap: 18, padding: 20 }}>
-            <GameView state={s} g={g} dispatch={room.dispatch} ctx={ctx} start={room.timerStart} />
-          </div>
-        </Scaled>
-      ) : (
-        <div className="panel center" style={{ minHeight: 160 }}>
-          {g.stage === "reveal" || g.stage === "final" ? "Guarda lo schermo" : `Tocca a ${s.config.players[g.turn ?? 0]}`}
+    <PhoneFrame role={role} room={room}>
+      {turn && s.config.judging === "host" ? (
+        <div className="panel waiting" style={{ color }}>
+          TOCCA A TE: RISPONDI A VOCE!
         </div>
+      ) : turn ? (
+        <PlayCtx.Provider value={{ readonly: false, flow, pad: true }}>
+          <PadCanvas>
+            <GameView state={s} g={g} dispatch={room.dispatch} ctx={emptyCtx} start={room.timerStart} />
+          </PadCanvas>
+        </PlayCtx.Provider>
+      ) : (
+        <div className="panel waiting">{closed || g.stage === "feedback" ? "GUARDA LO SCHERMO" : `TOCCA A ${s.config.players[(g.turn ?? g.starter ?? 0) as PlayerIdx]}`}</div>
       )}
-      {(g.stage === "reveal" || g.stage === "final") && !room.roster.host && (
-        <button className="btn" onClick={() => room.dispatch({ type: "NEXT" })}>
-          AVANTI ▶
-        </button>
-      )}
-      {g.game === "asta" && g.stage === "bidding" && g.turn === me && <div className="dim">Rilancia o passa.</div>}
+      {closed && next}
     </PhoneFrame>
   );
 }

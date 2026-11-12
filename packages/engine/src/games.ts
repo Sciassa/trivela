@@ -1,14 +1,10 @@
 import type {
-  CassaforteItem,
   DischettoItem,
-  FiloRossoItem,
   FormazioneItem,
   FrameItem,
   GameId,
   GiramondoItem,
-  IntrusoItem,
   MagliaItem,
-  MappamondoItem,
   MercatoItem,
   PlayerIdx,
   PrimaPaginaItem,
@@ -16,7 +12,7 @@ import type {
   SetItem,
   TiroSeccoItem,
 } from "@trivela/protocol";
-import { haversineKm, judgeInSet, judgeText, resolve } from "@trivela/matcher";
+import { judgeInSet, judgeText } from "@trivela/matcher";
 import { other, type Env, type GameModule, type GameStateAny, type Intent } from "./types";
 
 /** Default timers (ms). */
@@ -30,12 +26,8 @@ export const TIMERS = {
   list: 30_000,
   feedback: 1_500,
   formazione: 60_000,
-  cassaforte: 30_000,
   frame: 30_000,
-  intruso: 30_000,
   asta: 60_000,
-  filo_rosso: 60_000,
-  mappamondo: 30_000,
   maglia: 30_000,
 } as const;
 
@@ -170,7 +162,7 @@ const verdictOf = (intent: Intent | null) => (intent && intent.type === "VERDICT
 
 export const tiroSecco = turnQuiz<TiroSeccoItem>({
   id: "tiro_secco",
-  count: 8,
+  count: 4,
   phases: [
     {
       ms: TIMERS.tiro_secco,
@@ -240,56 +232,9 @@ export const frame = turnQuiz<FrameItem>({
   mask: (it) => ({ ...it, scoreAt: [-1, -1], lastScorer: it.lastScorer ? { kind: "text", accepted: [], display: "" } : undefined, script: "" }),
 });
 
-export const intruso = turnQuiz<IntrusoItem>({
-  id: "intruso",
-  count: 6,
-  phases: [
-    {
-      ms: TIMERS.intruso,
-      judge(item, intent) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (a?.choice === undefined) return "ignore";
-        const ok = a.choice === item.intruder;
-        return { points: ok ? 3 : 0, ok, detail: `pick:${a.choice}` };
-      },
-    },
-    {
-      ms: TIMERS.intruso,
-      judge(item, intent) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (a?.choice === undefined) return "ignore";
-        const ok = a.choice === item.correctLink;
-        return { points: ok ? 2 : 0, ok, detail: `link:${a.choice}` };
-      },
-    },
-  ],
-  mask: (it) => ({ ...it, intruder: -1 as never, correctLink: -1 as never, script: "" }),
-});
-
-export const mappamondo = turnQuiz<MappamondoItem>({
-  id: "mappamondo",
-  count: 6,
-  phases: [
-    {
-      ms: TIMERS.mappamondo,
-      judge(item, intent) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (a?.lat === undefined || a.lon === undefined) return "ignore";
-        const km = haversineKm(a.lat, a.lon, item.target.lat, item.target.lon);
-        const points = km < 25 ? 5 : km < 100 ? 3 : km < 300 ? 1 : 0;
-        return { points, ok: points > 0, detail: `km:${Math.round(km)}` };
-      },
-    },
-  ],
-  mask: (it) => ({ ...it, target: { lat: NaN, lon: NaN, label: "" }, script: "" }),
-});
-
 export const maglia = turnQuiz<MagliaItem>({
   id: "maglia",
-  count: 6,
+  count: 4,
   phases: [
     {
       ms: TIMERS.maglia,
@@ -306,49 +251,6 @@ export const maglia = turnQuiz<MagliaItem>({
     },
   ],
   mask: (it) => ({ ...it, answer: { kind: "text", accepted: [], display: "" }, script: "" }),
-});
-
-/** Validate a teammate chain from -> ... -> to. Returns the number of links or an error. */
-export function validateChain(
-  item: FiloRossoItem,
-  names: string[],
-  env: Env,
-): { links: number } | { error: string } {
-  const ids: string[] = [item.from.id];
-  for (const n of names) {
-    if (!n.trim()) continue;
-    const r = resolve(n, env.ctx.index, ["person"]);
-    if (r.status !== "ok") return { error: `Non riconosciuto: ${n}` };
-    ids.push(r.id);
-  }
-  ids.push(item.to.id);
-  for (let k = 0; k < ids.length - 1; k++) {
-    const a = env.ctx.teammates.byPerson[ids[k]!] ?? [];
-    const b = new Set(env.ctx.teammates.byPerson[ids[k + 1]!] ?? []);
-    if (!a.some((g) => b.has(g))) return { error: `Anello non valido tra ${k} e ${k + 1}` };
-  }
-  return { links: ids.length - 1 };
-}
-
-export const filoRosso = turnQuiz<FiloRossoItem>({
-  id: "filo_rosso",
-  count: 2,
-  phases: [
-    {
-      ms: TIMERS.filo_rosso,
-      judge(item, intent, env) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (!a?.chain) return "ignore";
-        const r = validateChain(item, a.chain, env);
-        if ("error" in r) return { points: 0, ok: false, detail: r.error };
-        if (r.links > 6) return { points: 0, ok: false, detail: "Troppi anelli" };
-        const points = r.links <= item.optimal ? 10 : r.links === item.optimal + 1 ? 5 : 2;
-        return { points, ok: true, detail: `links:${r.links}` };
-      },
-    },
-  ],
-  mask: (it) => ({ ...it, solution: [], script: "" }),
 });
 
 /* ------------------------------------------------------------------ */
@@ -488,7 +390,7 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
   };
 }
 
-export const mercato = clueBuzzer<MercatoItem>("mercato", 3, [20, 15, 10, 5, 3, 2]);
+export const mercato = clueBuzzer<MercatoItem>("mercato", 2, [20, 15, 10, 5, 3, 2]);
 export const giramondo = clueBuzzer<GiramondoItem>("giramondo", 2, [12, 9, 6, 3, 1]);
 
 /* ------------------------------------------------------------------ */
@@ -658,7 +560,7 @@ export const dischetto: GameModule = {
     r.item = {
       ...r.item,
       ranking: (r.item as DischettoItem).ranking.map((e) =>
-        said.has(e.id) || e.rank === 1 || e.rank === 10 ? { ...e, ...(said.has(e.id) ? {} : { id: "", name: "" }) } : { ...e, id: "", name: "", value: -1 },
+        said.has(e.id) || e.rank === 1 || e.rank === 10 ? { ...e, ...(said.has(e.id) ? {} : { id: "", name: "" }) } : { ...e, id: "", name: "", value: -1, label: undefined },
       ),
       script: "",
     };
@@ -772,92 +674,6 @@ export const formazione: GameModule = {
     });
     item.script = "";
     r.items = [];
-    return r;
-  },
-};
-
-/* ------------------------------------------------------------------ */
-/* La Cassaforte (finale)                                               */
-/* ------------------------------------------------------------------ */
-
-const CASSA_OK = [0, 10, 20, 30];
-const CASSA_KO = [0, -30, -20, -10];
-
-export const cassaforte: GameModule = {
-  id: "cassaforte",
-  count: 3,
-  perPlayer: true,
-  init(items, env) {
-    env.clearTimer();
-    const s = env.starter;
-    return {
-      game: "cassaforte",
-      stage: "choose",
-      turn: s,
-      items,
-      picks: [s, other(s), s, other(s)],
-      k: 0,
-      chosen: [[], []],
-      current: null,
-      last: null,
-      script: null,
-    };
-  },
-  reduce(s, intent, env) {
-    const p = s.picks[s.k] as PlayerIdx;
-    if (s.stage === "choose" && intent.type === "CHOOSE") {
-      if (intent.player !== undefined && intent.player !== p) return;
-      const level = intent.value;
-      if (![1, 2, 3].includes(level) || s.chosen[p].includes(level)) return;
-      s.chosen[p].push(level);
-      const item = (s.items[p] as CassaforteItem[]).find((it) => it.level === level)!;
-      s.current = { player: p, level, item };
-      s.stage = "ask";
-      env.setTimer(TIMERS.cassaforte, "ask");
-      return;
-    }
-    if (s.stage === "ask") {
-      const item = s.current.item as CassaforteItem;
-      let ok: boolean;
-      if (intent.type === "TIMEOUT") ok = false;
-      else if (intent.type === "VERDICT" && intent.payload.correct !== undefined) ok = intent.payload.correct;
-      else if (intent.type === "ANSWER" && (intent.payload.texts || intent.payload.text !== undefined)) {
-        if (env.judging === "auto" && intent.player !== undefined && intent.player !== p) return;
-        const texts = intent.payload.texts ?? [intent.payload.text!];
-        ok = item.parts.every((part, k) => judgeText(texts[k] ?? "", part, env.ctx.index));
-      } else return;
-      const level = s.current.level as 1 | 2 | 3;
-      const pts = ok ? CASSA_OK[level]! : CASSA_KO[level]!;
-      env.addPoints(p, pts);
-      env.emit(ok ? { type: "correct", player: p, points: pts } : { type: "malus", player: p, points: pts });
-      s.last = { player: p, points: pts, ok };
-      s.stage = "reveal";
-      s.script = item.script;
-      env.clearTimer();
-      env.emit({ type: "reveal" });
-      return;
-    }
-    if (s.stage === "reveal" && intent.type === "NEXT") {
-      s.k += 1;
-      s.current = null;
-      s.last = null;
-      s.script = null;
-      if (s.k >= 4) {
-        s.stage = "done";
-        return;
-      }
-      s.turn = s.picks[s.k];
-      s.stage = "choose";
-    }
-  },
-  done: (s) => s.stage === "done",
-  redact(s, role) {
-    if (role === "host") return s;
-    const r = clone(s);
-    r.items = [[], []];
-    if (r.current && s.stage !== "reveal") {
-      r.current.item = { ...r.current.item, parts: [], script: "" };
-    }
     return r;
   },
 };
@@ -979,13 +795,9 @@ export const MODULES: Record<GameId, GameModule> = {
   decina,
   dischetto,
   formazione,
-  cassaforte,
   giramondo,
   frame,
-  intruso,
   asta,
-  filo_rosso: filoRosso,
-  mappamondo,
   maglia,
 };
 
