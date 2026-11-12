@@ -58,7 +58,7 @@ export function Stage({ children }: { children: ReactNode }) {
     <StageCtx.Provider value={true}>
       <div className="stage-wrap need-landscape">
         <RotateOverlay />
-        <div className="stage" style={{ width: m.w, height: m.h, transform: `scale(${m.scale})` }}>
+        <div className={`stage ${m.h < 760 ? "short" : ""}`} style={{ width: m.w, height: m.h, transform: `scale(${m.scale})` }}>
           <Backdrop />
           <div className="stage-body">{children}</div>
           <div className="scanlines" />
@@ -168,7 +168,16 @@ export function Fit({ children, center = false, className = "" }: { children: Re
     const ro = new ResizeObserver(fit);
     ro.observe(o);
     ro.observe(i);
-    return () => ro.disconnect();
+    // focusing an input must never scroll the clipped area
+    const unscroll = () => {
+      o.scrollTop = 0;
+      o.scrollLeft = 0;
+    };
+    o.addEventListener("scroll", unscroll);
+    return () => {
+      ro.disconnect();
+      o.removeEventListener("scroll", unscroll);
+    };
   }, [center]);
   return (
     <div ref={outer} className={`fit ${className}`}>
@@ -317,11 +326,19 @@ export function Sources({ sources }: { sources: SourceRef[] }) {
 
 const isCoarse = () => typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches;
 
-function spellerOn(): boolean {
+/** The spelling helper can be switched off from the options page. */
+export function spellerOn(): boolean {
   try {
     return localStorage.getItem("trivela.speller") !== "off";
   } catch {
     return true;
+  }
+}
+export function setSpeller(on: boolean): void {
+  try {
+    localStorage.setItem("trivela.speller", on ? "on" : "off");
+  } catch {
+    /* ignore */
   }
 }
 
@@ -353,7 +370,8 @@ export function TextEntry({
   const inStage = useContext(StageCtx);
   const overlay = useMemo(() => inStage && isCoarse(), [inStage]);
   const [open, setOpen] = useState(false);
-  const [helper, setHelper] = useState(spellerOn);
+  const { pad } = usePlay();
+  const helper = useMemo(spellerOn, []);
   const bar = useRef<HTMLInputElement>(null);
   const sugg = useMemo(() => (index && helper ? suggest(value, index) : []), [value, index, helper]);
 
@@ -364,30 +382,14 @@ export function TextEntry({
   };
   useEffect(() => () => void (open && close()), [open]);
 
-  const chips = index && (
+  // controllers have no people index: the Screen judges their answers
+  const chips = index && !pad && sugg.length > 0 && (
     <div className="suggest" aria-label="Correttore ortografico">
       {sugg.map((s) => (
         <button key={s.name} type="button" onPointerDown={(e) => e.preventDefault()} onClick={() => onChange(s.name)}>
           {s.name}
         </button>
       ))}
-      <span className="grow" />
-      <button
-        type="button"
-        className="speller-toggle"
-        onPointerDown={(e) => e.preventDefault()}
-        onClick={() => {
-          const v = !helper;
-          setHelper(v);
-          try {
-            localStorage.setItem("trivela.speller", v ? "on" : "off");
-          } catch {
-            /* ignore */
-          }
-        }}
-      >
-        correttore {helper ? "ON" : "OFF"}
-      </button>
     </div>
   );
   const common = {
@@ -424,7 +426,7 @@ export function TextEntry({
         {value || placeholder}
         <span className="fake-hint">✎ tocca per scrivere</span>
       </button>
-      {index && sugg.length > 0 && chips}
+      {chips}
       {open &&
         createPortal(
           <div className="typebar" onPointerDown={(e) => e.target === e.currentTarget && close()}>

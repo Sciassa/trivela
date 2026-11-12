@@ -4,7 +4,7 @@ import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { loadCore } from "./runtime/packs";
 import { isRoomCode } from "./runtime/roomCore";
-import { Page, Stage } from "./components/ui";
+import { Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
 import { Setup } from "./screens/Setup";
 import { LocalMatch } from "./screens/LocalMatch";
@@ -124,7 +124,7 @@ export function App() {
             </div>
             <div className="menu-foot">
               <button className="btn ghost small" onClick={() => go({ name: "audio" })}>
-                ♪ AUDIO
+                ♪ OPZIONI
               </button>
               <button className="btn ghost small" onClick={() => go({ name: "credits" })}>
                 FONTI DEI DATI
@@ -176,13 +176,14 @@ export function App() {
 
 function AudioSettings({ onBack }: { onBack: () => void }) {
   const [p, setP] = useState(audio.prefs);
+  const [speller, setSp] = useState(spellerOn);
   const upd = (x: Partial<typeof p>) => {
     audio.setPrefs(x);
     setP({ ...audio.prefs });
     audio.play("blip");
   };
   return (
-    <Page title="AUDIO" onBack={onBack}>
+    <Page title="OPZIONI" onBack={onBack}>
       <div className="field">
         <label>MUSICA</label>
         <input type="range" min={0} max={1} step={0.1} value={p.music} onChange={(e) => upd({ music: Number(e.target.value) })} />
@@ -194,6 +195,19 @@ function AudioSettings({ onBack }: { onBack: () => void }) {
       <button className="btn big" onClick={() => upd({ muted: !p.muted })}>
         {p.muted ? "AUDIO SPENTO" : "AUDIO ACCESO"}
       </button>
+      <div className="field">
+        <label>CORRETTORE ORTOGRAFICO DEI NOMI</label>
+        <button
+          className={`btn ${speller ? "" : "ghost"}`}
+          onClick={() => {
+            setSpeller(!speller);
+            setSp(!speller);
+          }}
+        >
+          {speller ? "ACCESO" : "SPENTO"}
+        </button>
+        <span className="note">Corregge solo l'ortografia di un nome già scritto quasi per intero: non completa e non suggerisce risposte.</span>
+      </div>
       <span className="label">PROVA GLI EFFETTI</span>
       <div className="grid3">
         {(["goal", "sad", "post", "boo", "buzz", "fanfare"] as const).map((s) => (

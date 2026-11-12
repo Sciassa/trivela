@@ -505,7 +505,6 @@ export const dischetto: GameModule = {
       said: [],
       shots: [0, 0],
       kicks: [[], []],
-      tenthClosed: false,
       last: null,
       script: null,
     };
@@ -522,8 +521,10 @@ export const dischetto: GameModule = {
         const hitId = m.id;
         const entry = top.find((r) => r.id === hitId)!;
         if (entry.rank === 10) {
-          if (s.tenthClosed) m = null;
-          else s.tenthClosed = true;
+          // players tied at the last useful place share the places left in the top 10
+          const places = 10 - top.filter((r) => r.rank < 10).length;
+          const taken = (s.said as { id: string }[]).filter((x) => top.find((r) => r.id === x.id)?.rank === 10).length;
+          if (taken >= places) m = null;
         }
       }
       s.shots[p] += 1;

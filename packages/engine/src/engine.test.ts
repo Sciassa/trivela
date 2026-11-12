@@ -152,7 +152,7 @@ describe("la decina e dal dischetto", () => {
     expect(s.game!.stage).toBe("final");
     expect(s.scores[0] + s.scores[1]).toBe(20);
   });
-  it("dischetto: five kicks each on one list, tenth place closes after one tied name", () => {
+  it("dischetto: five kicks each on one list, tied names share the places left in the top 10", () => {
     let s = start(first("dischetto"));
     s = run(s, { type: "ANSWER", payload: { text: P(9).name } });
     expect(s.events[0]).toMatchObject({ type: "goal", points: 2 });

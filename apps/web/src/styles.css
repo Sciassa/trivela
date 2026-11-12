@@ -118,11 +118,13 @@ a { color: var(--p1); }
 .input.fake { cursor: text; position: relative; clip-path: none; }
 .input.fake.empty { color: var(--dim); }
 .fake-hint { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-family: var(--pixel); font-size: 13px; color: var(--accent); }
-.entry { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; }
+.entry { display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0; position: relative; }
 .answer { display: flex; gap: 16px; align-items: flex-start; }
-.suggest { display: flex; gap: 10px; flex-wrap: wrap; min-height: 46px; align-items: center; }
-.suggest button { font-family: var(--term); font-size: 30px; background: #0d0d26; color: var(--ink); border: 3px dashed var(--line); padding: 4px 14px; min-height: 46px; }
-.suggest .speller-toggle { font-size: 22px; color: var(--dim); border-style: dotted; }
+.suggest { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.suggest button { font-family: var(--term); font-size: 30px; background: #0d0d26; color: var(--ink); border: 3px dashed var(--accent); padding: 4px 14px; min-height: 46px; }
+/* in the stage the corrections float above the field: the layout never jumps */
+.stage .entry > .suggest { position: absolute; left: 0; right: 0; bottom: calc(100% + 6px); z-index: 6; animation: pop .2s steps(3); }
+.stage .entry > .suggest button { box-shadow: 0 6px 0 rgba(0,0,0,.6); }
 .phone-hint { display: flex; align-items: center; gap: 16px; justify-content: center; font-family: var(--pixel); font-size: 18px; color: var(--dim); padding: 18px; border: 4px dashed var(--line); background: rgba(10,10,30,.6); animation: blink 1.6s steps(2) infinite; }
 
 /* typing bar pinned above the on-screen keyboard (touch devices) */
@@ -132,7 +134,6 @@ a { color: var(--p1); }
 .typebar-input:focus { outline: none; }
 .typebar-ok { font-size: 16px; min-width: 76px; height: 52px; background: var(--accent); color: var(--bg); border: 0; }
 .typebar .suggest button { font-size: 20px; min-height: 40px; }
-.typebar .suggest .speller-toggle { font-size: 16px; }
 
 /* ------------------------------------------------------------ HUD */
 .hud { flex: none; height: 124px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 20px; padding: 0 max(28px, env(safe-area-inset-right)) 0 max(28px, env(safe-area-inset-left)); background: linear-gradient(#1c1c48, #0a0a22); border-bottom: 6px solid var(--line); box-shadow: 0 6px 0 rgba(0,0,0,.5); position: relative; z-index: 3; }
@@ -161,9 +162,30 @@ a { color: var(--p1); }
 .hud-pips i.done { background: var(--dim); border-color: var(--dim); }
 .hud-pips i.now { background: var(--accent); border-color: var(--accent); animation: blink 1s steps(2) infinite; }
 
+/* compact HUD and spacing on short stages (phones in landscape) */
+.stage.short .hud { height: 96px; gap: 14px; }
+.stage.short .hud-face { width: 60px; height: 60px; }
+.stage.short .hud-name { font-size: 20px; max-width: 250px; }
+.stage.short .hud-score { font-size: 40px; min-width: 116px; padding: 8px 8px 4px; }
+.stage.short .hud-game { font-size: 18px; padding: 6px 14px; }
+.stage.short .hud-mid { gap: 8px; }
+.stage.short .hud-delta { top: 56px; }
+.stage.short .arena { padding-top: 12px; padding-bottom: 12px; }
+.stage.short .view { gap: 12px; }
+.stage.short .q-card { padding: 12px 20px; }
+.stage.short .q { font-size: 46px; }
+.stage.short .q.small { font-size: 38px; }
+.stage.short .sub { font-size: 26px; }
+.stage.short .timer { height: 34px; }
+.stage.short .rank { min-height: 54px; }
+.stage.short .ranking { gap: 8px 18px; }
+.stage.short .option { min-height: 96px; }
+.stage.short .bd-crowd { bottom: 40px; }
+.stage.short .bd-pitch { height: 44px; }
+
 /* ------------------------------------------------------------ arena */
 .arena { flex: 1; min-height: 0; display: flex; padding: 22px max(36px, env(safe-area-inset-right)) 26px max(36px, env(safe-area-inset-left)); position: relative; }
-.fit { flex: 1; min-width: 0; min-height: 0; overflow: hidden; position: relative; }
+.fit { flex: 1; min-width: 0; min-height: 0; overflow: hidden; overflow: clip; position: relative; }
 .fit-inner { transform-origin: 0 0; }
 .view { display: flex; flex-direction: column; gap: 20px; padding: 6px; }
 .view.enter, .enter { animation: view-in .4s steps(8) both; }
@@ -179,7 +201,7 @@ a { color: var(--p1); }
 @keyframes flash { 0% { opacity: 1; } 40% { opacity: .2; } 60% { opacity: .9; } 100% { opacity: 0; } }
 
 .turnbar { display: flex; align-items: center; gap: 18px; min-height: 48px; }
-.turnbar .who { font-family: var(--pixel); font-size: 20px; padding: 12px 16px; color: var(--bg); background: currentColor; animation: pop .3s steps(4); }
+.turnbar .who { font-family: var(--pixel); font-size: 20px; padding: 12px 16px; background: currentColor; animation: pop .3s steps(4); }
 .turnbar .who span { color: var(--bg); }
 .turnbar .info { font-family: var(--pixel); font-size: 16px; color: var(--dim); }
 

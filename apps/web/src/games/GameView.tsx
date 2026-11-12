@@ -348,13 +348,29 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
   const item = g.item as DischettoItem;
   const final = g.stage === "final";
   const top = item.ranking.filter((r) => r.rank <= 10);
-  const said = new Map((g.said as { id: string; player: PlayerIdx }[]).map((s) => [s.id, s.player]));
+  const owners = new Map((g.said as { id: string; player: PlayerIdx }[]).map((s) => [s.id, s.player]));
+  // Players tied at the last useful place share the places left in the top 10.
+  const sure = top.filter((r) => r.rank < 10);
+  const tied = top.filter((r) => r.rank === 10);
+  const tiedSaid = (g.said as { id: string; name: string; player: PlayerIdx }[]).filter((x) => !sure.some((r) => r.id === x.id));
+  const tiedRest = tied.filter((r) => !tiedSaid.some((x) => x.id === r.id));
+  const places = Math.max(0, 10 - sure.length);
+  const rows = [
+    ...sure.map((r) => ({ pos: r.rank, value: r.value, label: r.label, name: owners.has(r.id) || final ? r.name : "", owner: r.id ? owners.get(r.id) : undefined })),
+    ...Array.from({ length: Math.min(places, tied.length) }, (_, k) => {
+      const hit = tiedSaid[k];
+      const shown = hit ? tied.find((r) => r.id === hit.id) : final ? tiedRest[k - tiedSaid.length] : undefined;
+      return { pos: sure.length + 1, value: tied[0]!.value, label: shown?.label ?? (tied.length === 1 ? tied[0]!.label : undefined), name: hit?.name ?? shown?.name ?? "", owner: hit?.player };
+    }),
+  ];
+  const spare = final ? tiedRest.slice(Math.max(0, places - tiedSaid.length)) : [];
   return (
     <>
       <div className="q-card">
         <div className="q small">{item.title}</div>
         <div className="sub">
-          {item.hint} <span style={{ opacity: 0.7 }}>· {item.definition}</span>
+          {item.hint} {tied.length > places && `In ${tied.length} a pari merito per ${places === 1 ? "l'ultimo posto" : `gli ultimi ${places} posti`}. `}
+          <span style={{ opacity: 0.7 }}>· {item.definition}</span>
         </div>
       </div>
       <TurnBar state={state} p={final ? null : g.turn} text="TIRA">
@@ -368,19 +384,16 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
         ))}
       </TurnBar>
       <StateTimer state={state} start={start} />
-      <div className="ranking" style={{ gridTemplateRows: `repeat(${Math.ceil(top.length / 2)}, auto)` }}>
-        {top.map((r, k) => {
-          const owner = r.id ? said.get(r.id) : undefined;
-          const known = owner !== undefined || final;
-          return (
-            <div key={k} className={`rank ${owner !== undefined ? pc(owner) : final ? "shown" : "mystery"}`}>
-              <span className="pos">{r.rank}</span>
-              <span className="name">{known ? r.name : "? ? ? ? ?"}</span>
-              <span className="val">{r.value >= 0 ? r.label ?? `${r.value} ${item.unit}` : ""}</span>
-            </div>
-          );
-        })}
+      <div className="ranking" style={{ gridTemplateRows: `repeat(${Math.ceil(rows.length / 2)}, auto)` }}>
+        {rows.map((r, k) => (
+          <div key={k} className={`rank ${r.owner !== undefined ? pc(r.owner) : r.name ? "shown" : "mystery"}`}>
+            <span className="pos">{r.pos}</span>
+            <span className="name">{r.name || "? ? ? ? ?"}</span>
+            <span className="val">{r.value >= 0 ? r.label ?? `${r.value} ${item.unit}` : ""}</span>
+          </div>
+        ))}
       </div>
+      {spare.length > 0 && <div className="sub">A pari merito, valevano anche: {spare.map((r) => r.name).join(", ")}.</div>}
       {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={g.shots.join()} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} submitLabel="TIRA!" />)}
       {g.stage === "feedback" && <div className={`shout ${g.last?.ok ? "c-ok" : "c-ko"}`}>{g.last?.ok ? "GOOOL!" : "PARATA!"}</div>}
       {final && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
@@ -389,6 +402,27 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
 }
 
 /* ------------------------------------------------------------ La Formazione */
+
+/** Nudge apart the players whose roles sit on the same spot, so names never overlap. */
+function spread(players: FormazioneItem["teams"][0]["players"]): { x: number; y: number }[] {
+  const pts = players.map((p) => ({ x: p.x, y: p.y }));
+  const clamp = (v: number) => Math.min(0.97, Math.max(0.03, v));
+  for (let n = 0; n < 12; n++) {
+    for (let a = 0; a < pts.length; a++) {
+      for (let b = a + 1; b < pts.length; b++) {
+        const A = pts[a]!;
+        const B = pts[b]!;
+        const dx = Math.abs(A.x - B.x);
+        if (Math.abs(A.y - B.y) >= 0.11 || dx >= 0.24) continue;
+        const push = (0.24 - dx) / 2 + 0.004;
+        const dir = A.x <= B.x ? -1 : 1;
+        A.x = clamp(A.x + dir * push);
+        B.x = clamp(B.x - dir * push);
+      }
+    }
+  }
+  return pts;
+}
 
 function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
   const { readonly, pad } = usePlay();
@@ -419,12 +453,13 @@ function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
   }
   const team = item.teams[g.teamOf[g.turn] as 0 | 1];
   const reveal = g.stage === "reveal";
+  const pts = spread(team.players);
   return (
     <div className="duo">
       {!pad && (
         <div className="pitch" key={g.round}>
           {team.players.map((p, k) => (
-            <div key={k} className={`pl ${p.hidden ? (g.found.includes(p.id) ? "found" : reveal ? "" : "hidden") : ""}`} style={{ left: `${8 + p.x * 84}%`, top: `${95 - p.y * 92}%` }}>
+            <div key={k} className={`pl ${p.hidden ? (g.found.includes(p.id) ? "found" : reveal ? "" : "hidden") : ""}`} style={{ left: `${8 + pts[k]!.x * 84}%`, top: `${95 - pts[k]!.y * 92}%` }}>
               <div className="shirt">{p.number ?? ""}</div>
               {p.name ? p.name.split(" ").slice(-1)[0] : "???"}
             </div>
