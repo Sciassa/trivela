@@ -1,0 +1,23 @@
+{
+  "name": "trivela",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev": "pnpm --filter @trivela/web dev",
+    "build": "pnpm --filter @trivela/web build",
+    "server": "pnpm --filter @trivela/realtime start",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "e2e": "node tools/e2e.mjs",
+    "content:validate": "cd data && uv run python -m trivela_data.validate_content",
+    "data:build": "cd data && uv run python -m trivela_data.fetch && uv run python -m trivela_data.build && uv run python -m trivela_data.build_content && uv run python -m trivela_data.generate",
+    "data:generate": "cd data && uv run python -m trivela_data.generate",
+    "data:sync": "cd data && uv run python -m trivela_data.sync"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "vitest": "2.1.8",
+    "@types/node": "22.10.2"
+  }
+}

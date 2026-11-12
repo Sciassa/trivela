@@ -1,0 +1,18 @@
+[project]
+name = "trivela-data"
+version = "0.1.0"
+description = "TRIVELA data pipeline: free authoritative sources, two-family verification, question packs"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=2.0.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

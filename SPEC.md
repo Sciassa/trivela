@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v1.0 — specifica approvata, sviluppo non ancora iniziato.**
+> Stato: **v1.1 — prima versione giocabile (dati: Mondiali FIFA 1930–2026). Vincolo: tutto gratuito.**
 
 ---
 
@@ -20,6 +20,129 @@ Principi che nessuna feature può violare:
 | P5 | **Domande "da maniaco", mai da quiz generalista.** | Archetipi (§8.6), filtro di curiosità, distrattori verificati. |
 | P6 | **Identità originale.** | Nessun nome, logo, persona reale o testata giornalistica reale usati come branding. Il conduttore è un ruolo generico; il giornale è di fantasia. |
 | P7 | **Fonti usate nel rispetto dei loro termini.** | Nessuno scraping massivo di siti che lo vietano (§8.1). |
+
+---
+
+## 0.1 Decisioni della v1 (vincolo "tutto gratis")
+
+Queste decisioni prevalgono sul resto del documento dove c'è contrasto.
+
+| Tema | Decisione v1 |
+|---|---|
+| Fonti | Solo fonti gratuite e aperte: **openfootball** (pubblico dominio), **Wikipedia/Wikidata** (famiglia *wikimedia*), **StatsBomb Open Data**. Nessuna API a pagamento (livello B rimosso). I siti di livello C (Transfermarkt, Sky Sport, UEFA, FBref…) restano riferimenti per la verifica manuale, mai scaricati in massa. |
+| Perimetro dati | **Fasi finali dei Mondiali FIFA 1930–2026**: è l'unico ambito in cui oggi esistono almeno due famiglie gratuite indipendenti con partite, marcatori al minuto, formazioni e rose. Serie A e club entreranno quando avranno una seconda fonte gratuita verificabile. |
+| Verifica | Regola delle due famiglie invariata. In più vale l'**attestazione referenziata**: una dichiarazione Wikidata che cita esplicitamente una fonte esterna (es. data di nascita con riferimento a un database calcistico o a un'autorità bibliografica) conta come seconda famiglia; il riferimento viene mostrato tra le fonti. |
+| Completezza | Elenchi, classifiche e insiemi (Decina, Dischetto, Asta, Intruso) si generano **solo dove i dati sono completi** (tutte le partite o tutte le rose dell'ambito verificate), così una risposta giusta non può mai essere rifiutata. |
+| Il Mercato | Nessuna fonte gratuita fornisce cifre di trasferimento verificabili su due famiglie: **0 istanze**, il gioco è escluso dal sorteggio finché non esisterà una fonte idonea. |
+| Il Giramondo | Diventa la **"carriera mondiale"**: club di appartenenza a ogni Mondiale disputato, ruolo, numeri di maglia, nazionale. |
+| Il Filo Rosso | Compagni = stessa rosa nello stesso torneo (rose verificate). |
+| La Formazione | Ruoli dalle rose ufficiali (concordanti), senza stringa del modulo tattico (non verificabile). |
+| L'Intruso | Il legame si sceglie sempre fra 4 opzioni, in tutte le modalità. |
+| Argomento libero | Interpretazione **deterministica nel browser** (n-grammi + indice entità + anni/stagioni/decenni); espansione sul grafo dei collegamenti; nessun LLM. Se i dati del perimetro non bastano, l'argomento viene allargato e la schermata lo dichiara. |
+| LLM | Nessun LLM né in gioco né nella pipeline (costo). L'archivio redazionale YAML resta disponibile per aneddoti inseriti a mano, sempre con due famiglie. |
+| Database | Niente Postgres: la pipeline produce `data/build/graph.json` e i pacchetti statici in `apps/web/public/packs/`. |
+| Più dispositivi | **Server Node gratuito in rete locale** (`pnpm server`) che serve app e stanze WebSocket sulla stessa porta. L'adattatore Cloudflare Durable Objects è rimandato. |
+
+## 0.2 Contenuti della v1 (snapshot 2026-11-11)
+
+Verifica incrociata sulle fasi finali dei Mondiali 1930–2026: 1002 risultati concordanti, 906 partite con marcatori concordanti (723 anche nei minuti), 1185 formazioni titolari concordanti, 9606 voci di rosa verificate, 8410 giocatori arricchiti da Wikidata (6654 con data di nascita referenziata). I dati in disaccordo tra le fonti sono esclusi.
+
+| Gioco | Istanze |
+|---|---|
+| Tiro Secco | 6397 |
+| Prima Pagina | 550 |
+| Il Mercato | 0 |
+| La Decina | 22 |
+| Dal Dischetto | 2 |
+| La Formazione | 37 |
+| La Cassaforte | 1929 |
+| Il Giramondo | 98 |
+| Il Frame | 279 |
+| L'Intruso | 87 |
+| L'Asta | 143 |
+| Il Filo Rosso | 81 |
+| Il Mappamondo | 421 |
+| La Maglia | 2500 |
+| **Totale** | **12546** |
+
+Limiti noti: Il Mercato è vuoto (nessuna fonte gratuita verificabile per le cifre); Dal Dischetto e La Formazione hanno poche istanze perché richiedono dati completi su un intero perimetro; circa 940 titoli Wikipedia non sono stati risolti in Wikidata per i limiti di richieste (restano con un identificativo Wikipedia e senza etichetta italiana).
+
+## 0.3 Decisione v2: una fonte autorevole per dominio (sostituisce la regola delle due famiglie)
+
+Decisione del committente (novembre 2026): la doppia fonte concorde era troppo restrittiva. Da ora:
+
+| Dominio | Fonte autorevole | Copertura reale |
+|---|---|---|
+| Trasferimenti e cifre, altezze, date di nascita, presenze, tabellini (formazioni, moduli, marcatori al minuto, arbitri, capitani, numeri) | **Transfermarkt** (dataset `dcaribou/transfermarkt-datasets`, file DuckDB su R2) | partite/eventi/presenze **2012/13 – 2025/26** (+ Mondiali); trasferimenti con cifra quasi tutti dal 2004 |
+| Fasi finali dei Mondiali 1930–2026 | openfootball + Wikipedia (già verificati in v1) | completa |
+| Nazionali: risultati 1872 – oggi | **martj42/international_results** (CC0) | completa per i risultati; i marcatori sono incompleti nei primi decenni e non si usano per classifiche "di sempre" |
+| Stagione in corso 2026/27 | **open-matchday** (aggiornato ogni giorno; uso non commerciale) | risultati, primo tempo, calendario (i minuti dei gol non indicano il marcatore) |
+| Etichette italiane, luogo di nascita e coordinate | **Wikidata** in blocco via SPARQL (proprietà P2446 = ID Transfermarkt) | giocatori con valore di mercato rilevante |
+| Aneddoti (`content/`) | una fonte citata con frase testuale, **verificata automaticamente** (frase presente nella pagina, oppure query sui dati) | 10 pubblicate, 11 in bozza |
+
+Regole che restano: si scartano i record con campi mancanti o incompleti (es. partite in cui gli eventi-gol non tornano con il risultato); classifiche e insiemi **dichiarano sempre il perimetro** (competizione e stagioni), così le risposte non sono contestabili; nessun dato inventato.
+
+Il "1990" indicato come inizio per le statistiche granulari non è raggiungibile con le fonti gratuite disponibili: il dataset Transfermarkt parte dalla stagione 2012/13. Per il periodo precedente restano i Mondiali (verificati) e i risultati delle nazionali.
+
+**Aggiornamento automatico gratuito:** `pnpm data:sync` (o `npm run data:sync`) e la GitHub Action `.github/workflows/sync-data.yml` (ogni lunedì 02:17 UTC) riscaricano le fonti, rigenerano i pacchetti e aprono una pull request.
+
+Contenuti dopo la v2:
+
+| Gioco | Istanze |
+|---|---|
+| tiro_secco | 8389 |
+| prima_pagina | 1681 |
+| mercato | 1740 |
+| decina | 40 |
+| dischetto | 66 |
+| formazione | 637 |
+| cassaforte | 5520 |
+| giramondo | 867 |
+| frame | 1212 |
+| intruso | 338 |
+| asta | 245 |
+| filo_rosso | 281 |
+| mappamondo | 1221 |
+| maglia | 5000 |
+| **Totale** | **27237** |
+
+## 0.4 Decisione v3: fonti storiche, domande inedite, notorietà, caricamento a richiesta
+
+**Fonti aggiunte** (tutte gratuite, su GitHub):
+
+| Fonte | Uso | Limiti verificati |
+|---|---|---|
+| `ewenme/transfers` (Transfermarkt, 1992–2022) | Il Mercato 1992–2011 | serve la nazionalità dai profili salimt: abbinamento nome + anno di nascita, scartati i casi ambigui |
+| `salimt/football-datasets` (Transfermarkt) | Il Giramondo (carriere storiche), nazionalità, valore di mercato massimo | presenze stagionali, presenze in Nazionale e compagni di squadra **incompleti** (es. Serie A 1995/96 con 236 gol totali; Baggio, Riva, Meazza, Piola assenti dalle presenze azzurre; nessun dato compagni per Totti/Maldini/Zanetti): **non usati per classifiche** |
+| StatsBomb Open Data | finali di Champions 1999–2019, Europei 2020/2024 (fase a eliminazione), Serie A 1986/87 e 2015/16 (big match) | solo le partite pubblicate da StatsBomb |
+| `jalapic/engsoccerdata` | calendario Serie A 1929–2011: "unica partita giocata di …" | solo risultati e date |
+| `jfjelstul/worldcup` | CT e premi individuali di ogni Mondiale | — |
+
+**Domande inedite.** L'archivio `content/` è stato svuotato. Un filtro (`postprocess.SHOW_FINGERPRINTS`) scarta ogni domanda generata che riproduce i casi già visti negli episodi usati come ispirazione.
+
+**Filtro notorietà.** Un giocatore può essere protagonista di una domanda solo se: valore di mercato massimo ≥ 10 milioni €, oppure ≥ 80 presenze o ≥ 20 gol tra Top 5 campionati e Champions League, oppure ≥ 15 sitelink su Wikidata. Per La Maglia servono anche ≥ 25 partite con quel numero (≥ 10 per i numeri iconici 7, 9, 10, 11, 45, 77, 80, 88, 99); si tengono le 1.200 domande sui giocatori più noti.
+
+**Caricamento a richiesta.** I dati sono in `apps/web/public/data/`: `manifest.json`, `entities.json`, `topics.json`, `teammates.json` e `games/<id>.json`. Lo Schermo scarica all'avvio solo manifest, indice e argomenti; dopo il sorteggio scarica i 5 giochi estratti. Regia e pulsantiere non scaricano dati di gioco (le risposte le giudica il server).
+
+**GitHub Pages.** `.github/workflows/pages.yml` pubblica `apps/web/dist` a ogni push su `main`. Su Pages è disponibile la modalità a schermo singolo; la modalità multi-dispositivo richiede il server locale (WebSocket).
+
+| Gioco | Istanze |
+|---|---|
+| tiro_secco | 9174 |
+| prima_pagina | 1625 |
+| mercato | 1401 |
+| decina | 39 |
+| dischetto | 64 |
+| formazione | 751 |
+| cassaforte | 5761 |
+| giramondo | 1542 |
+| frame | 1325 |
+| intruso | 316 |
+| asta | 241 |
+| filo_rosso | 280 |
+| mappamondo | 1220 |
+| maglia | 1200 |
+| **Totale** | **24939** |
 
 ---
 
