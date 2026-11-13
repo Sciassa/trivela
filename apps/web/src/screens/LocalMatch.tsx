@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { usedIds, viewFor, type EngineCtx, type Intent, type MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
-import { Confetti, Fit, NextButton, PlayCtx, Scoreboard, Stage, TimerClockCtx, useWakeLock, type PlayMode, type TimerClock } from "../components/ui";
+import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, useWakeLock, type PlayMode, type Pop, type TimerClock } from "../components/ui";
 import { GAME_COLORS, GameIcon, Sprite } from "../components/sprites";
 import { ClueBuzzer, GameView, isBuzzerGame } from "../games/GameView";
 import { GAME_NAMES, GAME_RULES } from "../rules";
@@ -26,6 +26,36 @@ function useFx(state: MatchState) {
   return fx;
 }
 
+/** Floating point gains: one per scoring event, gone after a second and a half. */
+function usePops(state: MatchState): Pop[] {
+  const [pops, setPops] = useState<Pop[]>([]);
+  useEffect(() => {
+    const fresh: Pop[] = [];
+    state.events.forEach((e, k) => {
+      if ((e.type === "correct" || e.type === "goal") && e.points !== 0) fresh.push({ id: Date.now() * 10 + k, value: e.points, player: e.player });
+    });
+    if (!fresh.length) return;
+    setPops((p) => [...p, ...fresh]);
+    const t = window.setTimeout(() => setPops((p) => p.filter((x) => !fresh.includes(x))), 1500);
+    return () => window.clearTimeout(t);
+  }, [state.events]);
+  return pops;
+}
+
+/** A new curtain of squares at every change of game and at the intro, game-over and final screens. */
+function useWipe(state: MatchState): number {
+  const [id, setId] = useState(0);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    if (state.phase === "intro" || state.phase === "game_over" || state.phase === "match_over") setId((n) => n + 1);
+  }, [state.phase, state.gameIdx]);
+  return id;
+}
+
 export function MatchShell({
   state,
   dispatch,
@@ -36,6 +66,7 @@ export function MatchShell({
   mode = LOCAL,
   clock = NO_CLOCK,
   onAgain,
+  onAbort,
 }: {
   state: MatchState;
   dispatch: (i: Intent) => void;
@@ -48,18 +79,29 @@ export function MatchShell({
   clock?: TimerClock;
   /** Play the same format again (rematch / another training run). */
   onAgain?: (s: MatchState) => void;
+  /** Stop the match for good, without a result (the discreet corner button, after a confirmation). */
+  onAbort?: () => void;
 }) {
+  const [asking, setAsking] = useState(false);
   const view = useMemo(() => viewFor(state, "screen"), [state]);
   const g = state.order[state.gameIdx];
   const fx = useFx(state);
+  const pops = usePops(state);
+  const wipe = useWipe(state);
   const buzzer = state.phase === "playing" && !!view.game && isBuzzerGame(view.game.game);
   return (
     <Stage>
       <PlayCtx.Provider value={mode}>
         <TimerClockCtx.Provider value={clock}>
+        <div className={`shake-root ${fx?.kind === "ko" ? "shake" : ""}`}>
         <Scoreboard state={state} />
+        {onAbort && state.phase !== "match_over" && (
+          <ExitButton kind={state.config.solo ? "home" : "end"} label={state.config.solo ? "TORNA ALLA HOME" : "TERMINA PARTITA"} onClick={() => setAsking(true)} />
+        )}
+        {onAbort && state.phase === "match_over" && <ExitButton kind="home" label="TORNA ALLA HOME" onClick={() => onExit(state)} />}
         <main className={`arena ${fx ? `fx-${fx.kind}` : ""}`}>
           {fx?.party && <Confetti key={fx.id} />}
+          <PointsPops pops={pops} />
           {state.phase === "draw" && (
             <Fit center>
               <Draw state={state} onStart={() => dispatch({ type: "START" })} />
@@ -128,6 +170,20 @@ export function MatchShell({
           )}
           {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} onAgain={onAgain ? () => onAgain(state) : undefined} />}
         </main>
+        </div>
+        <PixelWipe id={wipe} />
+        {asking && onAbort && (
+          <ConfirmModal
+            title={state.config.solo ? "TORNARE ALLA HOME?" : "SEI SICURO DI VOLER TERMINARE LA SFIDA?"}
+            text={state.config.solo ? "L'allenamento in corso andrà perso." : "La partita si chiude subito e il punteggio non viene salvato."}
+            confirm={state.config.solo ? "SÌ, ESCI" : "SÌ, TERMINA"}
+            onConfirm={() => {
+              setAsking(false);
+              onAbort();
+            }}
+            onCancel={() => setAsking(false)}
+          />
+        )}
         </TimerClockCtx.Provider>
       </PlayCtx.Provider>
     </Stage>
@@ -203,7 +259,7 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
                   ANCORA ▶
                 </button>
               )}
-              <NextButton label="FINE" onClick={onExit} />
+              <NextButton label="TORNA ALLA HOME" onClick={onExit} />
             </div>
           </div>
         </Fit>
@@ -244,7 +300,7 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
                 RIVINCITA ▶
               </button>
             )}
-            <NextButton label="FINE" onClick={onExit} />
+            <NextButton label="TORNA ALLA HOME" onClick={onExit} />
           </div>
         </div>
       </Fit>
@@ -257,12 +313,14 @@ export function LocalMatch({
   ctx,
   onExit,
   onAgain,
+  onAbort,
   tableMode,
 }: {
   initial: MatchState;
   ctx: EngineCtx;
   onExit: (s: MatchState) => void;
   onAgain?: (s: MatchState) => void;
+  onAbort?: () => void;
   tableMode?: boolean;
 }) {
   const { state, dispatch, timerStart } = useLocalMatch(initial, ctx);
@@ -270,5 +328,5 @@ export function LocalMatch({
   useEffect(() => {
     if (state.phase === "match_over") rememberSeen(usedIds(state));
   }, [state.phase, state]);
-  return <MatchShell state={state} dispatch={dispatch} ctx={ctx} start={timerStart} onExit={onExit} onAgain={onAgain} tableMode={tableMode} />;
+  return <MatchShell state={state} dispatch={dispatch} ctx={ctx} start={timerStart} onExit={onExit} onAgain={onAgain} onAbort={onAbort} tableMode={tableMode} />;
 }

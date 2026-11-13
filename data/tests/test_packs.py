@@ -10,7 +10,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "frame", "asta", "maglia"]
+GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -64,46 +64,6 @@ def test_anomalia_has_four_famous_options_and_variety():
     assert any("tripletta" in it["question"] and "difensori" in it["question"] for it in items)  # the flagship anomaly
     assert any("portieri" in it["question"] and "assist" in it["question"] for it in items)
     assert any("panchina" in it["question"] for it in items)
-
-
-def test_frame_timelines_are_anonymous_and_unambiguous():
-    items = load("frame")
-    assert {it["mode"] for it in items} == {"match", "score"}
-    for it in items:
-        mins = [e["minute"] for e in it["events"]]
-        assert mins == sorted(mins) and any(e["kind"] == "goal" for e in it["events"])
-        assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4
-        if it["mode"] == "match":
-            goals = [e for e in it["events"] if e["kind"] == "goal"]
-            assert all("score" in e for e in goals)
-            assert goals[-1]["score"][0] + goals[-1]["score"][1] == len(goals)
-            assert "side" in next(e for e in it["events"] if e["kind"] != "goal") or all(e["kind"] == "goal" for e in it["events"])
-            assert it["options"][it["correct"]].split(" · ")[0] in it["script"]
-        else:
-            # goals and cards are bare minutes: nothing but the number of goals can be read off
-            assert all(set(e) == {"minute", "kind"} for e in it["events"])
-            n = sum(1 for e in it["events"] if e["kind"] == "goal")
-            assert n >= 3 and all(sum(map(int, o.split("-"))) == n for o in it["options"])
-
-
-def test_frame_correct_option_is_the_match_in_the_script():
-    """The right option must be the match the facts describe, and no other option may fit them."""
-    for it in load("frame"):
-        label = re.match(r"(.+?) (\d+)-(\d+) \(", it["script"])
-        assert label, it["script"]
-        teams, h, a = label.group(1), int(label.group(2)), int(label.group(3))
-        right = it["options"][it["correct"]]
-        wrong = [o for k, o in enumerate(it["options"]) if k != it["correct"]]
-        if it["mode"] == "match":
-            assert right.split(" · ")[0] == teams, (right, teams)
-            assert all(o.split(" · ")[0] != teams or o != right for o in wrong)
-            assert sum(1 for e in it["events"] if e["kind"] == "goal") == h + a
-            assert it["events"][[e["kind"] for e in it["events"]].index("goal")]["score"] in ([1, 0], [0, 1])
-            last = [e for e in it["events"] if e["kind"] == "goal"][-1]["score"]
-            assert last == [h, a], (last, h, a)
-        else:
-            assert right == f"{h}-{a}" and f"{h}-{a}" not in wrong
-            assert it["heading"].startswith(teams)
 
 
 def test_maglia_asks_for_a_number_and_skips_banal_ones():

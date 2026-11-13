@@ -9,7 +9,6 @@ export const GAME_NAMES: Record<GameId, string> = {
   dischetto: "DAL DISCHETTO",
   formazione: "LA FORMAZIONE",
   giramondo: "IL GIRAMONDO",
-  frame: "IL FRAME",
   asta: "L'ASTA",
   maglia: "LA MAGLIA",
 };
@@ -22,7 +21,6 @@ export const GAME_RULES: Record<GameId, string[]> = {
   dischetto: ["Una Top 10 da completare.", "5 tiri a testa, 30 secondi a tiro.", "+2 per ogni nome in classifica."],
   formazione: ["Una partita, 5 titolari oscurati per squadra.", "Chi è in svantaggio sceglie la squadra. 60 secondi.", "5/5 = 15 · 4/5 = 10 · 3/5 = 5 · 2/5 = 3 · 1/5 = 2."],
   giramondo: ["2 carriere svelate in ordine cronologico.", "Si prenota col pulsante: un solo tentativo.", "Prima indovini, più vale: 12-9-6-3-1 punti."],
-  frame: ["Una partita iconica a testa, raccontata da gol e cartellini.", "Quale partita è? Oppure: com'è finita?", "+3 per ogni risposta esatta."],
   asta: ["2 categorie: quanti nomi sai dire?", "Chi vince l'asta ha 60 secondi per dirne quanti ne ha puntati.", "Ci riesce: +puntata. Fallisce: +5 all'avversario."],
   maglia: ["2 giocatori a testa: squadra e stagione.", "Che numero aveva sulla maglia?", "+3 per ogni numero esatto."],
 };

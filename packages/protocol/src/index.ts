@@ -11,7 +11,6 @@ export const GAME_IDS = [
   "dischetto",
   "formazione",
   "giramondo",
-  "frame",
   "asta",
   "maglia",
 ] as const;
@@ -161,30 +160,6 @@ export interface GiramondoItem extends InstanceMeta {
   answer: AnswerKey;
 }
 
-/** One event of the timeline of an iconic match. */
-export interface FrameEvent {
-  minute: number;
-  kind: "goal" | "yellow" | "second_yellow" | "red";
-  /** Running score after a goal (`match` mode only). */
-  score?: [number, number];
-  /** 0 = first-named team, 1 = second (cards, `match` mode only). */
-  side?: 0 | 1;
-}
-
-/**
- * An iconic match told by its anonymous timeline.
- * `match`: which match is it? (options: "Milan-Liverpool · 2004/05").
- * `score`: the match is named, goals and cards are bare minutes: what was the final score?
- */
-export interface FrameItem extends InstanceMeta {
-  mode: "match" | "score";
-  heading: string;
-  events: FrameEvent[];
-  question: string;
-  options: [string, string, string, string];
-  correct: 0 | 1 | 2 | 3;
-}
-
 /** Player + club + season: the answer is the shirt number. */
 export interface MagliaItem extends InstanceMeta {
   player: string;
@@ -202,7 +177,6 @@ export interface PackItems {
   dischetto: DischettoItem[];
   formazione: FormazioneItem[];
   giramondo: GiramondoItem[];
-  frame: FrameItem[];
   asta: SetItem[];
   maglia: MagliaItem[];
 }
@@ -222,5 +196,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], anomalia: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], frame: [], asta: [], maglia: [] };
+  return { tiro_secco: [], anomalia: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [] };
 }

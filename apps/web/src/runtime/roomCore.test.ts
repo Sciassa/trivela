@@ -10,7 +10,7 @@ function setupRoom(withHost: boolean) {
   if (withHost) room.onMessage("h", { t: "hello", role: "host", rev: 0 });
   room.onMessage("a", { t: "hello", role: "p1", rev: 0 });
   room.onMessage("b", { t: "hello", role: "p2", rev: 0 });
-  const r = createMatch({ judging: room.judging(), players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["tiro_secco", "maglia", "frame", "mercato", "decina"] }, packs);
+  const r = createMatch({ judging: room.judging(), players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["tiro_secco", "maglia", "anomalia", "mercato", "decina"] }, packs);
   if (!r.ok) throw new Error(r.reason);
   room.start(r.state);
   const last = (ch: "pub" | "host") => [...sent].reverse().find((x) => x.ch === ch && x.msg.t === "view")!.msg as Extract<DownMsg, { t: "view" }>;
@@ -159,6 +159,18 @@ describe("room authority", () => {
       r.room.onMessage("a", { t: "timer", op: "pause" });
       r.room.onMessage("stranger", { t: "timer", op: "pause" });
       expect(r.room.pausedLeft).toBeNull();
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("only the host can end the match, and everybody gets the empty view", () => {
+      const r = started();
+      r.room.onMessage("a", { t: "end" });
+      expect(r.room.state).not.toBeNull();
+      r.room.onMessage("h", { t: "end" });
+      expect(r.room.state).toBeNull();
+      expect(r.last("pub").state).toBeNull();
+      expect(r.room.timeLeft()).toBeNull();
       r.room.dispose();
       vi.useRealTimers();
     });

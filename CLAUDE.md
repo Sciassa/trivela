@@ -6,7 +6,7 @@ TRIVELA è un quiz calcistico arcade 1v1 multi-dispositivo. **`SPEC.md` è la fo
 
 - Codice, identificatori, nomi di file, commenti tecnici: **inglese**.
 - Testi dell'interfaccia, contenuti, documentazione (`SPEC.md`, `README.md`, questo file): **italiano**.
-- Gli `id` dei giochi sono quelli di SPEC §4 (`tiro_secco`, `anomalia`, `mercato`, `decina`, `dischetto`, `formazione`, `giramondo`, `frame`, `asta`, `maglia`). I nomi visualizzati stanno in un unico file (`apps/web/src/rules.ts`), perché alcuni sono ancora provvisori.
+- Gli `id` dei giochi sono quelli di SPEC §4 (`tiro_secco`, `anomalia`, `mercato`, `decina`, `dischetto`, `formazione`, `giramondo`, `asta`, `maglia`). I nomi visualizzati stanno in un unico file (`apps/web/src/rules.ts`), perché alcuni sono ancora provvisori.
 
 ## Invarianti non negoziabili
 
@@ -31,9 +31,9 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
 ## Struttura
 
-- `apps/web`: PWA React. `src/components` (palco adattivo `Stage`, `Fit`, tabellone, sprite, campi di testo), `src/games/GameView.tsx` (i 10 giochi), `src/screens` (nuova sfida, partita, sala d'attesa e telefoni, torneo), `src/runtime` (`packs` caricamento a richiesta, `roomCore` autorità della stanza, `transport` + `mqtt` relay cifrato, `room` hook React).
-- `packages/protocol` (tipi condivisi), `packages/engine` (10 giochi, sorteggio, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica ed effetti sintetizzati).
-- `data/trivela_data`: `tm_core` (strato dei fatti verificati e grammatica italiana), `gen_lists` (classifiche e insiemi), `gen_matches` (formazione), `gen_frame` (partite iconiche), `gen_anomalie` (record bizzarri), `gen_players` (mercato, giramondo, maglia), `gen_quiz` (curiosità del Tiro Secco), `managers` (date di nascita degli allenatori da Wikidata), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
+- `apps/web`: PWA React. `src/components` (palco adattivo `Stage`, `Fit`, tabellone, sprite, scenografia `scenery`, campi di testo), `src/games/GameView.tsx` (i 9 giochi), `src/screens` (nuova sfida, partita, sala d'attesa e telefoni, torneo), `src/runtime` (`packs` caricamento a richiesta, `roomCore` autorità della stanza, `transport` + `mqtt` relay cifrato, `room` hook React).
+- `packages/protocol` (tipi condivisi), `packages/engine` (9 giochi, sorteggio, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica ed effetti sintetizzati).
+- `data/trivela_data`: `tm_core` (strato dei fatti verificati e grammatica italiana), `gen_lists` (classifiche e insiemi), `gen_matches` (formazione), `gen_anomalie` (record bizzarri), `gen_players` (mercato, giramondo, maglia), `gen_quiz` (curiosità del Tiro Secco), `managers` (date di nascita degli allenatori da Wikidata), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
 - `tools/e2e.mjs` (test end-to-end, stanze comprese, con un relay MQTT locale), `tools/shots.mjs` (screenshot di tutti i giochi a più formati).
 
 ## Comandi
@@ -52,6 +52,9 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - Il Copione delle istanze generate nasce **solo da template** sui fatti dell'istanza.
 - Statistiche cumulative: sempre con definizione e data di aggiornamento visibili.
 - UI: palco che riempie sempre lo schermo (tela virtuale di almeno 1600×900, ridotta sui telefoni), contenuto di gioco dentro `Fit`; moduli e telefoni come pagine a scorrimento (`Page`); variabili CSS per i colori; rispettare `prefers-reduced-motion`; target touch ≥ 48 px.
+- Uscite: ogni partita ha un `ExitButton` discreto e un `ConfirmModal` 8-bit prima di terminare (SPEC §3.7); l'abbandono di un torneo non registra il risultato.
+- Effetti (SPEC §14.1): scossa, punti volanti, wipe a scacchiera e scanline vanno sempre disattivati con `prefers-reduced-motion`.
+- Telefoni: pagina `phone-shell` con azioni principali in basso, senza scorrimento (SPEC §12.5); dimensioni con `clamp()` e container query.
 - Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START". La musica resta ambient: solo onde sine/triangle, tempo lento, volume basso (SPEC §13).
 - Ogni risposta sbagliata va scritta in rosso sullo Schermo (`WrongSaid`, SPEC §3.6): un gioco nuovo deve registrare `said` in `last` (o `wrong` mentre la risposta è ancora in corso).
 

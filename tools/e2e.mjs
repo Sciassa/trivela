@@ -21,7 +21,7 @@ const http = createServer();
 new WebSocketServer({ server: http }).on("connection", (ws) => broker.handle(createWebSocketStream(ws)));
 await new Promise((res) => http.listen(0, res));
 const RELAY = `ws://localhost:${http.address().port}`;
-const GAMES = "tiro_secco,maglia,mercato,decina,frame";
+const GAMES = "tiro_secco,maglia,mercato,decina,anomalia";
 const ROOM = `${BASE}/?relay=${encodeURIComponent(RELAY)}&games=${GAMES}`;
 
 const server = spawn("pnpm", ["--filter", "@trivela/web", "exec", "vite", "preview", "--port", String(PORT), "--strictPort"], { stdio: "pipe", detached: true });
@@ -42,6 +42,8 @@ const open = async (ctxOpts = {}) => {
   p.on("request", (r) => r.url().includes("/data/") && p.dataRequests.push(r.url()));
   return p;
 };
+// the answers of a controller are the buttons pinned to the bottom of the phone
+const PAD_OPT = ".phone-actions .btn:not(.next)";
 const PHONE = { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true };
 let failed = false;
 const check = (cond, msg) => {
@@ -93,8 +95,17 @@ try {
   await p.locator(".option").first().click();
   await p.locator(".option.right").waitFor();
   await p.screenshot({ path: "test-results/local-reveal.png" });
+  // the exit control is discreet, asks for a confirmation, and leaves the game running when cancelled
+  await p.locator(".exit-btn").waitFor();
+  const exitOpacity = await p.locator(".exit-btn").evaluate((el) => Number(getComputedStyle(el).opacity));
+  check(exitOpacity < 0.6, `the exit button is half transparent until hovered (${exitOpacity})`);
+  await p.locator(".exit-btn").click();
+  check(await p.getByText("SEI SICURO DI VOLER TERMINARE LA SFIDA?").isVisible(), "ending the match asks for a confirmation");
+  await p.getByRole("button", { name: "CONTINUA" }).click();
+  check((await p.locator(".option").count()) === 4, "cancelling the confirmation leaves the game as it was");
   // a wrong answer is written in red for the whole room: the Screen shows what was tried
   let sawWrong = false;
+  let sawPop = false;
   for (let q = 0; q < 4 && !sawWrong; q++) {
     const wrong = await p.locator(".option.wrongpick").count();
     if (wrong) {
@@ -111,8 +122,15 @@ try {
     await p.locator(".option").first().waitFor();
     await p.locator(".option").first().click();
     await p.locator(".option.right").waitFor();
+    if ((await p.locator(".option.wrongpick").count()) === 0 && (await p.locator(".pop-plus.up").count()) > 0) sawPop = true;
   }
   check(sawWrong, "a wrong answer was shown in red");
+  if (sawPop) check(true, "a right answer makes a +N pop up");
+  // ending the match for good goes back to the menu
+  await p.locator(".exit-btn").click();
+  await p.getByRole("button", { name: "SÌ, TERMINA" }).click();
+  await p.locator(".menu-card").first().waitFor();
+  check(true, "confirming the exit goes back to the home menu");
   check(errors.length === 0, `no page errors in the single-screen match (${errors.join(" | ")})`);
   await p.context().close();
 
@@ -121,8 +139,8 @@ try {
     const q = await open();
     await q.goto(BASE);
     await q.getByText("PREMI START").click();
-    await q.locator(".menu .btn", { hasText: "SFIDA RAPIDA" }).click();
-    await q.getByText("IL FRAME").click();
+    await q.locator(".menu-card", { hasText: "SFIDA RAPIDA" }).click();
+    await q.locator(".game-pick button", { hasText: "ANOMALIA" }).click();
     await q.getByPlaceholder("Nome").first().fill("Anna");
     await q.getByPlaceholder("Nome").nth(1).fill("Bruno");
     await q.getByText("GIOCA ▶").click();
@@ -130,7 +148,7 @@ try {
     await q.getByText("SI PARTE ▶").click({ timeout: 15000 });
     await q.getByText("VIA! ▶").click();
     await q.locator(".option").first().waitFor();
-    check((await q.locator(".turnbar .info").first().innerText()).includes("PARTITA 1/6"), "sfida rapida: six matches, three each");
+    check((await q.locator(".turnbar .info").first().innerText()).includes("DOMANDA 1/6"), "sfida rapida: six questions, three each");
     const gameFiles = await q.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => n.includes("/data/games/")));
     check(gameFiles.length === 1, `sfida rapida downloads only the chosen game (${gameFiles.length})`);
     await q.context().close();
@@ -138,7 +156,7 @@ try {
     const t = await open();
     await t.goto(BASE);
     await t.getByText("PREMI START").click();
-    await t.locator(".menu .btn", { hasText: "ALLENAMENTO" }).click();
+    await t.locator(".menu-card", { hasText: "ALLENAMENTO" }).click();
     await t.getByText("LA DECINA").click();
     check((await t.getByPlaceholder("Nome").count()) === 1, "allenamento asks for one name only");
     await t.getByText("GIOCA ▶").click();
@@ -169,15 +187,18 @@ try {
     await screen.locator(".option").first().waitFor();
     check((await screen.locator(".arena input").count()) === 0, "the Screen shows no inputs when the phones are connected");
     // the controller of the player on turn shows the options
-    await Promise.race([p1.locator(".option").first().waitFor(), p2.locator(".option").first().waitFor()]);
-    const active = (await p1.locator(".option").count()) ? p1 : p2;
+    await Promise.race([p1.locator(PAD_OPT).first().waitFor(), p2.locator(PAD_OPT).first().waitFor()]);
+    const active = (await p1.locator(PAD_OPT).count()) ? p1 : p2;
     const idle = active === p1 ? p2 : p1;
-    check((await idle.locator(".option").count()) === 0, "only the player on turn can answer from the phone");
+    check((await idle.locator(PAD_OPT).count()) === 0, "only the player on turn can answer from the phone");
     await active.waitForTimeout(900);
     await active.screenshot({ path: "test-results/pad-turn.png" });
     const hasCorrect = await active.evaluate(() => document.body.innerHTML.includes("option right"));
+    check((await active.locator(PAD_OPT).count()) === 4, "the four answers sit in the thumb area of the controller");
+    const box = await active.locator(PAD_OPT).last().boundingBox();
+    check(!!box && box.y + box.height <= 780 + 1 && box.height >= 56, `... fully visible without scrolling, tall enough to tap (${Math.round(box?.height ?? 0)} px)`);
     check(!hasCorrect, "the controller receives no solution before answering");
-    await active.locator(".option").first().click();
+    await active.locator(PAD_OPT).first().click();
     await screen.locator(".option.right").waitFor();
     await screen.screenshot({ path: "test-results/room-screen-reveal.png" });
     check(true, "an answer given on the phone is judged and revealed on the Screen");
@@ -188,7 +209,7 @@ try {
       if (await screen.getByText("IL MERCATO").count()) break;
       for (const ph of [p1, p2]) {
         if (await ph.locator(".btn.next").count()) await ph.locator(".btn.next").first().click().catch(() => undefined);
-        else if (await ph.locator(".option").count()) await ph.locator(".option").first().click().catch(() => undefined);
+        else if (await ph.locator(PAD_OPT).count()) await ph.locator(PAD_OPT).first().click().catch(() => undefined);
         else if (await ph.locator(".numpad").count()) {
           await ph.getByRole("button", { name: "7", exact: true }).click().catch(() => undefined);
           await ph.getByRole("button", { name: "OK", exact: true }).click().catch(() => undefined);
@@ -198,7 +219,12 @@ try {
     }
     await screen.waitForTimeout(600);
     if (await p1.getByText("VIA! ▶").count()) await p1.getByText("VIA! ▶").click();
-    await p2.locator(".big-buzz:not(:disabled)").waitFor({ timeout: 15000 });
+    await p2.locator(".big-buzz:not(:disabled)").waitFor({ timeout: 15000 }).catch(async (e) => {
+      await screen.screenshot({ path: "test-results/debug-screen.png" });
+      await p1.screenshot({ path: "test-results/debug-p1.png" });
+      await p2.screenshot({ path: "test-results/debug-p2.png" });
+      throw e;
+    });
     await screen.waitForTimeout(2600); // "PRONTI…" is over: the first clue is out
     await p2.locator(".big-buzz").dispatchEvent("pointerdown");
     await screen.getByText("RISPONDE!").waitFor();
@@ -253,6 +279,8 @@ try {
     await screen.locator(".option.right").waitFor();
     await screen.getByText("ESATTO!").waitFor();
     check(true, "the verdict given by the Regia reaches the Screen");
+    await screen.locator(".pop-plus.up").first().waitFor({ timeout: 3000 });
+    check((await screen.locator(".pop-plus.up").first().innerText()).includes("+2"), "a right answer makes a green +2 rise on the Screen");
     await screen.context().close();
     await host.context().close();
   }

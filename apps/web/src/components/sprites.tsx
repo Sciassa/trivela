@@ -24,7 +24,7 @@ const MAPS = {
   dischetto: ["wwwwwwwwwwww", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "w..........w", "w....ww....w", "gggwkwwkwggg", "gggwwkkwwggg", "ggggwwwwgggg", "gggggggggggg"],
   formazione: ["gggggggggggg", "gwwwwwwwwwwg", "gw...ww...wg", "gw.y.ww.r.wg", "gw...ww...wg", "gwy..ww..rwg", "gw...ww...wg", "gw.y.ww.r.wg", "gw...ww...wg", "gwwwwwwwwwwg", "gggggggggggg", "............"],
   giramondo: ["....bbbb....", "..bbggbbbb..", ".bgggggbbbb.", ".bggggbbbgb.", "bbgggbbbgggb", "bbbggbbbgggb", "bbbbgbbbbggb", "bbbbggbbbbbb", ".bbbgggbbbb.", ".bbbbggbbbb.", "..bbbbgbbb..", "....bbbb...."],
-  frame: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],
+  clock: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],
   asta: ["..oooo......", ".oooooo.....", "oooooooo....", ".oooooooo...", "..oooooo.o..", "...oooo.ooo.", "....oo...ooo", "..........oo", "............", ".yyyyyyyy...", "yyyyyyyyyy..", "............"],
   maglia: ["..cc....cc..", ".cccwwwwccc.", "cccccwwccccc", "cccccccccccc", "cc.cccccc.cc", "...cccccc...", "...cwwwwc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc..."],
   face: ["..cccccccc..", ".cccccccccc.", ".cffffffffc.", ".ffkffffkff.", ".ffkffffkff.", ".ffffffffff.", ".fffkkkkfff.", "..ffffffff..", "...cccccc...", ".cccccccccc.", "cccccccccccc", "cccccccccccc"],
@@ -65,7 +65,6 @@ export const GAME_COLORS: Record<GameId, string> = {
   dischetto: "#39ff14",
   formazione: "#2fbf4a",
   giramondo: "#4aa3ff",
-  frame: "#c084fc",
   asta: "#e0a060",
   maglia: "#00e5ff",
 };

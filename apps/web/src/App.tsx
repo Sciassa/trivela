@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { MatchState, EngineCtx } from "@trivela/engine";
 import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
@@ -6,6 +6,7 @@ import { loadCore } from "./runtime/packs";
 import { isRoomCode } from "./runtime/roomCore";
 import { Fit, Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
+import { Logo } from "./components/scenery";
 import { Setup } from "./screens/Setup";
 import { LocalMatch } from "./screens/LocalMatch";
 import { Tournament } from "./screens/Tournament";
@@ -30,6 +31,19 @@ function hashRoute(): { role: "host" | "p1" | "p2"; code: string } | null {
   return m && isRoomCode(m[1]!) ? { code: m[1]!, role: m[2] as "host" | "p1" | "p2" } : null;
 }
 
+function MenuCard({ icon, title, text, color, onClick, primary, badge, i }: { icon: ReactNode; title: string; text: string; color: string; onClick: () => void; primary?: boolean; badge?: string; i: number }) {
+  return (
+    <button className={`menu-card ${primary ? "primary" : ""}`} style={{ "--c": color, "--i": i } as CSSProperties} onClick={onClick}>
+      {badge && <span className="badge">{badge}</span>}
+      <span className="ico">{icon}</span>
+      <span>
+        <b>{title}</b>
+        <small>{text}</small>
+      </span>
+    </button>
+  );
+}
+
 export function App() {
   const [data, setData] = useState<{ packs: Packs; ctx: EngineCtx } | null>(null);
   const [route, setRoute] = useState<Route>({ name: "start" });
@@ -47,7 +61,7 @@ export function App() {
   if (remote) return remote.role === "host" ? <HostRoom key={remote.code} code={remote.code} /> : <PadRoom key={remote.code + remote.role} code={remote.code} role={remote.role} />;
   if (!data) {
     return (
-      <Stage>
+      <Stage variant="sunset">
         <div className="home">
           <Sprite name="ball" size={120} className="blink" />
           <div className="px blink">CARICAMENTO…</div>
@@ -65,7 +79,7 @@ export function App() {
   switch (route.name) {
     case "start":
       return (
-        <Stage>
+        <Stage variant="sunset">
           <div
             className="home"
             onPointerDown={async () => {
@@ -75,70 +89,38 @@ export function App() {
               setRoute({ name: "menu" });
             }}
           >
-            <div className="title-logo">TRIVELA</div>
+            <Logo size={150} />
             <div className="tagline">IL QUIZ PER MANIACI DEL CALCIO</div>
             <div className="start-cta blink">PREMI START</div>
             <div className="stat">
               {total.toLocaleString("it-IT")} domande verificate · dati aggiornati al {packs.manifest.snapshot || "—"}
-            </div>
-            <div className="ballrun">
-              <Sprite name="ball" size={72} />
             </div>
           </div>
         </Stage>
       );
     case "menu":
       return (
-        <Stage>
+        <Stage variant="sunset">
           <div className="home">
             <Fit center>
               <div className="home-menu">
-                <div className="title-logo" style={{ fontSize: 76, animation: "none" }}>
-                  TRIVELA
+                <div className="menu-hero">
+                  <Logo size={84} />
+                  <div className="tagline">IL QUIZ PER MANIACI DEL CALCIO</div>
                 </div>
-                <div className="menu">
-                  <button className="btn" onClick={() => go({ name: "setup" })}>
-                    <Sprite name="screen" size={72} />
-                    <span>
-                      PARTITA COMPLETA
-                      <small>5 giochi sorteggiati · uno schermo</small>
-                    </span>
-                  </button>
-                  <button className="btn p1" onClick={() => go({ name: "room-screen" })}>
-                    <Sprite name="phone" size={72} />
-                    <span>
-                      SCHERMO + TELEFONI
-                      <small>Con conduttore o 2 pulsantiere</small>
-                    </span>
-                  </button>
-                  <button className="btn ok" onClick={() => go({ name: "pick", purpose: "quick" })}>
-                    <Sprite name="frame" size={72} />
-                    <span>
-                      SFIDA RAPIDA
-                      <small>Un solo gioco a scelta · 3 round a testa</small>
-                    </span>
-                  </button>
-                  <button className="btn ghost" onClick={() => go({ name: "pick", purpose: "training" })}>
-                    <Sprite name="face" size={72} className="c-accent" />
-                    <span>
-                      ALLENAMENTO
-                      <small>Da solo, un gioco, nessun avversario</small>
-                    </span>
-                  </button>
-                  <button className="btn p2" onClick={() => go({ name: "tournament" })}>
-                    <Sprite name="trophy" size={72} />
-                    <span>
-                      TORNEO TRA AMICI
-                      <small>Da 4 a 12: classifica e finale</small>
-                    </span>
-                  </button>
-                  <button className="btn ghost" onClick={() => go({ name: "join" })}>
-                    <Sprite name="maglia" size={72} className="c-accent" />
-                    <span>
-                      ENTRA CON CODICE
-                      <small>Questo telefono è Regia o pulsantiera</small>
-                    </span>
-                  </button>
+                <div className="menu-cols">
+                  <section className="menu-group">
+                    <h2>GIOCA SU QUESTO SCHERMO</h2>
+                    <MenuCard primary badge="CONSIGLIATO" color="#ffd23f" icon={<Sprite name="screen" size={72} />} title="PARTITA COMPLETA" text="5 giochi sorteggiati su 9, due giocatori" onClick={() => go({ name: "setup" })} i={0} />
+                    <MenuCard color="#5ee06a" icon={<Sprite name="clock" size={64} />} title="SFIDA RAPIDA" text="Un solo gioco a scelta, 3 round a testa" onClick={() => go({ name: "pick", purpose: "quick" })} i={1} />
+                    <MenuCard color="#7fd8ff" icon={<Sprite name="face" size={64} />} title="ALLENAMENTO" text="Da solo, un gioco, nessun avversario" onClick={() => go({ name: "pick", purpose: "training" })} i={2} />
+                  </section>
+                  <section className="menu-group">
+                    <h2>CON GLI AMICI</h2>
+                    <MenuCard color="#4adfff" icon={<Sprite name="phone" size={64} />} title="SCHERMO + TELEFONI" text="Con conduttore o 2 pulsantiere" onClick={() => go({ name: "room-screen" })} i={3} />
+                    <MenuCard color="#ff7ad9" icon={<Sprite name="trophy" size={64} />} title="TORNEO TRA AMICI" text="Da 4 a 12 giocatori: classifica e finale" onClick={() => go({ name: "tournament" })} i={4} />
+                    <MenuCard color="#c9a8ff" icon={<Sprite name="maglia" size={64} />} title="ENTRA CON CODICE" text="Questo telefono è Regia o pulsantiera" onClick={() => go({ name: "join" })} i={5} />
+                  </section>
                 </div>
                 <div className="menu-foot">
                   <button className="btn ghost small" onClick={() => go({ name: "audio" })}>
@@ -147,7 +129,7 @@ export function App() {
                   <button className="btn ghost small" onClick={() => go({ name: "credits" })}>
                     FONTI DEI DATI
                   </button>
-                  <span className="stat">{total.toLocaleString("it-IT")} domande · 10 giochi</span>
+                  <span className="stat">{total.toLocaleString("it-IT")} domande · 9 giochi</span>
                 </div>
               </div>
             </Fit>
@@ -166,7 +148,7 @@ export function App() {
     case "pick":
       return <GamePicker purpose={route.purpose} onBack={menu} onPick={(game) => setRoute({ name: "setup", format: { kind: route.purpose, game } })} />;
     case "local":
-      return <LocalMatch initial={route.state} ctx={route.ctx} tableMode={route.tableMode} onExit={menu} onAgain={() => setRoute({ name: "setup", format: route.format })} />;
+      return <LocalMatch initial={route.state} ctx={route.ctx} tableMode={route.tableMode} onExit={menu} onAbort={menu} onAgain={() => setRoute({ name: "setup", format: route.format })} />;
     case "tournament":
       return <Tournament onBack={menu} />;
     case "room-screen":

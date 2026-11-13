@@ -1,6 +1,6 @@
 # TRIVELA
 
-Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 10 mini-giochi, tornei tra amici.
+Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 9 mini-giochi, tornei tra amici.
 
 Si gioca aprendo il sito, senza installare né avviare nulla:
 
@@ -15,7 +15,7 @@ Si gioca aprendo il sito, senza installare né avviare nulla:
 
 Per le modalità con i telefoni: sullo schermo principale scegli *Schermo + telefoni*, poi inquadra il QR con ogni telefono (oppure apri lo stesso sito sul telefono, tocca *Entra con codice* e scrivi il codice di 5 lettere). Non serve la stessa Wi-Fi: basta internet su ogni dispositivo. Lo schermo principale può essere anche un telefono in orizzontale.
 
-Ogni partita sorteggia 5 giochi su 10; ogni gioco dura al massimo 2 domande a testa. Tutte le domande (oltre 14.000, almeno 1000 per gioco) sono calcolate sul dataset pubblico di Transfermarkt (`dcaribou/transfermarkt-datasets`): stagioni 2012/13–2025/26 dei principali campionati e coppe, Mondiali dal 2006, Europei dal 2008 e trasferimenti. Niente domande inventate né prese dalla TV, e solo su giocatori noti.
+Ogni partita sorteggia 5 giochi su 9; ogni gioco dura al massimo 2 domande a testa. Tutte le domande (oltre 13.000, almeno 1000 per gioco) sono calcolate sul dataset pubblico di Transfermarkt (`dcaribou/transfermarkt-datasets`): stagioni 2012/13–2025/26 dei principali campionati e coppe, Mondiali dal 2006, Europei dal 2008 e trasferimenti. Niente domande inventate né prese dalla TV, e solo su giocatori noti.
 
 - [`SPEC.md`](SPEC.md): specifica di prodotto e architettura (fonte di verità; §0.6 per le decisioni correnti)
 - [`CLAUDE.md`](CLAUDE.md): istruzioni operative per lo sviluppo

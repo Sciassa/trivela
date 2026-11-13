@@ -6,6 +6,7 @@ import type { MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { GAME_NAMES } from "../rules";
 import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
+import { Backdrop } from "./scenery";
 
 /* ------------------------------------------------------------ contexts */
 
@@ -49,7 +50,7 @@ function stageMetrics() {
   return { scale, w: Math.ceil(vw / scale), h: Math.ceil(vh / scale) };
 }
 
-export function Stage({ children }: { children: ReactNode }) {
+export function Stage({ children, variant = "dusk" }: { children: ReactNode; variant?: "dusk" | "sunset" }) {
   const [m, setM] = useState(stageMetrics);
   useLayoutEffect(() => {
     const fit = () => {
@@ -69,26 +70,12 @@ export function Stage({ children }: { children: ReactNode }) {
       <div className="stage-wrap need-landscape">
         <RotateOverlay />
         <div className={`stage ${m.h < 760 ? "short" : ""}`} style={{ width: m.w, height: m.h, transform: `scale(${m.scale})` }}>
-          <Backdrop />
+          <Backdrop variant={variant} />
           <div className="stage-body">{children}</div>
           <div className="scanlines" />
         </div>
       </div>
     </StageCtx.Provider>
-  );
-}
-
-/** Night stadium: stars, floodlights, crowd and pitch (pure CSS). */
-export function Backdrop() {
-  return (
-    <div className="backdrop" aria-hidden>
-      <div className="bd-stars" />
-      <div className="bd-stars far" />
-      <div className="bd-beam left" />
-      <div className="bd-beam right" />
-      <div className="bd-crowd" />
-      <div className="bd-pitch" />
-    </div>
   );
 }
 
@@ -203,10 +190,12 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
   const score = state.scores[p];
   const shown = useCountUp(score);
   const [delta, setDelta] = useState<{ v: number; id: number } | null>(null);
+  const [coin, setCoin] = useState(0);
   const prev = useRef(score);
   useEffect(() => {
     if (score !== prev.current) {
       setDelta({ v: score - prev.current, id: Date.now() });
+      setCoin(score > prev.current ? Date.now() : 0);
       prev.current = score;
     }
   }, [score]);
@@ -218,7 +207,7 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
         <span className="hud-name">{state.config.players[p]}</span>
         <span className="hud-tag">{state.config.solo ? "ALLENAMENTO" : turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
       </div>
-      <span className={`hud-score ${shown !== score ? "rolling" : ""}`}>{shown}</span>
+      <span key={coin} className={`hud-score ${shown !== score ? "rolling" : ""} ${coin ? "coin" : ""}`}>{shown}</span>
       {delta && (
         <span key={delta.id} className={`hud-delta ${delta.v > 0 ? "plus" : "minus"}`}>
           {delta.v > 0 ? `+${delta.v}` : delta.v}
@@ -642,5 +631,99 @@ export function Page({ title, onBack, children, wide = false }: { title: string;
         {children}
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------ Exit controls */
+
+const ICON_X = ["xx...xx", "xxx.xxx", ".xxxxx.", "..xxx..", ".xxxxx.", "xxx.xxx", "xx...xx"];
+const ICON_HOME = ["...x...", "..xxx..", ".xxxxx.", "xxxxxxx", ".xx.xx.", ".xx.xx.", ".xxxxx."];
+
+function PixelIcon({ rows, size }: { rows: string[]; size: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 7 7" shapeRendering="crispEdges" aria-hidden fill="currentColor">
+      {rows.flatMap((r, y) => r.split("").map((c, x) => (c === "x" ? <rect key={`${x}-${y}`} x={x} y={y} width={1.02} height={1.02} /> : null)))}
+    </svg>
+  );
+}
+
+/** A discreet corner button (a pixel icon, half transparent) that lights up on hover; its label shows on hover or focus. */
+export function ExitButton({ kind, label, onClick }: { kind: "end" | "home"; label: string; onClick: () => void }) {
+  return (
+    <button className={`exit-btn ${kind}`} onClick={onClick} aria-label={label} title={label}>
+      <span className="exit-label">{label}</span>
+      <PixelIcon rows={kind === "end" ? ICON_X : ICON_HOME} size={22} />
+    </button>
+  );
+}
+
+/** A small 8-bit dialog over the stage. Escape cancels; every other key is kept away from the game behind it. */
+export function ConfirmModal({ title, text, confirm, cancel = "CONTINUA", danger = true, fixed = false, onConfirm, onCancel }: { title: string; text?: string; confirm: string; cancel?: string; danger?: boolean; fixed?: boolean; onConfirm: () => void; onCancel: () => void }) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+      e.stopImmediatePropagation();
+      if (e.key !== "Tab") e.preventDefault();
+    };
+    window.addEventListener("keydown", h, true);
+    return () => window.removeEventListener("keydown", h, true);
+  }, [onCancel]);
+  return (
+    <div className={`modal-back ${fixed ? "fixed" : ""}`} role="dialog" aria-modal="true" aria-label={title} onPointerDown={(e) => e.target === e.currentTarget && onCancel()}>
+      <div className="modal">
+        <div className="modal-title">{title}</div>
+        {text && <div className="modal-text">{text}</div>}
+        <div className="modal-actions">
+          <button className="btn ghost" autoFocus onClick={onCancel}>
+            {cancel}
+          </button>
+          <button className={`btn ${danger ? "ko" : ""}`} onClick={onConfirm}>
+            {confirm}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Juice */
+
+const WIPE_COLS = 16;
+const WIPE_ROWS = 9;
+
+/** Checkerboard curtain: the new screen is uncovered square by square (re-keyed on every transition). */
+export function PixelWipe({ id }: { id: number }) {
+  if (!id) return null;
+  return (
+    <div className="pixel-wipe" key={id} aria-hidden>
+      {Array.from({ length: WIPE_COLS * WIPE_ROWS }, (_, k) => {
+        const x = k % WIPE_COLS;
+        const y = Math.floor(k / WIPE_COLS);
+        return <i key={k} style={{ animationDelay: `${((x + y) % 2) * 60 + (x + y) * 12}ms`, background: (x + y) % 2 ? "#4b2394" : "#1b0a3f" }} />;
+      })}
+    </div>
+  );
+}
+
+export interface Pop {
+  id: number;
+  value: number;
+  player: PlayerIdx;
+}
+
+/** Floating "+3" that climbs and fades, with a few sparks, above the player who scored. */
+export function PointsPops({ pops }: { pops: Pop[] }) {
+  return (
+    <>
+      {pops.map((p) => (
+        <div key={p.id} className={`pop-plus p${p.player + 1} ${p.value > 0 ? "up" : "down"}`} aria-hidden>
+          <span>{p.value > 0 ? `+${p.value}` : p.value}</span>
+          {p.value > 0 &&
+            Array.from({ length: 6 }, (_, k) => (
+              <i key={k} className="spark" style={{ "--a": `${k * 60 + 15}deg`, animationDelay: `${k * 25}ms` } as CSSProperties} />
+            ))}
+        </div>
+      ))}
+    </>
   );
 }

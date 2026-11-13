@@ -39,6 +39,7 @@ export function Tournament({ onBack }: { onBack: () => void }) {
         initial={playing.state}
         ctx={playing.ctx}
         tableMode={playing.tableMode}
+        onAbort={() => setPlaying(null)}
         onExit={(s) => {
           const m = t.matches.find((x) => x.id === playing.matchId)!;
           const flip = s.config.players[0] !== t.players[m.a];

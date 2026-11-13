@@ -1,4 +1,4 @@
-"""La Formazione, built on single famous matches (Il Frame lives in gen_frame)."""
+"""La Formazione, built on single famous matches."""
 
 from __future__ import annotations
 

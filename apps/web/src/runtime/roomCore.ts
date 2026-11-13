@@ -24,7 +24,9 @@ export type UpMsg =
   /** `at` is already expressed in the Screen clock. */
   | { t: "buzz"; at: number }
   /** Timer controls of the host: pause, resume, or move the remaining time by `ms` (negative to shorten). */
-  | { t: "timer"; op: "pause" | "resume" | "add"; ms?: number };
+  | { t: "timer"; op: "pause" | "resume" | "add"; ms?: number }
+  /** The host ends the match for good: everybody goes back to the lobby. */
+  | { t: "end" };
 
 /** Messages from the Screen to the phones. */
 export type DownMsg =
@@ -102,6 +104,9 @@ export class RoomCore {
         return;
       case "timer":
         if (known?.role === "host") this.timerControl(msg.op, msg.ms ?? 0);
+        return;
+      case "end":
+        if (known?.role === "host" && this.state) this.start(null);
         return;
     }
   }

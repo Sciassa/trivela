@@ -2,7 +2,6 @@ import type {
   AnomaliaItem,
   DischettoItem,
   FormazioneItem,
-  FrameItem,
   GameId,
   GiramondoItem,
   MagliaItem,
@@ -26,7 +25,6 @@ export const TIMERS = {
   list: 30_000,
   feedback: 1_500,
   formazione: 60_000,
-  frame: 40_000,
   asta: 60_000,
   maglia: 30_000,
 } as const;
@@ -163,7 +161,7 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
 const answerOf = (intent: Intent | null) => (intent && intent.type === "ANSWER" ? intent.payload : undefined);
 const verdictOf = (intent: Intent | null) => (intent && intent.type === "VERDICT" ? intent.payload : undefined);
 
-/** Four options, one correct: used by Tiro Secco, L'Anomalia Statistica and Il Frame. */
+/** Four options, one correct: used by Tiro Secco and L'Anomalia Statistica. */
 const pickOne = (points: number) => (item: { correct: number; options: readonly string[] }, intent: Intent | null) => {
   if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
   const a = answerOf(intent);
@@ -183,14 +181,6 @@ export const anomalia = turnQuiz<AnomaliaItem>({
   id: "anomalia",
   count: 4,
   phases: [{ ms: TIMERS.anomalia, judge: pickOne(3) }],
-  mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
-});
-
-/** An iconic match per question, the players taking turns: the timeline is on screen, the answer is one of four options. */
-export const frame = turnQuiz<FrameItem>({
-  id: "frame",
-  count: 2,
-  phases: [{ ms: TIMERS.frame, judge: pickOne(3) }],
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
@@ -776,7 +766,6 @@ export const MODULES: Record<GameId, GameModule> = {
   dischetto,
   formazione,
   giramondo,
-  frame,
   asta,
   maglia,
 };

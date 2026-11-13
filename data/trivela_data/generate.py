@@ -8,15 +8,15 @@ from __future__ import annotations
 import datetime as dt
 import json
 
-from . import gen_anomalie, gen_frame, gen_lists, gen_matches, gen_players, gen_quiz
+from . import gen_anomalie, gen_lists, gen_matches, gen_players, gen_quiz
 from .paths import PACKS_OUT
 from .postprocess import finalize
 from .tm_core import SNAPSHOT, TM, TM_DATASET, norm
 
-GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "frame", "asta", "maglia"]
+GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia"]
 MIN_ITEMS = 1000
 CAPS = {"tiro_secco": 2400, "anomalia": 1500, "mercato": 1300, "decina": 1400, "dischetto": 1150, "formazione": 1100,
-        "giramondo": 1400, "frame": 1500, "asta": 1500, "maglia": 1500}
+        "giramondo": 1400, "asta": 1500, "maglia": 1500}
 
 
 def cap(items: list[dict], n: int) -> list[dict]:
@@ -77,7 +77,7 @@ def build_entities(t: TM, packs: dict[str, list[dict]]) -> list[dict]:
 def main() -> None:
     t = TM()
     packs: dict[str, list[dict]] = {g: [] for g in GAMES}
-    for mod in (gen_quiz, gen_anomalie, gen_matches, gen_frame, gen_lists, gen_players):
+    for mod in (gen_quiz, gen_anomalie, gen_matches, gen_lists, gen_players):
         for game, items in mod.generate(t).items():
             packs[game] += items
     for game, items in packs.items():
