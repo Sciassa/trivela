@@ -55,6 +55,8 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - Uscite: ogni partita ha un `ExitButton` discreto e un `ConfirmModal` 8-bit prima di terminare (SPEC §3.7); l'abbandono di un torneo non registra il risultato.
 - Effetti (SPEC §14.1): scossa, punti volanti, wipe a scacchiera e scanline vanno sempre disattivati con `prefers-reduced-motion`.
 - Telefoni: pagina `phone-shell` con azioni principali in basso, senza scorrimento (SPEC §12.5); dimensioni con `clamp()` e container query.
+- Animazioni: solo `transform` e `opacity` (niente `clip-path`, `left/top`, `box-shadow` o `mix-blend-mode` animati o a schermo intero); curve morbide per i movimenti, `steps()` solo per lampeggi e simili. Chiavi React mai da `Date.now()`: usa un contatore.
+- Anomalia (SPEC §4.2): ogni nuovo generatore deve descrivere un evento che capita poche volte l'anno; si calcola solo sui dati Transfermarkt (mai su SofaScore) e il test `test_anomalia_only_genuinely_rare_records` va aggiornato insieme.
 - Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START". La musica resta ambient: solo onde sine/triangle, tempo lento, volume basso (SPEC §13).
 - Ogni risposta sbagliata va scritta in rosso sullo Schermo (`WrongSaid`, SPEC §3.6): un gioco nuovo deve registrare `said` in `last` (o `wrong` mentre la risposta è ancora in corso).
 

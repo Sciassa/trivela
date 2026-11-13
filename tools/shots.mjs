@@ -1,5 +1,6 @@
 // Visual check: plays a local match through every game at several viewports.
 // Usage: pnpm build && node tools/shots.mjs [game,game,...]   (screenshots in test-results/shots/)
+//   VP=pc|phone|tablet limits the viewport; LONG=1 plays with very long player names
 import { spawn } from "node:child_process";
 import { mkdirSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -33,8 +34,8 @@ try {
       await p.waitForTimeout(900);
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-menu.png` });
       await p.getByText("PARTITA COMPLETA").click();
-      await p.getByPlaceholder("Nome").first().fill("Annalisa");
-      await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
+      await p.getByPlaceholder("Nome").first().fill(process.env.LONG ? "Massimiliano Bellavista-Castelnuovo" : "Annalisa");
+      await p.getByPlaceholder("Nome").nth(1).fill(process.env.LONG ? "Bartolomeo Castelnuovo di Sotto" : "Bruno");
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-setup.png` });
       await p.getByText("GIOCA ▶").click();
       await p.getByText("SI PARTE ▶").waitFor({ timeout: 15000 });
@@ -53,10 +54,18 @@ try {
         if (games.includes(g)) await p.screenshot({ path: `${OUT}/${vp}-${g}.png` });
         // rush to the end of the game: answer something / let time pass via the engine
         let shot = false;
+        let endShot = false;
         for (let n = 0; n < 80; n++) {
           if (await p.getByText("VIA! ▶").count()) break;
           if (await p.getByText("FINE", { exact: true }).count()) break;
           const next = p.locator(".btn.next");
+          if (await p.locator(".final-score").count()) {
+            await p.waitForTimeout(900);
+            await p.screenshot({ path: `${OUT}/${vp}-end.png` });
+            if (process.env.DUMP) console.log(await p.locator(".hud").evaluate((e) => e.outerHTML.replace(/<svg.*?<\/svg>/gs, "")));
+            endShot = true;
+            break;
+          }
           if (await next.count()) {
             if (!shot && games.includes(g) && (await p.locator(".copione").count())) {
               await p.waitForTimeout(700);
@@ -89,10 +98,9 @@ try {
           }
           await p.waitForTimeout(350);
         }
-        if (await p.getByText("FINE", { exact: true }).count()) break;
+        if (endShot || (await p.getByText("FINE", { exact: true }).count())) break;
       }
       await p.waitForTimeout(1200);
-      if (k + 5 >= games.length) await p.screenshot({ path: `${OUT}/${vp}-end.png` });
       await ctx.close();
     }
   }

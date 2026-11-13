@@ -1,8 +1,15 @@
-"""L'Anomalia Statistica: multiple-choice questions on bizarre, counter-intuitive records (SPEC §4.1b).
+"""L'Anomalia Statistica: multiple-choice questions on genuinely rare, counter-intuitive records (SPEC §4.2).
 
-Every question has one option for which the record is true and three famous players for whom it is false on the same data.
-Claims about "never" are only made inside windows of seasons where every game has the data they need (goals, line-ups,
-cards or assists), and the window is written in the question.
+Every question has one option for which the record is true and three options for which it is false on the same data.
+Only events that happen a handful of times per season in the whole of Europe's top flights qualify: a goalkeeper
+scoring, an own goal and a goal in the same game, a substitute sent off minutes after coming on, a starter sent off
+inside the first minutes, three red cards for one team, a defender's hat-trick, a player who wore both shirts in the
+home-and-away games of the same tie. Common events (any substitute scoring, a defender with six goals in a season, a
+forward without a goal, 100 games without a red card) were removed because they are not anomalies.
+
+Claims about "never" only rest on seasons where every game has the data they need (goals, line-ups, cards), and the
+distractors are checked on the same facts. Missed penalties are not in the dataset (only shoot-out kicks are), so no
+question about them is made.
 """
 
 from __future__ import annotations
@@ -11,12 +18,13 @@ import datetime as dt
 from collections import defaultdict
 
 from .gen_quiz import END, Quiz
-from .tm_core import IN_COMP, L5, SRC_DATASET, base, opts4, season_label
+from .tm_core import IN_COMP, L5, SRC_DATASET, base, date_it, opts4, season_label
 
 COMPS = (*L5, "CL")
-LINE_IT = {"Defender": "difensori", "Midfield": "centrocampisti", "Attack": "attaccanti", "Goalkeeper": "portieri"}
 SING = {"Defender": "difensore", "Midfield": "centrocampista", "Attack": "attaccante", "Goalkeeper": "portiere"}
 WORD = {1: "un gol", 2: "due gol", 3: "tre gol", 4: "quattro gol"}
+# how many differently-worded-by-options variants one rare event may yield (distinct distractor triples); rarer events get more
+MAX_VARIANTS = 6
 
 
 def longest_run(ok: dict[int, bool], min_seasons: int) -> tuple[int, int] | None:
@@ -31,22 +39,29 @@ def longest_run(ok: dict[int, bool], min_seasons: int) -> tuple[int, int] | None
     return (best[0], best[-1]) if best and len(best) >= min_seasons else None
 
 
+def triples(ds: list, v: int) -> list[list]:
+    """Up to v distinct triples of distractors: disjoint ones when the pool allows, otherwise sliding windows."""
+    if len(ds) < 3:
+        return []
+    stride = 3 if len(ds) >= 3 * v else 1
+    return [ds[k * stride:k * stride + 3] for k in range(v) if k * stride + 3 <= len(ds)]
+
+
 class Anomalie(Quiz):
     def __init__(self, t):
         super().__init__(t)
         q = t.q
         cmp = ",".join(f"'{c}'" for c in COMPS)
+        self.cmp = cmp
         self.line = {pid: p["line"] for pid, p in t.players.items()}
         self.subin = {(int(g), int(p)) for g, p in q("select gid, pin from sub")}
-        # per (pid, comp, season) aggregates
+        # appearances per (pid, comp, season)
         self.apps = defaultdict(int)
         for pid, comp, season, n in q(f"select p.pid, gm.comp, gm.season, count(*) from pres p join gm using(gid) where gm.comp in ({cmp}) group by 1, 2, 3"):
             self.apps[(int(pid), comp, int(season))] += int(n)
-        # cards and assists come from the appearances table: one row per player per game, complete where a game has its 22+ rows
-        self.yellow, self.red = defaultdict(int), defaultdict(int)
-        for pid, comp, season, y, r in q(f"select a.pid, gm.comp, gm.season, sum(a.yc), sum(a.rc) from apx a join gm using(gid) where gm.comp in ({cmp}) group by 1, 2, 3"):
-            self.yellow[(int(pid), comp, int(season))] = int(y or 0)
-            self.red[(int(pid), comp, int(season))] = int(r or 0)
+        self.seasons_of = defaultdict(set)  # (pid, comp) -> seasons he played
+        for (pid, comp, season) in self.apps:
+            self.seasons_of[(pid, comp)].add(season)
         # a game's cards are trusted only where the two records agree: card events and the appearance rows give the same totals
         self.cards_ok = {int(r[0]) for r in q("""select gm.gid from gm
             join (select gid, sum(yc) y, sum(rc) r from apx group by 1) a using(gid)
@@ -57,18 +72,12 @@ class Anomalie(Quiz):
         ok_ids = ",".join(str(g) for g in self.cards_ok) or "0"
         for pid, comp, season, n in q(f"select p.pid, gm.comp, gm.season, count(*) from pres p join gm using(gid) where gm.comp in ({cmp}) and p.gid in ({ok_ids}) group by 1, 2, 3"):
             self.apps_ok[(int(pid), comp, int(season))] = int(n)
-        self.ev_yellow, self.ev_red = defaultdict(int), defaultdict(int)  # the same cards, counted from the events
-        for pid, comp, season, y, r in q(f"""select e.pid, gm.comp, gm.season, count(*) filter (where e.descr ilike '%yellow card%'),
-                count(*) filter (where e.descr ilike 'Red card%' or e.descr ilike 'Second yellow%') from ev e join gm using(gid)
-                where e.type = 'Cards' and e.pid is not null and gm.comp in ({cmp}) group by 1, 2, 3"""):
-            self.ev_yellow[(int(pid), comp, int(season))] = int(y)
-            self.ev_red[(int(pid), comp, int(season))] = int(r)
         self.assists = defaultdict(int)
         for pid, comp, season, n in q(f"select a.pid, gm.comp, gm.season, sum(a.assists) from apx a join gm using(gid) where gm.comp in ({cmp}) group by 1, 2, 3"):
             self.assists[(int(pid), comp, int(season))] = int(n or 0)
-        self.season_goals = defaultdict(int)
-        for pid, comp, season, n in q(f"select pg.pid, gm.comp, gm.season, sum(pg.goals) from pg join gm using(gid) where gm.comp in ({cmp}) group by 1, 2, 3"):
-            self.season_goals[(int(pid), comp, int(season))] = int(n)
+        self.red_ev = defaultdict(int)  # (pid, comp) -> red cards in the events
+        for pid, comp, n in q(f"select r.pid, gm.comp, count(*) from red r join gm using(gid) where gm.comp in ({cmp}) group by 1, 2"):
+            self.red_ev[(int(pid), comp)] = int(n)
         # seasons in which every game carries the data a claim needs
         apx_games = {int(r[0]) for r in q("select gid from apchk where n >= 22")}
         games_by = defaultdict(list)
@@ -93,7 +102,14 @@ class Anomalie(Quiz):
         self.out.append(it)
         return True
 
-    def pool(self, pid: int, comp: str, season: int, line: str | None, k: int = 60) -> list[int]:
+    def emit(self, gen: str, key, question: str, correct: str, ds: list[str], v: int, **kw) -> int:
+        """One question per distinct triple of distractors (the same rare fact, different company)."""
+        n = 0
+        for k, trio in enumerate(triples(ds, v)):
+            n += self.add_an(gen, (*key, k), question, correct, trio, **kw)
+        return n
+
+    def pool(self, pid: int, comp: str, season: int, line: str | None, k: int = 80) -> list[int]:
         """Famous players of the same age group who played in the comp around that season (same role when given)."""
         t = self.t
         yob = (t.players[pid]["dob"] or dt.date(1990, 1, 1)).year
@@ -104,15 +120,29 @@ class Anomalie(Quiz):
         ok = [p for p in cand if t.players[p]["dob"] and abs(t.players[p]["dob"].year - yob) <= 6 and (line is None or self.line.get(p) == line)]
         return sorted(ok, key=lambda p: (-t.fame(p), p))[:k]
 
-    def trusted(self, pid: int, comp: str, season: int) -> bool:
-        """Every game he played that season has cards on which both records agree."""
-        return self.apps_ok.get((pid, comp, season), 0) == self.apps.get((pid, comp, season), 0)
+    def trusted_cards(self, pid: int, comp: str) -> bool:
+        """Every game he played in the comp has cards on which both records agree."""
+        return all(self.apps_ok.get((pid, comp, s), 0) == self.apps.get((pid, comp, s), 0) for s in self.seasons_of.get((pid, comp), ()))
+
+    def trusted_pres(self, pid: int, comp: str) -> bool:
+        """Every season he played in the comp has complete line-ups for all its games."""
+        return all(self.ok[comp]["pres"].get(s, False) for s in self.seasons_of.get((pid, comp), ()))
 
     def window(self, comp: str, kind: str, min_seasons: int = 5):
         return longest_run(self.ok[comp][kind], min_seasons)
 
+    def distractors(self, pid: int, comp: str, season: int, owners: set[int], check, line: str | None = None, n: int = 14) -> list[str]:
+        t = self.t
+        ds = []
+        for q in self.pool(pid, comp, season, line):
+            if q not in owners and check(q, comp):
+                ds.append(t.pname(q))
+            if len(ds) >= n:
+                break
+        return ds
+
     # ------------------------------------------------------------------ goals in a single game
-    def multi_goals(self, gen: str, line: str | None, min_goals: int, as_sub: bool, subject: str, what: str, kind: str) -> None:
+    def multi_goals(self, gen: str, line: str | None, min_goals: int, as_sub: bool, subject: str, what: str, kind: str, v: int) -> None:
         t = self.t
         best: dict[tuple[int, str], tuple] = {}
         for pid, lst in self.pgoals.items():
@@ -124,86 +154,149 @@ class Anomalie(Quiz):
         owners = defaultdict(set)  # comp -> players for whom the record is true
         for (pid, comp) in best:
             owners[comp].add(pid)
+        clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
         for (pid, comp), (d, season, gid, n) in sorted(best.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
-            ds = []
-            for q in self.pool(pid, comp, season, line):
-                if q not in owners[comp] and self.clean_history(q, comp, END):
-                    ds.append(t.pname(q))
-                if len(ds) >= 8:
-                    break
+            ds = self.distractors(pid, comp, season, owners[comp], clean, line)
             g = self.G[gid]
             who = f"Quale di questi {subject} {what} {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
-            self.add_an(gen, (pid, comp), who, t.pname(pid), ds, year=d.year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
-                        sources=[t.src_game(g), t.src_player(pid)], kind=kind,
-                        script=f"{t.pname(pid)} ({SING.get(self.line.get(pid), 'giocatore')}) ha segnato {WORD.get(n, f'{n} gol')} in {t.label(g)} ({t.ctx(g)}, {d.day}/{d.month}/{d.year}).")
+            self.emit(gen, (pid, comp), who, t.pname(pid), ds, v, year=d.year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(g), t.src_player(pid)], kind=kind,
+                      script=f"{t.pname(pid)} ({SING.get(self.line.get(pid), 'giocatore')}) ha segnato {WORD.get(n, f'{n} gol')} in {t.label(g)} ({t.ctx(g)}, {d.day}/{d.month}/{d.year}).")
 
-    # ------------------------------------------------------------------ never sent off
-    def window_stats(self, pid: int, comp: str, a: int, b: int) -> tuple[int, int, int]:
-        """Appearances, reds in the appearance rows, reds in the events, over seasons a..b."""
-        apps = reds = ev = 0
-        for ss in range(a, b + 1):
-            apps += self.apps.get((pid, comp, ss), 0)
-            reds += self.red.get((pid, comp, ss), 0)
-            ev += self.ev_red.get((pid, comp, ss), 0)
-        return apps, reds, ev
-
-    def never_red(self) -> None:
-        """Forwards and midfielders with 100+ games and no red card, over the longest run of seasons in which every game of theirs has trusted cards."""
+    # ------------------------------------------------------------------ an own goal and a goal in the same game
+    def own_and_goal(self, v: int) -> None:
         t = self.t
-        for comp in L5:
-            w = self.window(comp, "apx")
-            if not w:
+        rows = t.q(f"""select g.gid, g.pid, g.minute, o.minute from goal g
+            join goal o on o.gid = g.gid and o.pid = g.pid and o.own and not g.own and o.club <> g.club
+            join pres p on p.gid = g.gid and p.pid = g.pid and p.club = g.club
+            join gm on gm.gid = g.gid where gm.comp in ({self.cmp}) group by 1, 2, 3, 4""")
+        events = {}
+        for gid, pid, gmin, omin in rows:
+            pid = int(pid)
+            if t.is_notable(pid):
+                events.setdefault((pid, self.G[int(gid)]["comp"]), (int(gid), int(gmin), int(omin)))
+        owners = defaultdict(set)
+        for (pid, comp) in events:
+            owners[comp].add(pid)
+        clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
+        for (pid, comp), (gid, gmin, omin) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            g = self.G[gid]
+            ds = self.distractors(pid, comp, g["season"], owners[comp], clean)
+            q = f"Quale di questi giocatori ha segnato un autogol e un gol per la propria squadra nella stessa partita {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
+            self.emit("an_autogol_e_gol", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(g), t.src_player(pid)], kind="autogol",
+                      script=f"{t.pname(pid)} in {t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): "
+                             + (f"gol per la propria squadra al {gmin}' e autogol al {omin}'." if gmin <= omin else f"autogol al {omin}' e gol per la propria squadra al {gmin}'."))
+
+    # ------------------------------------------------------------------ cards
+    def sub_sent_off(self, lo: int, limit: int, v: int) -> None:
+        """A substitute sent off less than `limit` minutes after coming on (the protagonist waited at least `lo` minutes, so the 5 and
+        10 minute questions never repeat the same event). Everyone who did it within `limit` minutes is excluded from the distractors."""
+        t = self.t
+        rows = t.q(f"""select s.gid, s.pin, s.minute, d.minute from sub s
+            join red d on d.gid = s.gid and d.pid = s.pin and d.minute >= s.minute and d.minute - s.minute < {limit}
+            join gm on gm.gid = s.gid where gm.comp in ({self.cmp})""")
+        events, everyone = {}, defaultdict(set)
+        for gid, pid, sm, rm in rows:
+            pid, gid = int(pid), int(gid)
+            everyone[self.G[gid]["comp"]].add(pid)
+            if gid in self.cards_ok and t.is_notable(pid) and rm - sm >= lo:
+                events.setdefault((pid, self.G[gid]["comp"]), (gid, int(sm), int(rm)))
+        check = lambda q, comp: self.trusted_cards(q, comp)  # noqa: E731
+        for (pid, comp), (gid, sm, rm) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            g = self.G[gid]
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], check)
+            q = f"Quale di questi giocatori è stato espulso meno di {limit} minuti dopo essere entrato dalla panchina {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
+            self.emit(f"an_subentrato_espulso_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(g), t.src_player(pid)], kind="disciplina",
+                      script=f"{t.pname(pid)} in {t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): entrato al {sm}', espulso al {rm}' ({rm - sm} minuti dopo).")
+
+    def early_red(self, lo: int, limit: int, v: int) -> None:
+        """A starter sent off within the first `limit` minutes (after minute `lo`, so the 5 and 10 minute questions never repeat an event)."""
+        t = self.t
+        rows = t.q(f"""select d.gid, d.pid, d.minute from red d join pres p on p.gid = d.gid and p.pid = d.pid and p.starter
+            join gm on gm.gid = d.gid where gm.comp in ({self.cmp}) and d.minute <= {limit}""")
+        events, everyone = {}, defaultdict(set)
+        for gid, pid, m in rows:
+            pid, gid = int(pid), int(gid)
+            everyone[self.G[gid]["comp"]].add(pid)
+            if gid in self.cards_ok and t.is_notable(pid) and m > lo:
+                events.setdefault((pid, self.G[gid]["comp"]), (gid, int(m)))
+        check = lambda q, comp: self.trusted_cards(q, comp)  # noqa: E731
+        for (pid, comp), (gid, m) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            g = self.G[gid]
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], check)
+            q = f"Quale di questi giocatori è stato espulso nei primi {limit} minuti di una partita {IN_COMP[comp]}, da titolare (stagioni 2012/13–2025/26)?"
+            self.emit(f"an_espulso_presto_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(g), t.src_player(pid)], kind="disciplina",
+                      script=f"{t.pname(pid)} in {t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): espulso al {m}' di gioco, scendendo in campo dall'inizio.")
+
+    def three_reds(self, v: int) -> None:
+        """Games in which one team finished with three or more players sent off."""
+        t = self.t
+        per_team = defaultdict(int)
+        for gid, club, n in t.q(f"select r.gid, r.club, count(*) from red r join gm on gm.gid = r.gid where gm.comp in ({self.cmp}) group by 1, 2"):
+            per_team[(int(gid), int(club))] = int(n)
+        worst = defaultdict(int)  # gid -> most reds for one team
+        for (gid, club), n in per_team.items():
+            worst[gid] = max(worst[gid], n)
+        by_comp = defaultdict(list)  # comp -> games with exactly two reds for one team: the closest false options
+        for gid, n in worst.items():
+            if n == 2 and gid in self.cards_ok:
+                by_comp[self.G[gid]["comp"]].append(gid)
+        for comp in by_comp:
+            by_comp[comp].sort()
+        label = lambda g: f"{t.label(g)} · {season_label(g['season']) if g['comp'] in L5 or g['comp'] == 'CL' else g['date'].year}"  # noqa: E731
+        for gid in sorted(g for g, n in worst.items() if n >= 3 and g in self.cards_ok):
+            g = self.G[gid]
+            comp = g["comp"]
+            pool = [x for x in by_comp.get(comp, []) if x != gid]
+            if len(pool) < 3:
                 continue
-            for line in ("Attack", "Midfield"):
-                players = sorted({p for (p, c, s) in self.apps if c == comp and w[0] <= s <= w[1] and self.line.get(p) == line and t.is_notable(p)})
-                for pid in players:
-                    # best run of consecutive seasons, all trusted, with 100+ games
-                    best = None
-                    for a in range(w[0], w[1] + 1):
-                        for b in range(a, w[1] + 1):
-                            if not all(self.trusted(pid, comp, ss) for ss in range(a, b + 1)):
-                                break
-                            apps, reds, ev = self.window_stats(pid, comp, a, b)
-                            if apps >= 100 and reds == 0 and ev == 0 and (best is None or (b - a, apps) > (best[1] - best[0], best[2])):
-                                best = (a, b, apps)
-                                break  # the shortest run that reaches 100 games is the cleanest claim
-                    if not best:
-                        continue
-                    a, b, apps = best
-                    bad = []
-                    for q in sorted((p for p in players if p != pid), key=lambda p: (abs((t.players[p]["dob"] or dt.date(1990, 1, 1)).year - (t.players[pid]["dob"] or dt.date(1990, 1, 1)).year), -t.fame(p))):
-                        n, r, e = self.window_stats(q, comp, a, b)
-                        if n >= 100 and r >= 1 and e >= 1:
-                            bad.append(q)
-                        if len(bad) >= 8:
-                            break
-                    q_text = (f"Quale di questi {LINE_IT[line]}, con almeno 100 presenze {IN_COMP[comp]} tra il {season_label(a)} e il {season_label(b)}, "
-                              f"non è mai stato espulso?")
-                    self.add_an("an_mai_espulso", (pid, comp, a, b), q_text, t.pname(pid), [t.pname(p) for p in bad], year=b, fame=t.fame(pid),
-                                entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="disciplina",
-                                script=f"{t.pname(pid)}: {apps} presenze {IN_COMP[comp]} dal {season_label(a)} al {season_label(b)} e nessuna espulsione. "
-                                       f"Gli altri hanno almeno 100 presenze nello stesso periodo e almeno un'espulsione.")
+            # spread the distractors over the years rather than taking the first ones
+            step = max(1, len(pool) // 24)
+            ds = [label(self.G[x]) for x in pool[gid % step::step]][:24]
+            hit = [c for (gg, c), n in per_team.items() if gg == gid and n >= 3][0]
+            q = f"In quale di queste partite {IN_COMP[comp]} una stessa squadra ha finito con almeno tre giocatori espulsi?"
+            reds = per_team[(gid, hit)]
+            self.emit("an_tre_espulsi", (gid,), q, label(g), ds, v, year=g["date"].year, fame=70, entities=[t.cid(g["home"]), t.cid(g["away"])], comp=comp,
+                      sources=[t.src_game(g)], kind="partita",
+                      script=f"{t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): {t.il(hit)} ha chiuso la partita con {reds} giocatori espulsi.")
 
-    # ------------------------------------------------------------------ never booked in a season
-    def never_booked(self) -> None:
+    # ------------------------------------------------------------------ the same man with both shirts of a double fixture
+    def both_legs(self, v: int) -> None:
         t = self.t
-        for comp in L5:
-            for s in [s for s, v in self.ok[comp]["apx"].items() if v]:
-                for line in ("Defender", "Midfield"):
-                    rows = [(pid, n) for (pid, c, ss), n in self.apps.items() if c == comp and ss == s and n >= 30 and self.line.get(pid) == line and t.is_notable(pid)]
-                    good = [p for p, n in rows if self.yellow.get((p, comp, s), 0) == 0 and self.ev_yellow.get((p, comp, s), 0) == 0 and self.trusted(p, comp, s)]
-                    bad = [p for p, n in rows if self.yellow.get((p, comp, s), 0) >= 6 and self.ev_yellow.get((p, comp, s), 0) >= 6]
-                    if len(bad) < 3:
-                        continue
-                    for pid in sorted(good, key=lambda p: (-t.fame(p), p)):
-                        near = sorted(bad, key=lambda p: (-t.fame(p), p))[:8]
-                        q = (f"Quale di questi {LINE_IT[line]} ha giocato almeno 30 partite {IN_COMP[comp]} nel {season_label(s)} senza ricevere nemmeno un'ammonizione?")
-                        self.add_an("an_mai_ammonito", (pid, comp, s), q, t.pname(pid), [t.pname(p) for p in near], year=s, fame=t.fame(pid),
-                                    entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="disciplina",
-                                    script=f"{t.pname(pid)}: {self.apps[(pid, comp, s)]} presenze {IN_COMP[comp]} nel {season_label(s)} e nessun cartellino giallo.")
+        by = defaultdict(list)
+        for pid, gid, club, comp, season, h, a in t.q(f"""select p.pid, p.gid, p.club, gm.comp, gm.season, gm.home, gm.away from pres p join gm using(gid)
+                                                           where gm.comp in ({self.cmp})"""):
+            by[(int(pid), comp, int(season))].append((int(gid), int(club), int(h), int(a)))
+        events = {}
+        owners = defaultdict(set)
+        for (pid, comp, season), lst in by.items():
+            if len(lst) < 2 or not self.ok[comp]["pres"].get(season):
+                continue
+            for i in range(len(lst)):
+                for j in range(i + 1, len(lst)):
+                    g1, c1, h1, a1 = lst[i]
+                    g2, c2, h2, a2 = lst[j]
+                    if g1 != g2 and c1 != c2 and {h1, a1} == {h2, a2} and {c1, c2} == {h1, a1}:
+                        owners[comp].add(pid)
+                        if t.is_notable(pid):
+                            first, second = sorted(((self.G[g1]["date"], g1, c1), (self.G[g2]["date"], g2, c2)))
+                            events.setdefault((pid, comp, season), (first, second))
+        check = lambda q, comp: self.trusted_pres(q, comp)  # noqa: E731
+        for (pid, comp, season), ((d1, g1, c1), (d2, g2, c2)) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            ds = self.distractors(pid, comp, season, owners[comp], check)
+            ga, gb = self.G[g1], self.G[g2]
+            q = (f"Quale di questi giocatori ha giocato per una squadra all'andata e per l'avversaria al ritorno, nelle due partite della stessa stagione "
+                 f"tra le stesse due squadre {IN_COMP[comp]} (stagioni 2012/13–2025/26)?")
+            self.emit("an_andata_ritorno", (pid, comp, season), q, t.pname(pid), ds, v, year=season, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(ga), t.src_game(gb), t.src_player(pid)], kind="mercato",
+                      script=f"{t.pname(pid)} ha giocato {t.con(c1)} in {t.teams(ga)} ({date_it(d1)}) e {t.con(c2)} nel ritorno {t.teams(gb)} ({date_it(d2)}): "
+                             f"la stessa sfida con maglie opposte.")
 
     # ------------------------------------------------------------------ goalkeepers who assisted
-    def gk_assist(self) -> None:
+    def gk_assist(self, v: int) -> None:
         t = self.t
         for comp in L5:
             w = self.window(comp, "apx")
@@ -220,120 +313,28 @@ class Anomalie(Quiz):
             if len(bad) < 3:
                 continue
             for pid in good:
-                near = sorted(bad, key=lambda p: (abs(t.players[p]["dob"].year - t.players[pid]["dob"].year) if t.players[p]["dob"] and t.players[pid]["dob"] else 9, -t.fame(p)))[:8]
+                near = sorted(bad, key=lambda p: (abs(t.players[p]["dob"].year - t.players[pid]["dob"].year) if t.players[p]["dob"] and t.players[pid]["dob"] else 9, -t.fame(p)))[:14]
                 q = f"Quale di questi portieri ha fornito almeno un assist {IN_COMP[comp]} tra il {season_label(w[0])} e il {season_label(w[1])}?"
-                self.add_an("an_portiere_assist", (pid, comp, w), q, t.pname(pid), [t.pname(p) for p in near], year=w[1], fame=t.fame(pid),
-                            entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="portiere",
-                            script=f"{t.pname(pid)} ha fornito {ast[pid]} assist {IN_COMP[comp]} dal {season_label(w[0])} al {season_label(w[1])}, da portiere. "
-                                   f"Gli altri tre portieri, con almeno 30 presenze, non ne hanno registrato nessuno.")
-
-    # ------------------------------------------------------------------ defenders who scored a lot in a season
-    def defender_season(self, min_goals: int = 6) -> None:
-        t = self.t
-        for comp in L5:
-            for s, okg in self.ok[comp]["goal"].items():
-                if not okg or not self.ok[comp]["pres"].get(s):
-                    continue
-                rows = [(pid, n) for (pid, c, ss), n in self.apps.items() if c == comp and ss == s and n >= 25 and self.line.get(pid) == "Defender" and t.is_notable(pid)]
-                good = [p for p, n in rows if self.season_goals.get((p, comp, s), 0) >= min_goals]
-                bad = [p for p, n in rows if self.season_goals.get((p, comp, s), 0) <= 1]
-                if len(bad) < 3:
-                    continue
-                for pid in good:
-                    near = sorted(bad, key=lambda p: (-t.fame(p), p))[:8]
-                    goals = self.season_goals[(pid, comp, s)]
-                    q = f"Quale di questi difensori ha segnato almeno {min_goals} gol {IN_COMP[comp]} nel {season_label(s)}?"
-                    self.add_an("an_difensore_bomber", (pid, comp, s), q, t.pname(pid), [t.pname(p) for p in near], year=s, fame=t.fame(pid),
-                                entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="difensore",
-                                script=f"{t.pname(pid)}, difensore, ha chiuso il {season_label(s)} {IN_COMP[comp]} con {goals} gol. "
-                                       f"Gli altri tre difensori, con almeno 25 presenze, ne hanno segnato al massimo uno.")
-
-    # ------------------------------------------------------------------ forwards who never scored
-    def scoreless_forward(self) -> None:
-        t = self.t
-        for comp in L5:
-            for s, okg in self.ok[comp]["goal"].items():
-                if not okg or not self.ok[comp]["pres"].get(s):
-                    continue
-                rows = [p for (p, c, ss), n in self.apps.items() if c == comp and ss == s and n >= 25 and self.line.get(p) == "Attack" and t.is_notable(p)]
-                good = [p for p in rows if self.season_goals.get((p, comp, s), 0) == 0]
-                bad = sorted((p for p in rows if self.season_goals.get((p, comp, s), 0) >= 10), key=lambda p: (-t.fame(p), p))
-                if len(bad) < 3:
-                    continue
-                for pid in good:
-                    q = f"Quale di questi attaccanti ha giocato almeno 25 partite {IN_COMP[comp]} nel {season_label(s)} senza segnare nemmeno un gol?"
-                    self.add_an("an_attaccante_a_secco", (pid, comp, s), q, t.pname(pid), [t.pname(p) for p in bad[:8]], year=s, fame=t.fame(pid),
-                                entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="attaccante",
-                                script=f"{t.pname(pid)}, attaccante, ha giocato {self.apps[(pid, comp, s)]} partite {IN_COMP[comp]} nel {season_label(s)} senza segnare. "
-                                       f"Gli altri tre attaccanti hanno giocato almeno 25 partite e segnato almeno 10 gol.")
-
-    # ------------------------------------------------------------------ scored for two clubs in the same season
-    def two_clubs(self) -> None:
-        t = self.t
-        clubs = defaultdict(set)
-        for pid, lst in self.pgoals.items():
-            for d, comp, season, gid, club, n in lst:
-                if comp in L5 and n > 0:
-                    clubs[(pid, comp, season)].add(club)
-        owners = defaultdict(set)  # comp -> players who did it at least once
-        for (pid, comp, season), cs in clubs.items():
-            if len(cs) >= 2 and t.is_notable(pid) and self.ok[comp]["goal"].get(season):
-                owners[comp].add(pid)
-        for (pid, comp, season), cs in sorted(clubs.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
-            if len(cs) < 2 or pid not in owners[comp] or not self.ok[comp]["goal"].get(season) or not self.ok[comp]["pres"].get(season):
-                continue
-            ds = []
-            for q in self.pool(pid, comp, season, self.line.get(pid)):
-                if q not in owners[comp] and self.clean_history(q, comp, END):
-                    ds.append(t.pname(q))
-                if len(ds) >= 8:
-                    break
-            names = " e ".join(t.club(c) for c in sorted(cs))
-            self.add_an("an_due_maglie", (pid, comp, season), f"Quale di questi giocatori ha segnato per due squadre diverse nella stessa stagione {IN_COMP[comp]} (stagioni 2012/13–2025/26)?",
-                        t.pname(pid), ds, year=season, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="mercato",
-                        script=f"{t.pname(pid)} ha segnato {IN_COMP[comp]} nel {season_label(season)} sia con una squadra sia con un'altra ({names}).")
-
-    # ------------------------------------------------------------------ top scorers without a single penalty
-    def no_penalties(self) -> None:
-        t = self.t
-        stats = defaultdict(lambda: [0, 0])
-        for pid, comp, season, n, pen in t.q("""select e.pid, gm.comp, gm.season, count(*), count(*) filter (where e.pen) from goal e join gm using(gid)
-                                                  where not e.own and gm.comp in ('IT1','GB1','ES1','L1','FR1') group by 1, 2, 3"""):
-            stats[(int(pid), comp, int(season))] = [int(n), int(pen)]
-        for comp in L5:
-            ev_ok = t.valid_seasons(comp, None, "ev")
-            for s, okev in ev_ok.items():
-                if not okev:
-                    continue
-                rows = [(p, v) for (p, c, ss), v in stats.items() if c == comp and ss == s and v[0] >= 15 and t.is_notable(p)]
-                good = [p for p, v in rows if v[1] == 0]
-                bad = sorted((p for p, v in rows if v[1] >= 5), key=lambda p: (-t.fame(p), p))
-                if len(bad) < 3:
-                    continue
-                for pid in good:
-                    n = stats[(pid, comp, s)][0]
-                    q = f"Quale di questi attaccanti ha segnato almeno 15 gol {IN_COMP[comp]} nel {season_label(s)} senza battere nemmeno un rigore?"
-                    self.add_an("an_senza_rigori", (pid, comp, s), q, t.pname(pid), [t.pname(p) for p in bad[:8]], year=s, fame=t.fame(pid),
-                                entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="attaccante",
-                                script=f"{t.pname(pid)} ha segnato {n} gol {IN_COMP[comp]} nel {season_label(s)}, nessuno su rigore. "
-                                       f"Gli altri tre attaccanti ne hanno segnati almeno 15, con almeno 5 rigori.")
+                self.emit("an_portiere_assist", (pid, comp, w), q, t.pname(pid), [t.pname(p) for p in near], v, year=w[1], fame=t.fame(pid),
+                          entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="portiere",
+                          script=f"{t.pname(pid)} ha fornito {ast[pid]} assist {IN_COMP[comp]} dal {season_label(w[0])} al {season_label(w[1])}, da portiere. "
+                                 f"Gli altri portieri, con almeno 30 presenze, non ne hanno registrato nessuno.")
 
     def run(self) -> list[dict]:
-        self.multi_goals("an_difensore_tripletta", "Defender", 3, False, "difensori", "ha segnato una tripletta", "difensore")
-        self.multi_goals("an_difensore_doppietta", "Defender", 2, False, "difensori", "ha segnato due gol in una singola partita", "difensore")
-        self.multi_goals("an_centrocampista_tripletta", "Midfield", 3, False, "centrocampisti", "ha segnato una tripletta", "centrocampista")
-        self.multi_goals("an_portiere_gol", "Goalkeeper", 1, False, "portieri", "ha segnato un gol", "portiere")
-        self.multi_goals("an_poker", "Attack", 4, False, "attaccanti", "ha segnato quattro gol in una partita", "attaccante")
-        self.multi_goals("an_panchina_doppietta", None, 2, True, "giocatori", "è entrato dalla panchina e ha segnato due gol nella stessa partita", "panchina")
-        self.multi_goals("an_difensore_subentrato", "Defender", 1, True, "difensori", "è entrato dalla panchina e ha segnato", "panchina")
-        self.multi_goals("an_panchina_tripletta", None, 3, True, "giocatori", "è entrato dalla panchina e ha segnato tre gol nella stessa partita", "panchina")
-        self.never_red()
-        self.never_booked()
-        self.gk_assist()
-        self.defender_season()
-        self.scoreless_forward()
-        self.two_clubs()
-        self.no_penalties()
+        v = MAX_VARIANTS
+        self.multi_goals("an_portiere_gol", "Goalkeeper", 1, False, "portieri", "ha segnato un gol", "portiere", v)
+        self.multi_goals("an_difensore_tripletta", "Defender", 3, False, "difensori", "ha segnato almeno tre gol in una partita (una tripletta)", "difensore", v)
+        self.multi_goals("an_difensore_doppietta", "Defender", 2, False, "difensori", "ha segnato almeno due gol in una singola partita", "difensore", 2)
+        self.multi_goals("an_panchina_tripletta", None, 3, True, "giocatori", "è entrato dalla panchina e ha segnato almeno tre gol nella stessa partita", "panchina", v)
+        self.multi_goals("an_poker", "Attack", 4, False, "attaccanti", "ha segnato almeno quattro gol in una partita", "attaccante", 3)
+        self.own_and_goal(3)
+        self.sub_sent_off(0, 5, v)
+        self.sub_sent_off(5, 10, 3)
+        self.early_red(-1, 5, v)
+        self.early_red(5, 10, 3)
+        self.three_reds(v + 2)
+        self.both_legs(3)
+        self.gk_assist(v)
         return self.out
 
 
