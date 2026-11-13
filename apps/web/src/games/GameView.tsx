@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { AnomaliaItem, DischettoItem, FormazioneItem, FrameEvent, FrameItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
+import type { AnomaliaItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
 import type { EngineCtx, GameStateAny, Intent, MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
@@ -50,7 +50,7 @@ function RevealFooter({ g, state, dispatch, sources, solution }: { g: GameStateA
   );
 }
 
-/* ------------------------------------------------------------ Four-option quizzes: Tiro Secco, L'Anomalia, Il Frame */
+/* ------------------------------------------------------------ Four-option quizzes: Tiro Secco, L'Anomalia */
 
 /** The four options with the keyboard shortcuts, the reveal colours and the answers disabled on a read-only Screen. */
 function FourOptions({ item, g, dispatch }: { item: { options: string[]; correct: number }; g: GameStateAny; dispatch: (i: Intent) => void }) {
@@ -499,55 +499,6 @@ function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
   );
 }
 
-/* ------------------------------------------------------------ Il Frame */
-
-const EVENT_LABEL: Record<FrameEvent["kind"], string> = { goal: "Gol", yellow: "Ammonizione", second_yellow: "Seconda ammonizione", red: "Espulsione" };
-
-/** The anonymous timeline of an iconic match: goals (with the running score in `match` mode) and cards. */
-function Timeline({ item }: { item: FrameItem }) {
-  return (
-    <div className="timeline">
-      {item.events.map((e, k) => (
-        <div key={k} className={`ev ${e.kind}`} style={{ "--i": k } as CSSProperties}>
-          <span className="min">{e.minute}'</span>
-          {e.kind === "goal" ? <Sprite name="ball" size={34} /> : <i className={`card ${e.kind}`} />}
-          <span className="what">
-            {EVENT_LABEL[e.kind]}
-            {e.score && <b className="led-score">{e.score[0]}-{e.score[1]}</b>}
-            {e.side !== undefined && <small> · {e.side === 0 ? "casa" : "ospite"}</small>}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Frame({ state, g, dispatch, start }: GameProps) {
-  const { pad } = usePlay();
-  const item = g.items[g.i] as FrameItem;
-  const reveal = g.stage === "reveal";
-  return (
-    <div className="duo">
-      <div className="side" style={pad ? undefined : { flex: "0 0 40%" }}>
-        <div className="q-card" key={g.i}>
-          <div className="q small">{item.heading}</div>
-          <div className="sub">{item.mode === "match" ? "Cronologia di gol e cartellini" : "Gol e cartellini (solo i minuti)"}</div>
-        </div>
-        <Timeline item={item} />
-      </div>
-      <div className="side">
-        <TurnBar state={state} p={g.turn} info={`PARTITA ${g.i + 1}/${g.items.length}`} />
-        <StateTimer state={state} start={start} />
-        <div className="q-card">
-          <div className="q small">{item.question}</div>
-        </div>
-        <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
-        {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------ La Maglia */
 
 function Maglia({ state, g, dispatch, start }: GameProps) {
@@ -599,8 +550,6 @@ export function GameView(props: GameProps) {
       return <Dischetto {...props} />;
     case "formazione":
       return <Formazione {...props} />;
-    case "frame":
-      return <Frame {...props} />;
     case "maglia":
       return <Maglia {...props} />;
     default:

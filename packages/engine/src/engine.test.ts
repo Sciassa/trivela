@@ -9,7 +9,7 @@ import { makeCtx, makePacks, meta, P } from "./fixtures.test-helpers";
 
 const packs = makePacks();
 const ctx = makeCtx(packs);
-const g5: GameId[] = ["tiro_secco", "maglia", "frame", "anomalia", "decina"];
+const g5: GameId[] = ["tiro_secco", "maglia", "anomalia", "decina", "dischetto"];
 
 function start(games: GameId[], over: Partial<MatchConfig> = {}): MatchState {
   const r = createMatch({ judging: "auto", players: ["Anna", "Bruno"], yearFrom: null, seed: 7, forcedGames: games, ...over }, packs);
@@ -23,7 +23,7 @@ const timeout = (s: MatchState) => reduce(s, { type: "TIMEOUT", timerId: s.timer
 const first = (g: GameId) => [g, ...g5.filter((x) => x !== g)].slice(0, 5) as GameId[];
 
 describe("match flow", () => {
-  it("draws five games out of ten, deterministically per seed, with no fixed final", () => {
+  it("draws five games out of nine, deterministically per seed, with no fixed final", () => {
     const cfg = { judging: "auto" as const, players: ["A", "B"] as [string, string], yearFrom: null, seed: 42 };
     const a = createMatch(cfg, packs);
     const b = createMatch(cfg, packs);
@@ -33,12 +33,11 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(10);
+    expect(POOL).toHaveLength(9);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
     expect(itemsNeeded("tiro_secco")).toBe(4);
-    expect(itemsNeeded("frame")).toBe(2); // one iconic match each
     expect(itemsNeeded("anomalia")).toBe(4);
     expect(itemsNeeded("maglia")).toBe(4);
     expect(itemsNeeded("mercato")).toBe(2);
@@ -47,7 +46,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(10);
+    expect(Object.keys(MODULES)).toHaveLength(9);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -104,7 +103,7 @@ describe("year filter and sampling", () => {
       expect(new Set(d).size).toBe(5);
       expect(d.filter((g) => g === "mercato" || g === "giramondo").length).toBeLessThanOrEqual(1);
       expect(d.filter((g) => ["decina", "dischetto", "asta"].includes(g)).length).toBeLessThanOrEqual(1);
-      expect(["tiro_secco", "frame", "maglia"]).toContain(d[0]);
+      expect(["tiro_secco", "anomalia", "maglia"]).toContain(d[0]);
     }
   });
 });
@@ -127,7 +126,7 @@ describe("league filter", () => {
     p.items.tiro_secco.forEach((q, k) => (q.entities = [k % 2 ? "comp:IT1" : "comp:GB1"]));
     const only = eligibleItems("tiro_secco", p, { judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"] });
     expect(only).toHaveLength(10);
-    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "frame", "anomalia", "decina"] }, p);
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "anomalia", "decina", "dischetto"] }, p);
     expect(r.ok && (r.state.content[0] as { entities: string[] }[]).every((q) => q.entities[0] === "comp:GB1")).toBe(true);
   });
 });
@@ -190,7 +189,7 @@ describe("la decina e dal dischetto", () => {
   });
 });
 
-describe("la formazione, l'asta, il frame", () => {
+describe("la formazione, l'asta, le domande a 4 opzioni", () => {
   it("formazione scores 15/10/5/3/2/0", () => {
     let s = start(first("formazione"));
     s = run(s, { type: "CHOOSE", value: 0 });
@@ -206,23 +205,9 @@ describe("la formazione, l'asta, il frame", () => {
     s = run(s, { type: "ANSWER", payload: { text: P(0).name } }, { type: "FINISH" });
     expect(s.scores[1 - a]).toBe(5);
   });
-  it("frame: one match per question, +3 for the right option, 0 for every wrong one, the answer hidden from the screen", () => {
-    let s = start(first("frame"));
-    expect(s.game!.items).toHaveLength(2);
-    expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
-    const first0 = s.game!.turn;
-    s = run(s, { type: "ANSWER", payload: { choice: 2 } });
-    expect(s.game!.last).toMatchObject({ points: 3, ok: true });
-    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { choice: 0 } });
-    expect(s.game!.last).toMatchObject({ points: 0, ok: false, said: "A-B · 2015/16" });
-    expect(s.game!.turn).not.toBe(first0);
-    s = run(s, { type: "NEXT" });
-    expect(s.phase).toBe("game_over");
-    expect(s.scores[first0]).toBe(3);
-  });
-  it("frame and the other four-option games: every wrong option is wrong, and only the right one scores", () => {
-    for (const game of ["frame", "anomalia", "tiro_secco"] as const) {
-      const right = game === "frame" ? 2 : game === "anomalia" ? 3 : 1;
+  it("the four-option games: every wrong option is wrong, and only the right one scores", () => {
+    for (const game of ["anomalia", "tiro_secco"] as const) {
+      const right = game === "anomalia" ? 3 : 1;
       for (const choice of [0, 1, 2, 3]) {
         const s0 = start(first(game));
         const s1 = run(s0, { type: "ANSWER", payload: { choice } });
@@ -232,7 +217,7 @@ describe("la formazione, l'asta, il frame", () => {
       }
     }
     // an answer that is not one of the four options is ignored, never judged
-    const s0 = start(first("frame"));
+    const s0 = start(first("anomalia"));
     for (const choice of [-1, 4, 1.5, Number.NaN]) expect(run(s0, { type: "ANSWER", payload: { choice } }).game!.last).toBeNull();
   });
   it("anomalia: four questions, +3 each, the answer stays hidden from the screen", () => {
@@ -290,7 +275,7 @@ describe("single-game formats", () => {
   };
   it("sfida rapida: three rounds each, whatever the game", () => {
     expect(singleGamePlan("tiro_secco", { rounds: 3 })).toEqual({ order: ["tiro_secco"], need: 6 });
-    expect(singleGamePlan("frame", { rounds: 3 })).toEqual({ order: ["frame"], need: 6 });
+    expect(singleGamePlan("anomalia", { rounds: 3 })).toEqual({ order: ["anomalia"], need: 6 });
     expect(singleGamePlan("mercato", { rounds: 3 })).toEqual({ order: ["mercato"], need: 6 });
     expect(singleGamePlan("asta", { rounds: 3 })).toEqual({ order: ["asta"], need: 6 });
     expect(singleGamePlan("decina", { rounds: 3 })).toEqual({ order: ["decina", "decina", "decina"], need: 1 }); // a list per round

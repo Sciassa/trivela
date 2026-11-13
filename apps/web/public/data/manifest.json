@@ -1,6 +1,6 @@
 {
   "version": "2026-11-13",
-  "generatedAt": "2026-11-13T10:17:48+00:00",
+  "generatedAt": "2026-11-13T11:52:41+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 2400,
@@ -10,7 +10,6 @@
     "dischetto": 1150,
     "formazione": 1100,
     "giramondo": 1400,
-    "frame": 1500,
     "asta": 1500,
     "maglia": 1500
   },
@@ -22,7 +21,6 @@
     "dischetto": 53,
     "formazione": 1,
     "giramondo": 1,
-    "frame": 2,
     "asta": 26,
     "maglia": 6
   },
@@ -76,13 +74,8 @@
       "excluded_show": 2,
       "excluded_not_notable": 0
     },
-    "frame": {
-      "kept": 1987,
-      "excluded_show": 20,
-      "excluded_not_notable": 0
-    },
     "asta": {
-      "kept": 3167,
+      "kept": 3170,
       "excluded_show": 5,
       "excluded_not_notable": 0
     },

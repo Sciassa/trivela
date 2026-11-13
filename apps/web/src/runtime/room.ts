@@ -144,6 +144,8 @@ export function useRoom(role: ClientRole, code: string) {
     live,
     timerStart,
     timer,
+    /** Host only: end the match for everybody. */
+    endMatch: () => link.current?.send("up", { t: "end" } satisfies UpMsg),
     /** Host only: pause or resume the countdown, or move it by `ms`. */
     timerOp: (op: "pause" | "resume" | "add", ms?: number) => link.current?.send("up", { t: "timer", op, ms } satisfies UpMsg),
     dispatch: (intent: Intent) => link.current?.send("up", { t: "intent", intent } satisfies UpMsg),

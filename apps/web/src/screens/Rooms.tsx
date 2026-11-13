@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import { GAME_IDS, type AnomaliaItem, type DischettoItem, type FormazioneItem, type FrameItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
+import { GAME_IDS, type AnomaliaItem, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
-import { AnswerBox, Page, PlayCtx, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
+import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
@@ -65,6 +65,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
           rememberSeen(usedIds(s));
           room.start(null);
         }}
+        onAbort={() => room.start(null)}
       />
     );
   }
@@ -141,7 +142,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
             SFIDA RAPIDA
           </button>
         </div>
-        <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 10." : "Un solo gioco a scelta, 3 round a testa."}</span>
+        <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 9." : "Un solo gioco a scelta, 3 round a testa."}</span>
         {formatKind === "quick" && (
           <div className="game-pick">
             {GAME_IDS.map((g) => (
@@ -187,18 +188,28 @@ export function RoomJoin({ onBack }: { onBack: () => void }) {
 
 /* ------------------------------------------------------------ Shared phone frame */
 
-function PhoneFrame({ role, room, children }: { role: ClientRole; room: RoomClient; children: ReactNode }) {
+/**
+ * Full-height phone layout: a compact header, an area that scrolls, and the buttons pinned to the bottom edge, so the
+ * main actions are always in the thumb's reach and never need a scroll.
+ */
+function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: ClientRole; room: RoomClient; children: ReactNode; top?: ReactNode; actions?: ReactNode; onEnd?: () => void }) {
   const s = room.state;
   const g = s?.order[s.gameIdx];
+  const [asking, setAsking] = useState(false);
   return (
-    <div className="page">
+    <div className="page phone-shell">
       <div className="page-bg" aria-hidden />
-      <div className="page-body">
+      <div className="phone-head">
         <div className="phone-top">
           <span style={{ color: ROLE_COLOR[role] }}>{role === "host" ? "REGIA" : s ? s.config.players[role === "p1" ? 0 : 1] : ROLE_LABEL[role]}</span>
-          <span className="dim">· STANZA {room.code}</span>
+          <span className="dim">· {room.code}</span>
           <span className="grow" />
           <span className={`status-dot ${room.live ? "on" : ""}`}>{room.live ? "COLLEGATO" : room.connected ? "CERCO LO SCHERMO…" : "MI COLLEGO…"}</span>
+          {onEnd && s && (
+            <button className="phone-end" aria-label="Termina partita" title="Termina partita" onClick={() => setAsking(true)}>
+              ✕
+            </button>
+          )}
         </div>
         {s && (
           <div className="phone-score">
@@ -211,6 +222,9 @@ function PhoneFrame({ role, room, children }: { role: ClientRole; room: RoomClie
             </span>
           </div>
         )}
+        {top}
+      </div>
+      <div className="phone-scroll">
         {!room.live && !s ? (
           <div className="panel waiting">
             <span className="blink">CERCO LA STANZA {room.code}…</span>
@@ -223,6 +237,20 @@ function PhoneFrame({ role, room, children }: { role: ClientRole; room: RoomClie
           children
         )}
       </div>
+      {actions && <div className="phone-actions">{actions}</div>}
+      {asking && (
+        <ConfirmModal
+          fixed
+          title="SEI SICURO DI VOLER TERMINARE LA SFIDA?"
+          text="La partita si chiude per tutti e si torna alla sala d'attesa."
+          confirm="SÌ, TERMINA"
+          onConfirm={() => {
+            setAsking(false);
+            onEnd?.();
+          }}
+          onCancel={() => setAsking(false)}
+        />
+      )}
     </div>
   );
 }
@@ -251,10 +279,6 @@ function solutionOf(g: GameStateAny): string[] {
     case "formazione": {
       const it = g.item as FormazioneItem;
       return [`${it.title} · ${it.competition}`, ...it.teams.map((t) => `${t.name}: ${t.players.filter((p) => p.hidden).map((p) => p.name).join(", ")}`)];
-    }
-    case "frame": {
-      const it = g.items[g.i] as FrameItem;
-      return [it.heading, it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "maglia": {
       const it = g.items[g.i] as MagliaItem;
@@ -333,6 +357,7 @@ export function HostRoom({ code }: { code: string }) {
     </div>
   );
   let controls: ReactNode = null;
+  let picks: ReactNode = null; // long lists of names: they scroll, the buttons below them stay put
   if (s.phase === "draw") controls = <Btn label="INIZIA ▶" onClick={() => d({ type: "START" })} />;
   else if (s.phase === "intro") controls = <Btn label="VIA AL GIOCO ▶" onClick={() => d({ type: "BEGIN_GAME" })} />;
   else if (s.phase === "game_over") controls = <Btn label="PROSSIMO GIOCO ▶" onClick={() => d({ type: "NEXT" })} />;
@@ -342,8 +367,7 @@ export function HostRoom({ code }: { code: string }) {
     else
       switch (g.game) {
         case "tiro_secco":
-        case "anomalia":
-        case "frame": {
+        case "anomalia": {
           const it = g.items[g.i] as TiroSeccoItem;
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
@@ -390,21 +414,22 @@ export function HostRoom({ code }: { code: string }) {
             g.stage === "feedback" ? (
               <Btn label="CONTINUA ▶" onClick={() => d({ type: "NEXT" })} />
             ) : (
-              <>
-                <div className="grid2">
-                  <Btn label="✗ ERRATA" cls="ko" onClick={() => d({ type: "VERDICT", payload: { id: null } })} />
-                  {g.game === "asta" ? <Btn label="SI ARRENDE" cls="ghost" onClick={() => d({ type: "FINISH" })} /> : <span />}
-                </div>
-                <div className="pick-grid">
-                  {pool
-                    .filter((m) => !said.has(m.id))
-                    .map((m) => (
-                      <button key={m.id} onClick={() => d({ type: "VERDICT", payload: { id: m.id } })}>
-                        {m.name}
-                      </button>
-                    ))}
-                </div>
-              </>
+              <div className="grid2">
+                <Btn label="✗ ERRATA" cls="ko" onClick={() => d({ type: "VERDICT", payload: { id: null } })} />
+                {g.game === "asta" ? <Btn label="SI ARRENDE" cls="ghost" onClick={() => d({ type: "FINISH" })} /> : <span />}
+              </div>
+            );
+          if (g.stage !== "feedback")
+            picks = (
+              <div className="pick-grid">
+                {pool
+                  .filter((m) => !said.has(m.id))
+                  .map((m) => (
+                    <button key={m.id} onClick={() => d({ type: "VERDICT", payload: { id: m.id } })}>
+                      {m.name}
+                    </button>
+                  ))}
+              </div>
             );
           break;
         }
@@ -415,7 +440,7 @@ export function HostRoom({ code }: { code: string }) {
             break;
           }
           const team = it.teams[g.teamOf[g.turn] as 0 | 1];
-          controls = (
+          picks = (
             <>
               <span className="label">TOCCA I TITOLARI INDOVINATI ({team.name})</span>
               <div className="pick-grid">
@@ -428,9 +453,9 @@ export function HostRoom({ code }: { code: string }) {
                     </button>
                   ))}
               </div>
-              <Btn label={`CONFERMA ${sel.length}/5`} onClick={() => d({ type: "VERDICT", payload: { ids: sel } })} />
             </>
           );
+          controls = <Btn label={`CONFERMA ${sel.length}/5`} onClick={() => d({ type: "VERDICT", payload: { ids: sel } })} />;
           break;
         }
         case "maglia":
@@ -439,7 +464,7 @@ export function HostRoom({ code }: { code: string }) {
       }
   }
   return (
-    <PhoneFrame role="host" room={room}>
+    <PhoneFrame role="host" room={room} top={<HostTimerPad room={room} />} actions={controls} onEnd={() => room.endMatch()}>
       {g && s.phase === "playing" && (
         <>
           {g.turn !== null && g.turn !== undefined && (
@@ -447,7 +472,6 @@ export function HostRoom({ code }: { code: string }) {
               TOCCA A {s.config.players[g.turn as PlayerIdx]}
             </div>
           )}
-          <HostTimerPad room={room} />
           <div className="solution-box">
             <span className="label">SOLUZIONE (SOLO PER TE)</span>
             {solutionOf(g)
@@ -459,16 +483,17 @@ export function HostRoom({ code }: { code: string }) {
           {scriptOf(g) && <div className="copione">{scriptOf(g)}</div>}
         </>
       )}
-      <div className="col" style={{ gap: 10 }}>
-        {controls}
-      </div>
+      {picks}
     </PhoneFrame>
   );
 }
 
 /* ------------------------------------------------------------ Controller */
 
-/** Draws the game controls on a 760px virtual canvas scaled to the phone width. */
+/** Draws the game controls on a narrow virtual canvas scaled to the phone width. */
+/** Virtual width of the controller canvas: narrow enough that text and buttons stay big on a phone. */
+const PAD_WIDTH = 520;
+
 function PadCanvas({ children }: { children: ReactNode }) {
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
@@ -476,7 +501,7 @@ function PadCanvas({ children }: { children: ReactNode }) {
     const o = outer.current!;
     const i = inner.current!;
     const fit = () => {
-      const k = o.clientWidth / 760;
+      const k = o.clientWidth / PAD_WIDTH;
       i.style.transform = `scale(${k})`;
       o.style.height = `${i.offsetHeight * k}px`;
     };
@@ -529,7 +554,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   );
   if (!s || s.phase !== "playing" || !g) {
     return (
-      <PhoneFrame role={role} room={room}>
+      <PhoneFrame role={role} room={room} actions={next}>
         <div className="panel waiting" style={{ color }}>
           {!s ? (
             <>
@@ -542,14 +567,26 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
             "GUARDA LO SCHERMO"
           )}
         </div>
-        {next}
       </PhoneFrame>
     );
   }
   if (g.game === "mercato" || g.game === "giramondo") {
     const can = (g.stage === "clues" || g.stage === "ready") && !g.out[me];
     return (
-      <PhoneFrame role={role} room={room}>
+      <PhoneFrame
+        role={role}
+        room={room}
+        actions={
+          <>
+            {g.free && !g.out[me] && g.stage === "clues" && (
+              <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
+                SCOPRI UN ALTRO INDIZIO
+              </button>
+            )}
+            {g.stage === "reveal" && next}
+          </>
+        }
+      >
         {g.stage === "answering" && g.buzzer === me ? (
           s.config.judging === "host" ? (
             <div className="panel waiting" style={{ color }}>
@@ -574,18 +611,39 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
             {g.out[me] ? "FUORI" : "PRENOTA!"}
           </button>
         )}
-        {g.free && !g.out[me] && g.stage === "clues" && (
-          <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
-            SCOPRI UN ALTRO INDIZIO
-          </button>
-        )}
-        {g.stage === "reveal" && next}
       </PhoneFrame>
     );
   }
   const closed = g.stage === "reveal" || g.stage === "final";
+  if (turn && s.config.judging !== "host" && (g.game === "tiro_secco" || g.game === "anomalia")) {
+    // four options: the question scrolls, the answers stay under the thumb
+    const it = g.items[g.i] as TiroSeccoItem;
+    return (
+      <PhoneFrame
+        role={role}
+        room={room}
+        actions={it.options.map((o, k) => (
+          <button key={k} className="btn big ghost" onClick={() => (navigator.vibrate?.(30), room.dispatch({ type: "ANSWER", payload: { choice: k } }))}>
+            {"ABCD"[k]}) {o}
+          </button>
+        ))}
+      >
+        <TimerClockCtx.Provider value={room.timer}>
+          <div className="pad-question">
+            <div className="px dim" style={{ fontSize: 11 }}>
+              DOMANDA {g.i + 1}/{g.items.length}
+            </div>
+            <StateTimer state={s} start={room.timerStart} />
+            <div className="q-card">
+              <div className="q">{it.question}</div>
+            </div>
+          </div>
+        </TimerClockCtx.Provider>
+      </PhoneFrame>
+    );
+  }
   return (
-    <PhoneFrame role={role} room={room}>
+    <PhoneFrame role={role} room={room} actions={closed ? next : undefined}>
       {turn && s.config.judging === "host" ? (
         <div className="panel waiting" style={{ color }}>
           TOCCA A TE: RISPONDI A VOCE!
@@ -601,7 +659,6 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       ) : (
         <div className="panel waiting">{closed || g.stage === "feedback" ? "GUARDA LO SCHERMO" : `TOCCA A ${s.config.players[(g.turn ?? g.starter ?? 0) as PlayerIdx]}`}</div>
       )}
-      {closed && next}
     </PhoneFrame>
   );
 }

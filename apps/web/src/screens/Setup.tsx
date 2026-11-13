@@ -136,7 +136,9 @@ export function Setup({
   };
 
   return (
-    <Page title={format ? `${format.kind === "quick" ? "SFIDA RAPIDA" : "ALLENAMENTO"} · ${GAME_NAMES[format.game]}` : "NUOVA SFIDA · UN SOLO SCHERMO"} onBack={onBack}>
+    <Page title={format ? `${format.kind === "quick" ? "SFIDA RAPIDA" : "ALLENAMENTO"} · ${GAME_NAMES[format.game]}` : "NUOVA SFIDA · UN SOLO SCHERMO"} onBack={onBack} wide>
+      <div className="form-cols">
+      <div className="form-col">
       {format?.kind === "training" ? (
         <div className="field">
           <label className="c-p1">IL TUO NOME</label>
@@ -146,6 +148,8 @@ export function Setup({
         <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
       )}
       <YearField year={year} setYear={setYear} locked={presetYear !== undefined} />
+      </div>
+      <div className="form-col">
       <LeaguesField value={leagues} onChange={setLeagues} locked={presetLeagues !== undefined} />
       {format?.kind !== "training" && (
       <div className="field">
@@ -161,9 +165,11 @@ export function Setup({
         <span className="note">{tableMode ? "Sul tavolo tra i due giocatori: i pulsanti di prenotazione sono girati verso i lati." : "TV, PC o tablet davanti a entrambi i giocatori."}</span>
       </div>
       )}
+      </div>
+      </div>
       <div className="panel note">
         {!format
-          ? "5 giochi sorteggiati su 10 · al massimo 2 domande a testa per gioco · vince chi fa più punti."
+          ? "5 giochi sorteggiati su 9 · al massimo 2 domande a testa per gioco · vince chi fa più punti."
           : format.kind === "quick"
             ? `${GAME_NAMES[format.game]}: solo questo gioco, 3 round a testa · vince chi fa più punti.`
             : `${GAME_NAMES[format.game]}: da solo, senza turni né avversari. Nessuna classifica: serve per allenarsi.`}

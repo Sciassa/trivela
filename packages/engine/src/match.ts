@@ -11,7 +11,7 @@ export const GAMES_PER_MATCH = 5;
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "anomalia", "mercato", "formazione", "frame", "maglia"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "anomalia", "mercato", "formazione", "maglia"];
 const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
@@ -69,7 +69,7 @@ const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== u
 
 const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
 const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
-const OPENERS: GameId[] = ["tiro_secco", "frame", "maglia"];
+const OPENERS: GameId[] = ["tiro_secco", "anomalia", "maglia"];
 
 export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): GameId[] {
   const avail = new Set(available);
