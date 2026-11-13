@@ -58,6 +58,32 @@ it("a whole first name points to the people who have it, but a prefix suggests n
   expect(suggest("marco", index)).toEqual([]); // too many people called Marco: it would point nowhere
 });
 
+it("tolerates the typos of hard names, by closeness and never by fame", () => {
+  // spelling slips and sound-alikes of complex names
+  for (const typed of ["sczesni", "sczesny", "Szczesni", "SZCZESNY"]) expect(suggest(typed, index).map((x) => x.name)).toContain("Wojciech Szczęsny");
+  for (const typed of ["kvaratskelia", "kvaratskhelya", "Kvaratskelya"]) expect(suggest(typed, index).map((x) => x.name)).toContain("Khvicha Kvaratskhelia");
+  expect(suggest("chalanoglu", index).map((x) => x.name)).toContain("Hakan Çalhanoğlu");
+  // still no completion from the first letters: nothing below four letters, nothing for a prefix
+  for (const typed of ["s", "sc", "scz", "szcz", "sczes", "kvar", "hak"]) expect(suggest(typed, index)).toEqual([]);
+  // short names must be typed in full
+  const rossi = buildIndex([P("r1", "Mario Rossi", 99, "Rossi")]);
+  expect(suggest("ross", rossi)).toEqual([]);
+  expect(suggest("rosi", rossi)).toEqual([]);
+  expect(suggest("rossy", rossi).map((x) => x.name)).toEqual(["Mario Rossi"]);
+});
+
+it("orders by closeness then alphabetically, at most eight, whatever the fame", () => {
+  const many = buildIndex(
+    Array.from({ length: 12 }, (_, i) => P(`b${i}`, `Nome${String.fromCharCode(97 + i)} Bellini`, i === 11 ? 100 : 1, "Bellini")),
+  );
+  const out = suggest("belini", many);
+  expect(out.length).toBe(8);
+  expect(out.map((x) => x.name)).toEqual([...out.map((x) => x.name)].sort((a, b) => a.localeCompare(b, "it"))); // equal closeness: alphabetical
+  expect(out.map((x) => x.name)).not.toContain("Nomel Bellini"); // the famous one gets no priority
+  const mixed = buildIndex([P("m1", "Anna Marchetti", 1, "Marchetti"), P("m2", "Luca Marchesi", 100, "Marchesi")]);
+  expect(suggest("marchetty", mixed).map((x) => x.name)[0]).toBe("Anna Marchetti"); // closer beats famous
+});
+
 it("a first name alone is never an answer", () => {
   expect(resolve("Lautaro", index)).toEqual({ status: "none" });
   expect(judgeText("Lautaro", { kind: "entity", ids: ["l1"], display: "Lautaro Martínez" }, index)).toBe(false);

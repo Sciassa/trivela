@@ -216,7 +216,7 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
       <Sprite name="face" size={64} className="hud-face" />
       <div className="hud-id">
         <span className="hud-name">{state.config.players[p]}</span>
-        <span className="hud-tag">{turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
+        <span className="hud-tag">{state.config.solo ? "ALLENAMENTO" : turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
       </div>
       <span className={`hud-score ${shown !== score ? "rolling" : ""}`}>{shown}</span>
       {delta && (
@@ -230,8 +230,9 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
 
 export function Scoreboard({ state }: { state: MatchState }) {
   const g = state.order[state.gameIdx];
+  const solo = state.config.solo === true;
   return (
-    <header className="hud">
+    <header className={`hud ${solo ? "solo" : ""}`}>
       <PlayerCard state={state} p={0} />
       <div className="hud-mid" style={{ "--game": g ? GAME_COLORS[g] : "var(--accent)" } as CSSProperties}>
         <div className="hud-game">
@@ -240,11 +241,11 @@ export function Scoreboard({ state }: { state: MatchState }) {
         </div>
         <div className="hud-pips">
           {state.order.map((x, k) => (
-            <i key={x} className={k < state.gameIdx ? "done" : k === state.gameIdx ? "now" : ""} />
+            <i key={`${x}${k}`} className={k < state.gameIdx ? "done" : k === state.gameIdx ? "now" : ""} />
           ))}
         </div>
       </div>
-      <PlayerCard state={state} p={1} />
+      {solo ? <div /> : <PlayerCard state={state} p={1} />}
     </header>
   );
 }
@@ -563,18 +564,37 @@ export function NextButton({ onClick, label = "AVANTI ▶" }: { onClick: () => v
   );
 }
 
-export function Result({ last, players }: { last: { player: 0 | 1 | null; points: number; ok: boolean; detail?: string } | null; players: [string, string] }) {
+type Last = { player: 0 | 1 | null; points: number; ok: boolean; detail?: string; said?: string } | null;
+
+/** What a wrong answer said, in red, so that everybody in the room can read it. */
+export function WrongSaid({ text, who }: { text: string | null | undefined; who?: string }) {
+  if (!text) return null;
+  return (
+    <div className="said-wrong" role="status">
+      <span className="said-label">{who ? `${who} ha risposto:` : "Hai risposto:"}</span>
+      <b>{text}</b>
+    </div>
+  );
+}
+
+export function Result({ last, players }: { last: Last; players: [string, string] }) {
   if (!last) return null;
   const who = last.player === null ? "" : players[last.player];
+  // "3/5" (La Formazione) is a count, not a verdict: only a fully right answer says ESATTO
+  const count = /^\d\/\d$/.test(last.detail ?? "") ? last.detail : null;
+  const word = count ? `${count} TROVATI` : last.ok ? "ESATTO!" : "NO!";
   return (
-    <div className={`result ${last.ok ? "ok" : "ko"}`}>
-      <span className="result-word">{last.ok ? "ESATTO!" : "NO!"}</span>
-      {last.points !== 0 && (
-        <span className="result-pts">
-          {who} {last.points > 0 ? `+${last.points}` : last.points}
-        </span>
-      )}
-    </div>
+    <>
+      <div className={`result ${last.ok ? "ok" : "ko"}`}>
+        <span className="result-word">{word}</span>
+        {last.points !== 0 && (
+          <span className="result-pts">
+            {who} {last.points > 0 ? `+${last.points}` : last.points}
+          </span>
+        )}
+      </div>
+      {!last.ok && !count && <WrongSaid text={last.said} who={who} />}
+    </>
   );
 }
 

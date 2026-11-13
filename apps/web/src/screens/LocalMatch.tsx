@@ -35,6 +35,7 @@ export function MatchShell({
   tableMode,
   mode = LOCAL,
   clock = NO_CLOCK,
+  onAgain,
 }: {
   state: MatchState;
   dispatch: (i: Intent) => void;
@@ -45,6 +46,8 @@ export function MatchShell({
   mode?: PlayMode;
   /** Timer adjustments made by the host (pause, +10, -10). */
   clock?: TimerClock;
+  /** Play the same format again (rematch / another training run). */
+  onAgain?: (s: MatchState) => void;
 }) {
   const view = useMemo(() => viewFor(state, "screen"), [state]);
   const g = state.order[state.gameIdx];
@@ -123,7 +126,7 @@ export function MatchShell({
               </div>
             </Fit>
           )}
-          {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} />}
+          {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} onAgain={onAgain ? () => onAgain(state) : undefined} />}
         </main>
         </TimerClockCtx.Provider>
       </PlayCtx.Provider>
@@ -145,27 +148,29 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
   return (
     <div className="splash enter">
       <div className="px c-accent" style={{ fontSize: 34 }}>
-        IL SORTEGGIO
+        {state.config.solo ? "ALLENAMENTO" : state.config.rounds !== undefined ? `SFIDA RAPIDA · ${state.config.rounds} ROUND A TESTA` : "IL SORTEGGIO"}
       </div>
       <div className="draw-grid">
         {state.order.map((g, k) =>
           k < shown ? (
-            <div key={g} className="draw-card open" style={{ "--game": GAME_COLORS[g] } as CSSProperties}>
-              <span className="n">GIOCO {k + 1}</span>
+            <div key={`${g}${k}`} className="draw-card open" style={{ "--game": GAME_COLORS[g] } as CSSProperties}>
+              <span className="n">{state.config.rounds !== undefined && state.order.length > 1 ? `ROUND ${k + 1}` : `GIOCO ${k + 1}`}</span>
               <GameIcon game={g} size={96} />
               {GAME_NAMES[g]}
             </div>
           ) : (
-            <div key={g} className="draw-card closed">
+            <div key={`${g}${k}`} className="draw-card closed">
               ?
             </div>
           ),
         )}
       </div>
       {state.config.yearFrom !== null && <div className="dim">Domande dal {state.config.yearFrom} in poi (elenchi e classifiche usano tutte le stagioni).</div>}
-      <div className="px" style={{ visibility: done ? "visible" : "hidden" }}>
-        MONETA: INIZIA <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
-      </div>
+      {!state.config.solo && (
+        <div className="px" style={{ visibility: done ? "visible" : "hidden" }}>
+          MONETA: INIZIA <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
+        </div>
+      )}
       <div style={{ visibility: done ? "visible" : "hidden" }}>
         <NextButton label="SI PARTE ▶" onClick={onStart} />
       </div>
@@ -173,9 +178,38 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
   );
 }
 
-function MatchOver({ state, onExit }: { state: MatchState; onExit: () => void }) {
+function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () => void; onAgain?: () => void }) {
   const [a, b] = state.scores;
   const winner = a === b ? null : a > b ? 0 : 1;
+  if (state.config.solo) {
+    const game = state.order[0]!;
+    return (
+      <>
+        <Confetti count={40} />
+        <Fit center>
+          <div className="splash enter">
+            <GameIcon game={game} size={130} />
+            <div className="px c-accent" style={{ fontSize: 30 }}>
+              ALLENAMENTO CONCLUSO
+            </div>
+            <div className="px dim">{GAME_NAMES[game]}</div>
+            <div className="final-score">
+              <span className="px">PUNTI</span>
+              <span className="led big">{a}</span>
+            </div>
+            <div className="row">
+              {onAgain && (
+                <button className="btn ghost" onClick={onAgain}>
+                  ANCORA ▶
+                </button>
+              )}
+              <NextButton label="FINE" onClick={onExit} />
+            </div>
+          </div>
+        </Fit>
+      </>
+    );
+  }
   return (
     <>
       <Confetti rain count={60} />
@@ -195,7 +229,7 @@ function MatchOver({ state, onExit }: { state: MatchState; onExit: () => void })
           </div>
           <div className="breakdown">
             {state.order.map((g, k) => (
-              <div key={g} style={{ display: "contents" }}>
+              <div key={`${g}${k}`} style={{ display: "contents" }}>
                 <span className="c-p1" style={{ textAlign: "right" }}>
                   +{state.gamePoints[k]![0]}
                 </span>
@@ -204,18 +238,37 @@ function MatchOver({ state, onExit }: { state: MatchState; onExit: () => void })
               </div>
             ))}
           </div>
-          <NextButton label="FINE" onClick={onExit} />
+          <div className="row">
+            {onAgain && (
+              <button className="btn ghost" onClick={onAgain}>
+                RIVINCITA ▶
+              </button>
+            )}
+            <NextButton label="FINE" onClick={onExit} />
+          </div>
         </div>
       </Fit>
     </>
   );
 }
 
-export function LocalMatch({ initial, ctx, onExit, tableMode }: { initial: MatchState; ctx: EngineCtx; onExit: (s: MatchState) => void; tableMode?: boolean }) {
+export function LocalMatch({
+  initial,
+  ctx,
+  onExit,
+  onAgain,
+  tableMode,
+}: {
+  initial: MatchState;
+  ctx: EngineCtx;
+  onExit: (s: MatchState) => void;
+  onAgain?: (s: MatchState) => void;
+  tableMode?: boolean;
+}) {
   const { state, dispatch, timerStart } = useLocalMatch(initial, ctx);
   useWakeLock(true);
   useEffect(() => {
     if (state.phase === "match_over") rememberSeen(usedIds(state));
   }, [state.phase, state]);
-  return <MatchShell state={state} dispatch={dispatch} ctx={ctx} start={timerStart} onExit={onExit} tableMode={tableMode} />;
+  return <MatchShell state={state} dispatch={dispatch} ctx={ctx} start={timerStart} onExit={onExit} onAgain={onAgain} tableMode={tableMode} />;
 }

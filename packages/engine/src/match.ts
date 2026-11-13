@@ -45,6 +45,24 @@ export function itemsNeeded(game: GameId): number {
   return m.perPlayer ? m.count * 2 : m.count;
 }
 
+/** Games made of one list: a longer format plays them again, with a new list, instead of asking more questions. */
+const LIST_GAMES: GameId[] = ["decina", "dischetto", "formazione"];
+
+/** Questions of a solo session (Allenamento) when the game is made of questions or profiles. */
+const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3 };
+
+/**
+ * Slots of a single-game format: which game is played, how many times, with how many instances each time.
+ * Sfida Rapida: `rounds` rounds each (two instances per round, or one list per round); Allenamento: one session.
+ */
+export function singleGamePlan(game: GameId, config: Pick<MatchConfig, "rounds" | "solo">): { order: GameId[]; need: number } {
+  const rounds = Math.max(1, Math.floor(config.rounds ?? 3));
+  if (LIST_GAMES.includes(game)) return { order: Array<GameId>(config.solo ? 1 : rounds).fill(game), need: 1 };
+  return { order: [game], need: config.solo ? SOLO_ITEMS[game] ?? 6 : rounds * 2 };
+}
+
+const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== undefined || c.solo === true;
+
 /* ------------------------------------------------------------------ */
 /* Draw                                                                 */
 /* ------------------------------------------------------------------ */
@@ -110,18 +128,29 @@ export type CreateResult = { ok: true; state: MatchState } | { ok: false; reason
 export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx): CreateResult {
   const rng = new Rng(config.seed);
   const used = new Set<string>();
-  const available = POOL.filter((g) => eligibleItems(g, packs, config).length >= itemsNeeded(g));
-  const games = config.forcedGames ?? drawGames(rng, available);
-  if (games.length < GAMES_PER_MATCH && !config.forcedGames) {
-    return { ok: false, reason: `Contenuti insufficienti per sorteggiare ${GAMES_PER_MATCH} giochi.` };
+  let order: GameId[];
+  let needs: number[];
+  if (isSingleGame(config)) {
+    const game = config.forcedGames?.[0];
+    if (!game) return { ok: false, reason: "Scegli un gioco." };
+    const plan = singleGamePlan(game, config);
+    order = plan.order;
+    needs = order.map(() => plan.need);
+  } else {
+    const available = POOL.filter((g) => eligibleItems(g, packs, config).length >= itemsNeeded(g));
+    order = config.forcedGames ?? drawGames(rng, available);
+    if (order.length < GAMES_PER_MATCH && !config.forcedGames) {
+      return { ok: false, reason: `Contenuti insufficienti per sorteggiare ${GAMES_PER_MATCH} giochi.` };
+    }
+    needs = order.map(itemsNeeded);
   }
-  const content: Partial<Record<GameId, unknown[]>> = {};
-  for (const g of games) {
-    const items = sampleVaried(eligibleItems(g, packs, config), itemsNeeded(g), rng, used);
+  const content: unknown[][] = [];
+  for (let k = 0; k < order.length; k++) {
+    const g = order[k]!;
+    const items = sampleVaried(eligibleItems(g, packs, config), needs[k]!, rng, used);
     if (!items) return { ok: false, reason: `Contenuti insufficienti per ${g}.` };
-    content[g] = items;
+    content.push(items);
   }
-  const order: GameId[] = [...games];
   const state: MatchState = {
     config,
     scores: [0, 0],
@@ -135,7 +164,7 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
     timer: null,
     timerSeq: 0,
     events: [],
-    coin: rng.int(2) as PlayerIdx,
+    coin: config.solo ? 0 : (rng.int(2) as PlayerIdx),
   };
   return { ok: true, state };
 }
@@ -145,6 +174,7 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
 /* ------------------------------------------------------------------ */
 
 function starterFor(s: MatchState): PlayerIdx {
+  if (s.config.solo) return 0;
   if (s.gameIdx === 0) return s.coin;
   const [a, b] = s.scores;
   if (a < b) return 0;
@@ -156,6 +186,7 @@ function makeEnv(s: MatchState, ctx: EngineCtx, events: EngineEvent[]): Env {
   return {
     ctx,
     judging: s.config.judging,
+    solo: s.config.solo === true,
     starter: s.starters[s.gameIdx] ?? s.coin,
     addPoints(player, points) {
       s.scores[player] += points;
@@ -194,7 +225,7 @@ export function reduce(prev: MatchState, intent: Intent, ctx: EngineCtx): MatchS
       if (intent.type === "BEGIN_GAME") {
         const g = s.order[s.gameIdx]!;
         const env = makeEnv(s, ctx, events);
-        s.game = MODULES[g].init(s.content[g] ?? [], env);
+        s.game = MODULES[g].init(s.content[s.gameIdx] ?? [], env);
         s.phase = "playing";
         events.push({ type: "game_start", game: g });
       }
@@ -234,7 +265,7 @@ export function reduce(prev: MatchState, intent: Intent, ctx: EngineCtx): MatchS
 /** Role-filtered view: only the host sees answers before they are revealed. */
 export function viewFor(s: MatchState, role: Role): MatchState {
   if (role === "host") return s;
-  const v: MatchState = { ...s, content: {} };
+  const v: MatchState = { ...s, content: [] };
   if (s.game) v.game = MODULES[s.game.game].redact(s.game, role);
   return v;
 }
@@ -251,6 +282,6 @@ export function usedIds(s: MatchState): string[] {
     if (Array.isArray(x)) x.forEach(walk);
     else if (x && typeof x === "object" && "id" in x && "generator" in x) ids.push((x as InstanceMeta).id);
   };
-  Object.values(s.content).forEach(walk);
+  s.content.forEach(walk);
   return ids;
 }

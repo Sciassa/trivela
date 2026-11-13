@@ -32,7 +32,7 @@ try {
       await p.getByText("PREMI START").click();
       await p.waitForTimeout(900);
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-menu.png` });
-      await p.getByText("UN SOLO SCHERMO").click();
+      await p.getByText("PARTITA COMPLETA").click();
       await p.getByPlaceholder("Nome").first().fill("Annalisa");
       await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-setup.png` });

@@ -25,7 +25,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 10. **Motore deterministico**: `packages/engine` è TypeScript puro, senza accesso a orologio, rete, DOM o `Math.random` (usa l'RNG con seme). Lo stesso motore gira nello schermo singolo e nello Schermo che ospita una stanza.
 11. **Domande inedite e su giocatori noti** (SPEC §0.4): mai riproporre i casi degli episodi usati come ispirazione (`postprocess.SHOW_FINGERPRINTS`); un giocatore è protagonista solo se supera il filtro notorietà. Non indebolire questi filtri.
 12. **Caricamento a richiesta**: i telefoni (Regia, pulsantiere) non scaricano mai i pacchetti dei giochi (domande e soluzioni); lo Schermo scarica solo i giochi sorteggiati. Le pulsantiere scaricano solo l'indice dei nomi, perché il correttore ortografico deve funzionare su ogni dispositivo che scrive (SPEC §10.3); la Regia non scarica nulla.
-13. **Almeno 1000 domande per gioco** e **round brevi** (SPEC §0.6): al massimo 2 domande a testa per gioco (1 partita a testa per Il Frame), una sola lista per Decina e Dischetto. `data/tests/test_packs.py` verifica i conteggi.
+13. **Almeno 1000 domande per gioco** e **round brevi** (SPEC §0.6): al massimo 2 domande a testa per gioco, una sola lista per Decina e Dischetto. Fanno eccezione i formati a gioco singolo (SPEC §3.5): Sfida Rapida (3 round a testa) e Allenamento (solo). `data/tests/test_packs.py` verifica i conteggi.
 14. **Nessun server nostro per le stanze** (SPEC §12): lo Schermo è l'autorità, i messaggi passano cifrati da relay pubblici. Non reintrodurre un backend senza una decisione dell'utente.
 15. **Niente tagliato a schermo**: il contenuto di gioco sta dentro il palco adattivo e il componente `Fit`; ogni nuova schermata va controllata con `tools/shots.mjs` su PC, tablet e telefono orizzontale.
 
@@ -52,7 +52,8 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - Il Copione delle istanze generate nasce **solo da template** sui fatti dell'istanza.
 - Statistiche cumulative: sempre con definizione e data di aggiornamento visibili.
 - UI: palco che riempie sempre lo schermo (tela virtuale di almeno 1600×900, ridotta sui telefoni), contenuto di gioco dentro `Fit`; moduli e telefoni come pagine a scorrimento (`Page`); variabili CSS per i colori; rispettare `prefers-reduced-motion`; target touch ≥ 48 px.
-- Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START".
+- Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START". La musica resta ambient: solo onde sine/triangle, tempo lento, volume basso (SPEC §13).
+- Ogni risposta sbagliata va scritta in rosso sullo Schermo (`WrongSaid`, SPEC §3.6): un gioco nuovo deve registrare `said` in `last` (o `wrong` mentre la risposta è ancora in corso).
 
 ## Test e definizione di "fatto"
 

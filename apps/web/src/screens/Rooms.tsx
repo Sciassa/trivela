@@ -1,16 +1,17 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import type { AnomaliaItem, DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, SetItem, TiroSeccoItem } from "@trivela/protocol";
+import { GAME_IDS, type AnomaliaItem, type DischettoItem, type FormazioneItem, type FrameItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
-import { LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
+import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
 import { AnswerBox, Page, PlayCtx, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
+import { GAME_COLORS, GameIcon } from "../components/sprites";
 
 const ROLE_LABEL: Record<ClientRole, string> = { host: "REGIA", p1: "GIOCATORE 1", p2: "GIOCATORE 2" };
 const ROLE_COLOR: Record<ClientRole, string> = { host: "var(--accent)", p1: "var(--p1)", p2: "var(--p2)" };
@@ -39,6 +40,8 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   const [p2, setP2] = useState("");
   const [year, setYear] = useState("");
   const [leagues, setLeagues] = useState(savedLeagues);
+  const [quickGame, setQuickGame] = useState<GameId | null>(null); // null: classic five-game match
+  const [formatKind, setFormatKind] = useState<"classic" | "quick">("classic");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [matchCtx, setMatchCtx] = useState(ctx);
@@ -82,11 +85,12 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
       yearFrom,
       leagues: leaguesForMatch(leagues),
       seed: newSeed(),
-      forcedGames: forcedGamesFromUrl(),
+      forcedGames: formatKind === "quick" && quickGame ? [quickGame] : forcedGamesFromUrl(),
+      ...(formatKind === "quick" && quickGame ? { rounds: 3 } : {}),
     });
     setLoading(false);
     if (!r.ok) {
-      setError(yearFrom ? `${r.reason} Prova con un anno precedente.` : r.reason);
+      setError(friendlyReason(r.reason, yearFrom));
       return;
     }
     setMatchCtx(r.ctx);
@@ -127,12 +131,36 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
           Senza fotocamera: sul telefono apri questo stesso sito, tocca «ENTRA CON CODICE» e scrivi <b className="c-accent">{room.code}</b>. Non serve la stessa Wi-Fi: basta una connessione a internet su ogni dispositivo.
         </span>
       </div>
+      <div className="field">
+        <label>FORMATO DELLA SFIDA</label>
+        <div className="seg">
+          <button className={`btn ${formatKind === "classic" ? "" : "ghost"}`} onClick={() => setFormatKind("classic")}>
+            PARTITA COMPLETA
+          </button>
+          <button className={`btn ${formatKind === "quick" ? "" : "ghost"}`} onClick={() => setFormatKind("quick")}>
+            SFIDA RAPIDA
+          </button>
+        </div>
+        <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 10." : "Un solo gioco a scelta, 3 round a testa."}</span>
+        {formatKind === "quick" && (
+          <div className="game-pick">
+            {GAME_IDS.map((g) => (
+              <button key={g} className={quickGame === g ? "on" : ""} style={{ "--game": GAME_COLORS[g], background: quickGame === g ? "#2a2a10" : undefined } as React.CSSProperties} onClick={() => setQuickGame(g)}>
+                <GameIcon game={g} size={40} />
+                <span>
+                  <b>{GAME_NAMES[g]}</b>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} />
       <YearField year={year} setYear={setYear} />
       <LeaguesField value={leagues} onChange={setLeagues} />
       {error && <div className="err">{error}</div>}
-      <button className="btn big" disabled={loading || !ready} onClick={() => void start()}>
-        {loading ? "CARICO I GIOCHI…" : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
+      <button className="btn big" disabled={loading || !ready || (formatKind === "quick" && !quickGame)} onClick={() => void start()}>
+        {loading ? "CARICO I GIOCHI…" : formatKind === "quick" && !quickGame ? "SCEGLI IL GIOCO" : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
       </button>
     </Page>
   );
@@ -225,7 +253,7 @@ function solutionOf(g: GameStateAny): string[] {
       return [`${it.title} · ${it.competition}`, ...it.teams.map((t) => `${t.name}: ${t.players.filter((p) => p.hidden).map((p) => p.name).join(", ")}`)];
     }
     case "frame": {
-      const it = g.items[g.turn] as FrameItem;
+      const it = g.items[g.i] as FrameItem;
       return [it.heading, it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "maglia": {
@@ -238,7 +266,7 @@ function solutionOf(g: GameStateAny): string[] {
 
 function scriptOf(g: GameStateAny): string {
   if (g.script) return g.script;
-  const it = g.item ?? (g.game === "frame" ? g.items?.[g.turn] : g.items?.[g.i]);
+  const it = g.item ?? g.items?.[g.i];
   return it?.script ?? "";
 }
 
@@ -316,7 +344,7 @@ export function HostRoom({ code }: { code: string }) {
         case "tiro_secco":
         case "anomalia":
         case "frame": {
-          const it = g.items[g.game === "frame" ? g.turn : g.i] as TiroSeccoItem;
+          const it = g.items[g.i] as TiroSeccoItem;
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
         }

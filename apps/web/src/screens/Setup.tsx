@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { LEAGUES } from "@trivela/protocol";
+import { GAME_NAMES } from "../rules";
+import type { Format } from "./GamePicker";
 import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { ALL_LEAGUES, forcedGamesFromUrl, leaguesForMatch, newSeed, prepareFreshMatch, saveLeagues, savedLeagues } from "../runtime/packs";
@@ -9,6 +11,12 @@ export interface SetupResult {
   state: MatchState;
   tableMode: boolean;
   ctx: EngineCtx;
+}
+
+/** A game that cannot be drawn with the current filters is not a bug: say what to loosen. */
+export function friendlyReason(reason: string, yearFrom: number | null): string {
+  if (/insufficienti/i.test(reason)) return `${reason} Con questi filtri non ci sono abbastanza domande: ${yearFrom ? "prova con un anno precedente o " : "prova "}ad attivare altri campionati.`;
+  return reason;
 }
 
 /** Parse the "from year" field; undefined when it is not a plausible year. */
@@ -80,6 +88,7 @@ export function Setup({
   yearFrom: presetYear,
   leagues: presetLeagues,
   excludeIds,
+  format,
 }: {
   onStart: (r: SetupResult) => void;
   onBack: () => void;
@@ -87,6 +96,8 @@ export function Setup({
   yearFrom?: number | null;
   leagues?: string[] | null;
   excludeIds?: string[];
+  /** Sfida Rapida or Allenamento on one chosen game; absent: the classic five-game match. */
+  format?: Format;
 }) {
   const [p1, setP1] = useState(presetPlayers?.[0] ?? "");
   const [p2, setP2] = useState(presetPlayers?.[1] ?? "");
@@ -104,28 +115,39 @@ export function Setup({
       return;
     }
     setLoading(true);
+    const training = format?.kind === "training";
     const r = await prepareFreshMatch({
       judging: "auto",
-      players: [p1.trim() || "Giocatore 1", p2.trim() || "Giocatore 2"],
+      players: [p1.trim() || (training ? "Giocatore" : "Giocatore 1"), training ? "—" : p2.trim() || "Giocatore 2"],
       yearFrom,
       leagues: leaguesForMatch(leagues),
       seed: newSeed(),
       excludeIds,
-      forcedGames: forcedGamesFromUrl(),
+      forcedGames: format ? [format.game] : forcedGamesFromUrl(),
+      ...(format?.kind === "quick" ? { rounds: 3 } : {}),
+      ...(training ? { solo: true } : {}),
     });
     setLoading(false);
     if (!r.ok) {
-      setError(yearFrom ? `${r.reason} Prova con un anno precedente.` : r.reason);
+      setError(friendlyReason(r.reason, yearFrom));
       return;
     }
     onStart({ state: r.state, tableMode, ctx: r.ctx });
   };
 
   return (
-    <Page title="NUOVA SFIDA · UN SOLO SCHERMO" onBack={onBack}>
-      <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
+    <Page title={format ? `${format.kind === "quick" ? "SFIDA RAPIDA" : "ALLENAMENTO"} · ${GAME_NAMES[format.game]}` : "NUOVA SFIDA · UN SOLO SCHERMO"} onBack={onBack}>
+      {format?.kind === "training" ? (
+        <div className="field">
+          <label className="c-p1">IL TUO NOME</label>
+          <input className="input" value={p1} maxLength={14} placeholder="Nome (facoltativo)" onChange={(e) => setP1(e.target.value)} style={{ borderColor: "var(--p1)" }} />
+        </div>
+      ) : (
+        <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
+      )}
       <YearField year={year} setYear={setYear} locked={presetYear !== undefined} />
       <LeaguesField value={leagues} onChange={setLeagues} locked={presetLeagues !== undefined} />
+      {format?.kind !== "training" && (
       <div className="field">
         <label>DOVE STA LO SCHERMO?</label>
         <div className="seg">
@@ -138,7 +160,14 @@ export function Setup({
         </div>
         <span className="note">{tableMode ? "Sul tavolo tra i due giocatori: i pulsanti di prenotazione sono girati verso i lati." : "TV, PC o tablet davanti a entrambi i giocatori."}</span>
       </div>
-      <div className="panel note">5 giochi sorteggiati su 10 · al massimo 2 domande a testa per gioco · vince chi fa più punti.</div>
+      )}
+      <div className="panel note">
+        {!format
+          ? "5 giochi sorteggiati su 10 · al massimo 2 domande a testa per gioco · vince chi fa più punti."
+          : format.kind === "quick"
+            ? `${GAME_NAMES[format.game]}: solo questo gioco, 3 round a testa · vince chi fa più punti.`
+            : `${GAME_NAMES[format.game]}: da solo, senza turni né avversari. Nessuna classifica: serve per allenarsi.`}
+      </div>
       {error && <div className="err">{error}</div>}
       <button className="btn big" onClick={() => void start()} disabled={loading}>
         {loading ? "CARICO I GIOCHI…" : "GIOCA ▶"}

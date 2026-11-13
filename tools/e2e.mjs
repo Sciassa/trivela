@@ -71,7 +71,7 @@ try {
   const p = await open();
   await p.goto(`${BASE}/?games=${GAMES}`);
   await p.getByText("PREMI START").click();
-  await p.getByText("UN SOLO SCHERMO").click();
+  await p.getByText("PARTITA COMPLETA").click();
   await p.getByPlaceholder("Nome").first().fill("Anna");
   await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
   check((await p.getByText(/argomento/i).count()) === 0, "no free-topic field in the setup");
@@ -93,8 +93,64 @@ try {
   await p.locator(".option").first().click();
   await p.locator(".option.right").waitFor();
   await p.screenshot({ path: "test-results/local-reveal.png" });
+  // a wrong answer is written in red for the whole room: the Screen shows what was tried
+  let sawWrong = false;
+  for (let q = 0; q < 4 && !sawWrong; q++) {
+    const wrong = await p.locator(".option.wrongpick").count();
+    if (wrong) {
+      const tried = (await p.locator(".option.wrongpick").first().innerText()).replace(/^[ABCD]\s*/, "").trim();
+      const said = await p.locator(".said-wrong").first();
+      const text = await said.innerText();
+      check(text.includes(tried), `the wrong option is shown on the Screen (${text.replace(/\n/g, " ")})`);
+      const color = await said.evaluate((el) => getComputedStyle(el).color);
+      check(color === "rgb(255, 59, 59)", `... and it is red (${color})`);
+      sawWrong = true;
+      break;
+    }
+    await p.locator(".btn.next").first().click();
+    await p.locator(".option").first().waitFor();
+    await p.locator(".option").first().click();
+    await p.locator(".option.right").waitFor();
+  }
+  check(sawWrong, "a wrong answer was shown in red");
   check(errors.length === 0, `no page errors in the single-screen match (${errors.join(" | ")})`);
   await p.context().close();
+
+  // ---------------- Sfida Rapida (one game, 3 rounds each) and Allenamento (alone), single screen
+  {
+    const q = await open();
+    await q.goto(BASE);
+    await q.getByText("PREMI START").click();
+    await q.locator(".menu .btn", { hasText: "SFIDA RAPIDA" }).click();
+    await q.getByText("IL FRAME").click();
+    await q.getByPlaceholder("Nome").first().fill("Anna");
+    await q.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await q.getByText("GIOCA ▶").click();
+    await q.getByText(/SFIDA RAPIDA · 3 ROUND A TESTA/).waitFor({ timeout: 15000 });
+    await q.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await q.getByText("VIA! ▶").click();
+    await q.locator(".option").first().waitFor();
+    check((await q.locator(".turnbar .info").first().innerText()).includes("PARTITA 1/6"), "sfida rapida: six matches, three each");
+    const gameFiles = await q.evaluate(() => performance.getEntriesByType("resource").map((e) => e.name).filter((n) => n.includes("/data/games/")));
+    check(gameFiles.length === 1, `sfida rapida downloads only the chosen game (${gameFiles.length})`);
+    await q.context().close();
+
+    const t = await open();
+    await t.goto(BASE);
+    await t.getByText("PREMI START").click();
+    await t.locator(".menu .btn", { hasText: "ALLENAMENTO" }).click();
+    await t.getByText("LA DECINA").click();
+    check((await t.getByPlaceholder("Nome").count()) === 1, "allenamento asks for one name only");
+    await t.getByText("GIOCA ▶").click();
+    await t.getByText("ALLENAMENTO", { exact: true }).first().waitFor({ timeout: 15000 });
+    await t.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await t.getByText("VIA! ▶").click();
+    await t.locator(".slots").waitFor();
+    check((await t.locator(".hud-player").count()) === 1, "allenamento shows a single player and no opponent");
+    await t.screenshot({ path: "test-results/training.png" });
+    check(errors.length === 0, `no page errors in sfida rapida / allenamento (${errors.join(" | ")})`);
+    await t.context().close();
+  }
 
   // ---------------- room without a host: Screen + two controllers
   {
@@ -199,6 +255,27 @@ try {
     check(true, "the verdict given by the Regia reaches the Screen");
     await screen.context().close();
     await host.context().close();
+  }
+  // ---------------- Sfida Rapida in a room: Screen + two controllers, a buzzer game, 3 rounds each
+  {
+    const { screen, code } = await lobby();
+    const p1 = await join(code, "p1");
+    const p2 = await join(code, "p2");
+    await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
+    await screen.getByRole("button", { name: "SFIDA RAPIDA" }).click();
+    check(await screen.getByRole("button", { name: "SCEGLI IL GIOCO" }).isDisabled(), "the lobby asks for a game before starting a sfida rapida");
+    await screen.locator(".game-pick button", { hasText: "IL MERCATO" }).click();
+    await screen.getByPlaceholder("Nome").first().fill("Anna");
+    await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.getByText("INIZIA LA PARTITA ▶").click();
+    await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await screen.waitForTimeout(500);
+    if (await p1.getByText("VIA! ▶").count()) await p1.getByText("VIA! ▶").click();
+    await screen.getByText(/TRASFERIMENTO 1\/6/).waitFor({ timeout: 15000 });
+    check(true, "sfida rapida in a room: six transfers, three rounds each");
+    await screen.context().close();
+    await p1.context().close();
+    await p2.context().close();
   }
   check(errors.length === 0, `no page errors in rooms (${errors.join(" | ")})`);
 } catch (e) {

@@ -285,29 +285,51 @@ export interface Suggestion {
   score: number;
 }
 
+/** Slips tolerated by the corrector: tighter than for judging an answer, so that it does not suggest look-alikes. */
+export function suggestTolerance(length: number): number {
+  if (length <= 9) return 1;
+  if (length <= 13) return 2;
+  return 3;
+}
+
 export const SPELLER_MIN_COVERAGE = 0.8;
-export const SPELLER_MIN_SIMILARITY = 0.85;
+export const SPELLER_MIN_LENGTH = 4;
 export const SPELLER_MAX = 8;
 
 /**
  * Corrector, not a completer. It is a pure function of the typed text and the
  * global index: it never receives the question, the game, the context or the
- * year filter. A suggestion appears only when the input already covers most of
- * a name (length >= 80%) and is very similar to it (>= 0.85): a whole surname,
- * a whole (rare) first name, or the full name. Never a prefix: "laut" suggests
- * nothing, "lautaro" suggests the people called Lautaro.
+ * year filter, and it never looks at fame. A suggestion appears only when the
+ * input already covers most of a name (length >= 80% of it, at least 4 letters)
+ * and is a typo of it, in one of two ways:
+ *   - spelling: an edit distance (Damerau-Levenshtein) within a
+ *     tolerance that grows with the name's length (1 slip up to 9 letters, 2 up to 13, 3 beyond);
+ *   - sound: the same phonetic key ("sczesni" and "szczesny" sound alike),
+ *     with one more slip allowed on long names.
+ * Short names (5 letters or less) must be typed in full: "ross" never suggests
+ * "Rossi". Names are a whole surname, a whole (rare) first name, or the full
+ * name. Never a prefix: "laut" suggests nothing, "lautaro" suggests the people
+ * called Lautaro. Results are ordered by closeness, then alphabetically.
  */
 export function suggest(text: string, index: MatchIndex): Suggestion[] {
   const q = normalize(text);
-  if (q.length < 3) return [];
+  if (q.length < SPELLER_MIN_LENGTH) return [];
+  const qPhon = phoneticKey(q);
   const maxLen = Math.floor(q.length / SPELLER_MIN_COVERAGE);
   const out = new Map<number, number>();
   for (let len = Math.ceil(q.length * SPELLER_MIN_COVERAGE); len <= maxLen; len++) {
     for (const k of [...(index.byLength.get(len) ?? []), ...(index.givenByLength.get(len) ?? [])]) {
-      const sim = similarity(q, k.key);
-      if (sim < SPELLER_MIN_SIMILARITY) continue;
+      if (k.key.length <= 5 && q.length < k.key.length) continue;
+      const tol = suggestTolerance(k.key.length);
+      const spelling = editDistance(q, k.key, tol);
+      const sound = k.phon.length >= 4 ? editDistance(qPhon, k.phon, k.phon.length >= 7 ? 1 : 0) : Infinity;
+      const soundOk = sound <= (k.phon.length >= 7 ? 1 : 0);
+      if (spelling > tol && !soundOk) continue;
+      // closeness in [0, 1]: the better of the two readings
+      const dist = Math.min(spelling <= tol ? spelling : Infinity, soundOk ? sound : Infinity);
+      const score = 1 - dist / Math.max(q.length, k.key.length);
       const prev = out.get(k.entity) ?? 0;
-      if (sim > prev) out.set(k.entity, sim);
+      if (score > prev) out.set(k.entity, score);
     }
   }
   return [...out.entries()]
