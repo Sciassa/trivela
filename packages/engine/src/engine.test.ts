@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameId } from "@trivela/protocol";
 import { MODULES } from "./games";
-import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, viewFor } from "./match";
+import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, singleGamePlan, viewFor } from "./match";
 import { Rng } from "./rng";
 import { createTournament, recordResult, roundRobin, standings } from "./tournament";
 import type { Intent, MatchConfig, MatchState } from "./types";
@@ -63,7 +63,7 @@ describe("match flow", () => {
   it("hides answers from the screen view", () => {
     const s = start(g5);
     const v = viewFor(s, "screen");
-    expect(v.content).toEqual({});
+    expect(v.content).toEqual([]);
     expect(v.game!.items[v.game!.i].correct).toBe(-1);
     expect(v.game!.items[v.game!.i + 1]).toBeNull();
     expect(viewFor(s, "host").game!.items[0].correct).toBe(1);
@@ -128,7 +128,7 @@ describe("league filter", () => {
     const only = eligibleItems("tiro_secco", p, { judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"] });
     expect(only).toHaveLength(10);
     const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "frame", "anomalia", "decina"] }, p);
-    expect(r.ok && (r.state.content.tiro_secco as { entities: string[] }[]).every((q) => q.entities[0] === "comp:GB1")).toBe(true);
+    expect(r.ok && (r.state.content[0] as { entities: string[] }[]).every((q) => q.entities[0] === "comp:GB1")).toBe(true);
   });
 });
 
@@ -206,19 +206,34 @@ describe("la formazione, l'asta, il frame", () => {
     s = run(s, { type: "ANSWER", payload: { text: P(0).name } }, { type: "FINISH" });
     expect(s.scores[1 - a]).toBe(5);
   });
-  it("frame: one match each, +3 for the right one, the answer stays hidden from the screen", () => {
+  it("frame: one match per question, +3 for the right option, 0 for every wrong one, the answer hidden from the screen", () => {
     let s = start(first("frame"));
     expect(s.game!.items).toHaveLength(2);
-    expect(viewFor(s, "screen").game!.items[s.game!.turn].correct).toBe(-1);
+    expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
     const first0 = s.game!.turn;
     s = run(s, { type: "ANSWER", payload: { choice: 2 } });
-    expect(s.game!.last.points).toBe(3);
+    expect(s.game!.last).toMatchObject({ points: 3, ok: true });
     s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { choice: 0 } });
-    expect(s.game!.last.points).toBe(0);
+    expect(s.game!.last).toMatchObject({ points: 0, ok: false, said: "A-B · 2015/16" });
     expect(s.game!.turn).not.toBe(first0);
     s = run(s, { type: "NEXT" });
     expect(s.phase).toBe("game_over");
     expect(s.scores[first0]).toBe(3);
+  });
+  it("frame and the other four-option games: every wrong option is wrong, and only the right one scores", () => {
+    for (const game of ["frame", "anomalia", "tiro_secco"] as const) {
+      const right = game === "frame" ? 2 : game === "anomalia" ? 3 : 1;
+      for (const choice of [0, 1, 2, 3]) {
+        const s0 = start(first(game));
+        const s1 = run(s0, { type: "ANSWER", payload: { choice } });
+        expect(s1.game!.last!.ok, `${game} option ${choice}`).toBe(choice === right);
+        expect(s1.game!.last!.points, `${game} option ${choice}`).toBe(choice === right ? (game === "tiro_secco" ? 2 : 3) : 0);
+        expect(s1.game!.last!.said, `${game} option ${choice}`).toBe(choice === right ? undefined : s0.game!.items[0].options[choice]);
+      }
+    }
+    // an answer that is not one of the four options is ignored, never judged
+    const s0 = start(first("frame"));
+    for (const choice of [-1, 4, 1.5, Number.NaN]) expect(run(s0, { type: "ANSWER", payload: { choice } }).game!.last).toBeNull();
   });
   it("anomalia: four questions, +3 each, the answer stays hidden from the screen", () => {
     let s = start(first("anomalia"));
@@ -226,6 +241,123 @@ describe("la formazione, l'asta, il frame", () => {
     expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
     for (let k = 0; k < 4; k++) s = run(s, { type: "ANSWER", payload: { choice: 3 } }, { type: "NEXT" });
     expect(s.scores).toEqual([6, 6]);
+  });
+});
+
+describe("wrong answers are kept so the Screen can show them", () => {
+  it("maglia, decina, dischetto, mercato, formazione and asta remember what was typed", () => {
+    let s = start(first("maglia"));
+    s = run(s, { type: "ANSWER", payload: { text: "98" } });
+    expect(s.game!.last).toMatchObject({ ok: false, said: "98" });
+
+    s = start(first("decina"));
+    s = run(s, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+    expect(s.game!.last).toMatchObject({ ok: false, said: "Mario Fantasma" });
+
+    s = start(first("dischetto"));
+    s = run(s, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+    expect(s.game!.last).toMatchObject({ ok: false, said: "Mario Fantasma" });
+
+    s = start(first("mercato"));
+    s = timeout(s);
+    s = timeout(s);
+    s = run(s, { type: "BUZZ", player: 0 }, { type: "ANSWER", player: 0, payload: { text: "Mario Fantasma" } });
+    expect(s.game!.last).toMatchObject({ ok: false, said: "Mario Fantasma" });
+
+    s = start(first("formazione"));
+    s = run(s, { type: "CHOOSE", value: 0 }, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+    expect(s.game!.wrong).toMatchObject({ text: "Mario Fantasma" });
+    s = run(s, { type: "ANSWER", payload: { text: s.game!.item.teams[0].players.find((p: { hidden: boolean }) => p.hidden).name } });
+    expect(s.game!.wrong).toBeNull();
+
+    s = start(first("asta"));
+    const a = s.game!.turn;
+    s = run(s, { type: "BID", player: a, amount: 3 }, { type: "PASS", player: 1 - a } as Intent, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+    expect(s.game!.wrong).toMatchObject({ text: "Mario Fantasma" });
+  });
+  it("a timeout or a verdict from the host has nothing to show", () => {
+    const s = timeout(start(g5));
+    expect(s.game!.last).toMatchObject({ ok: false });
+    expect(s.game!.last!.said).toBeUndefined();
+  });
+});
+
+describe("single-game formats", () => {
+  const quick = (game: GameId, over: Partial<MatchConfig> = {}) => {
+    const r = createMatch({ judging: "auto", players: ["Anna", "Bruno"], yearFrom: null, seed: 5, forcedGames: [game], rounds: 3, ...over }, packs);
+    if (!r.ok) throw new Error(r.reason);
+    return r.state;
+  };
+  it("sfida rapida: three rounds each, whatever the game", () => {
+    expect(singleGamePlan("tiro_secco", { rounds: 3 })).toEqual({ order: ["tiro_secco"], need: 6 });
+    expect(singleGamePlan("frame", { rounds: 3 })).toEqual({ order: ["frame"], need: 6 });
+    expect(singleGamePlan("mercato", { rounds: 3 })).toEqual({ order: ["mercato"], need: 6 });
+    expect(singleGamePlan("asta", { rounds: 3 })).toEqual({ order: ["asta"], need: 6 });
+    expect(singleGamePlan("decina", { rounds: 3 })).toEqual({ order: ["decina", "decina", "decina"], need: 1 }); // a list per round
+    expect(singleGamePlan("formazione", { rounds: 3 }).order).toHaveLength(3);
+    const s = quick("tiro_secco");
+    expect(s.order).toEqual(["tiro_secco"]);
+    expect(s.content[0]).toHaveLength(6);
+    let st = run(reduce(s, { type: "START" }, ctx), { type: "BEGIN_GAME" });
+    for (let k = 0; k < 6; k++) st = run(st, { type: "ANSWER", payload: { choice: 1 } }, { type: "NEXT" });
+    expect(st.scores).toEqual([6, 6]); // 3 questions each, +2 per right answer
+    expect(st.phase).toBe("game_over");
+  });
+  it("sfida rapida on a list game plays three different lists in a row", () => {
+    const s = quick("decina");
+    expect(s.order).toEqual(["decina", "decina", "decina"]);
+    expect(new Set(s.content.map((c) => (c[0] as { id: string }).id)).size).toBe(3); // never the same list twice
+  });
+  it("sfida rapida respects the year and league filters, and says so when a game has too few questions", () => {
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: 2999, seed: 1, forcedGames: ["tiro_secco"], rounds: 3 }, packs);
+    expect(r).toEqual({ ok: false, reason: "Contenuti insufficienti per tiro_secco." });
+    expect(createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, rounds: 3 }, packs)).toMatchObject({ ok: false });
+  });
+  it("allenamento: one player, every turn is his, no opponent anywhere", () => {
+    const solo = (game: GameId) => quick(game, { solo: true, rounds: undefined, players: ["Anna", "—"] });
+    // quiz: all questions go to player 0
+    let s = reduce(reduce(solo("tiro_secco"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    expect(s.starters[0]).toBe(0);
+    const turns: number[] = [];
+    for (let k = 0; k < 6; k++) {
+      turns.push(s.game!.turn);
+      s = run(s, { type: "ANSWER", payload: { choice: 1 } }, { type: "NEXT" });
+    }
+    expect(turns).toEqual([0, 0, 0, 0, 0, 0]);
+    expect(s.scores).toEqual([12, 0]);
+    expect(s.phase).toBe("game_over");
+    // buzzer: the opponent is out from the start, a wrong answer ends the profile
+    s = reduce(reduce(solo("mercato"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    expect(s.game!.out).toEqual([false, true]);
+    s = timeout(s);
+    s = timeout(s);
+    s = run(s, { type: "BUZZ", player: 0 }, { type: "ANSWER", player: 0, payload: { text: "Mario Fantasma" } });
+    expect(s.game!.stage).toBe("reveal");
+    // list: alone until the second mistake
+    s = reduce(reduce(solo("decina"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    for (let k = 0; k < 2; k++) {
+      s = run(s, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+      if (s.game!.stage === "feedback") s = timeout(s);
+    }
+    expect(s.game!.stage).toBe("final");
+    // penalties: five kicks for the one player
+    s = reduce(reduce(solo("dischetto"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    for (let k = 0; k < 5; k++) {
+      s = run(s, { type: "ANSWER", payload: { text: "Mario Fantasma" } });
+      s = timeout(s);
+    }
+    expect(s.game!.stage).toBe("final");
+    expect(s.game!.shots[0]).toBe(5);
+    // auction: bidding alone goes straight to proving; failing gives nothing to anybody
+    s = reduce(reduce(solo("asta"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    s = run(s, { type: "BID", player: 0, amount: 4 });
+    expect(s.game!.stage).toBe("proving");
+    s = run(s, { type: "FINISH" });
+    expect(s.scores).toEqual([0, 0]);
+    // team line-up: a single round
+    s = reduce(reduce(solo("formazione"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
+    s = run(s, { type: "CHOOSE", value: 0 }, { type: "FINISH" }, { type: "NEXT" });
+    expect(s.game!.stage).toBe("done");
   });
 });
 

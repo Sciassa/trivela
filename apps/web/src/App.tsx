@@ -4,19 +4,21 @@ import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { loadCore } from "./runtime/packs";
 import { isRoomCode } from "./runtime/roomCore";
-import { Page, setSpeller, spellerOn, Stage } from "./components/ui";
+import { Fit, Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
 import { Setup } from "./screens/Setup";
 import { LocalMatch } from "./screens/LocalMatch";
 import { Tournament } from "./screens/Tournament";
+import { GamePicker, type Format } from "./screens/GamePicker";
 import { RoomScreen, RoomJoin, HostRoom, PadRoom } from "./screens/Rooms";
 import { GAME_NAMES } from "./rules";
 
 type Route =
   | { name: "start" }
   | { name: "menu" }
-  | { name: "setup" }
-  | { name: "local"; state: MatchState; tableMode: boolean; ctx: EngineCtx }
+  | { name: "setup"; format?: Format }
+  | { name: "pick"; purpose: Format["kind"] }
+  | { name: "local"; state: MatchState; tableMode: boolean; ctx: EngineCtx; format?: Format }
   | { name: "tournament" }
   | { name: "room-screen" }
   | { name: "join" }
@@ -89,55 +91,82 @@ export function App() {
       return (
         <Stage>
           <div className="home">
-            <div className="title-logo" style={{ fontSize: 76, animation: "none" }}>
-              TRIVELA
-            </div>
-            <div className="menu">
-              <button className="btn" onClick={() => go({ name: "setup" })}>
-                <Sprite name="screen" size={84} />
-                <span>
-                  UN SOLO SCHERMO
-                  <small>Tutti e due sullo stesso dispositivo</small>
-                </span>
-              </button>
-              <button className="btn p1" onClick={() => go({ name: "room-screen" })}>
-                <Sprite name="phone" size={84} />
-                <span>
-                  SCHERMO + TELEFONI
-                  <small>Con conduttore o con 2 pulsantiere</small>
-                </span>
-              </button>
-              <button className="btn p2" onClick={() => go({ name: "tournament" })}>
-                <Sprite name="trophy" size={84} />
-                <span>
-                  TORNEO TRA AMICI
-                  <small>Da 4 a 12: classifica, semifinali, finale</small>
-                </span>
-              </button>
-              <button className="btn ghost" onClick={() => go({ name: "join" })}>
-                <Sprite name="maglia" size={84} className="c-accent" />
-                <span>
-                  ENTRA CON CODICE
-                  <small>Questo telefono fa da Regia o pulsantiera</small>
-                </span>
-              </button>
-            </div>
-            <div className="menu-foot">
-              <button className="btn ghost small" onClick={() => go({ name: "audio" })}>
-                ♪ OPZIONI
-              </button>
-              <button className="btn ghost small" onClick={() => go({ name: "credits" })}>
-                FONTI DEI DATI
-              </button>
-              <span className="stat">{total.toLocaleString("it-IT")} domande · 10 giochi</span>
-            </div>
+            <Fit center>
+              <div className="home-menu">
+                <div className="title-logo" style={{ fontSize: 76, animation: "none" }}>
+                  TRIVELA
+                </div>
+                <div className="menu">
+                  <button className="btn" onClick={() => go({ name: "setup" })}>
+                    <Sprite name="screen" size={72} />
+                    <span>
+                      PARTITA COMPLETA
+                      <small>5 giochi sorteggiati · uno schermo</small>
+                    </span>
+                  </button>
+                  <button className="btn p1" onClick={() => go({ name: "room-screen" })}>
+                    <Sprite name="phone" size={72} />
+                    <span>
+                      SCHERMO + TELEFONI
+                      <small>Con conduttore o 2 pulsantiere</small>
+                    </span>
+                  </button>
+                  <button className="btn ok" onClick={() => go({ name: "pick", purpose: "quick" })}>
+                    <Sprite name="frame" size={72} />
+                    <span>
+                      SFIDA RAPIDA
+                      <small>Un solo gioco a scelta · 3 round a testa</small>
+                    </span>
+                  </button>
+                  <button className="btn ghost" onClick={() => go({ name: "pick", purpose: "training" })}>
+                    <Sprite name="face" size={72} className="c-accent" />
+                    <span>
+                      ALLENAMENTO
+                      <small>Da solo, un gioco, nessun avversario</small>
+                    </span>
+                  </button>
+                  <button className="btn p2" onClick={() => go({ name: "tournament" })}>
+                    <Sprite name="trophy" size={72} />
+                    <span>
+                      TORNEO TRA AMICI
+                      <small>Da 4 a 12: classifica e finale</small>
+                    </span>
+                  </button>
+                  <button className="btn ghost" onClick={() => go({ name: "join" })}>
+                    <Sprite name="maglia" size={72} className="c-accent" />
+                    <span>
+                      ENTRA CON CODICE
+                      <small>Questo telefono è Regia o pulsantiera</small>
+                    </span>
+                  </button>
+                </div>
+                <div className="menu-foot">
+                  <button className="btn ghost small" onClick={() => go({ name: "audio" })}>
+                    ♪ OPZIONI
+                  </button>
+                  <button className="btn ghost small" onClick={() => go({ name: "credits" })}>
+                    FONTI DEI DATI
+                  </button>
+                  <span className="stat">{total.toLocaleString("it-IT")} domande · 10 giochi</span>
+                </div>
+              </div>
+            </Fit>
           </div>
         </Stage>
       );
     case "setup":
-      return <Setup onBack={menu} onStart={(r) => setRoute({ name: "local", state: r.state, tableMode: r.tableMode, ctx: r.ctx })} />;
+      return (
+        <Setup
+          key={route.format ? `${route.format.kind}-${route.format.game}` : "classic"}
+          format={route.format}
+          onBack={() => (route.format ? go({ name: "pick", purpose: route.format.kind }) : menu())}
+          onStart={(r) => setRoute({ name: "local", state: r.state, tableMode: r.tableMode, ctx: r.ctx, format: route.format })}
+        />
+      );
+    case "pick":
+      return <GamePicker purpose={route.purpose} onBack={menu} onPick={(game) => setRoute({ name: "setup", format: { kind: route.purpose, game } })} />;
     case "local":
-      return <LocalMatch initial={route.state} ctx={route.ctx} tableMode={route.tableMode} onExit={menu} />;
+      return <LocalMatch initial={route.state} ctx={route.ctx} tableMode={route.tableMode} onExit={menu} onAgain={() => setRoute({ name: "setup", format: route.format })} />;
     case "tournament":
       return <Tournament onBack={menu} />;
     case "room-screen":

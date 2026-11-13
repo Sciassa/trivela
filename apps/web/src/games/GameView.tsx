@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { AnomaliaItem, DischettoItem, FormazioneItem, FrameEvent, FrameItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
 import type { EngineCtx, GameStateAny, Intent, MatchState } from "@trivela/engine";
-import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay } from "../components/ui";
+import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
 
 export interface GameProps {
@@ -13,6 +13,9 @@ export interface GameProps {
   start: number;
   tableMode?: boolean;
 }
+
+/** Names to print next to results: nobody's name in Allenamento, where there is no opponent to tell apart. */
+const namesOf = (state: MatchState): [string, string] => (state.config.solo ? ["", ""] : state.config.players);
 
 const pc = (p: PlayerIdx | null | undefined) => (p === 0 ? "c-p1" : p === 1 ? "c-p2" : "");
 
@@ -37,7 +40,7 @@ function RevealFooter({ g, state, dispatch, sources, solution }: { g: GameStateA
   return (
     <div className="reveal">
       <div className="reveal-row">
-        <Result last={g.last} players={state.config.players} />
+        <Result last={g.last} players={namesOf(state)} />
         {solution && <span className="solution">{solution}</span>}
         <span className="grow" />
         <NextButton onClick={() => dispatch({ type: "NEXT" })} />
@@ -155,8 +158,9 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
       </button>
     );
   };
+  const solo = state.config.solo === true;
   return (
-    <div className={`buzz-layout ${tableMode ? "table-mode" : ""}`}>
+    <div className={`buzz-layout ${tableMode ? "table-mode" : ""} ${solo ? "solo" : ""}`}>
       {side(0)}
       <Fit>
         <div className="view">
@@ -184,6 +188,9 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
               </div>
             ))}
           </div>
+          {g.stage === "clues" && g.last && !g.last.ok && (
+            <WrongSaid text={g.last.said} who={namesOf(state)[g.last.player as PlayerIdx]} />
+          )}
           {g.stage === "answering" && (
             <div className="col" style={{ gap: 10 }}>
               <TurnBar state={state} p={g.buzzer} text="RISPONDE" />
@@ -198,7 +205,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           )}
         </div>
       </Fit>
-      {side(1)}
+      {solo ? <div /> : side(1)}
     </div>
   );
 }
@@ -230,7 +237,7 @@ function Decina({ state, g, dispatch, ctx, start }: GameProps) {
         {item.description && <div className="sub">{item.description}</div>}
       </div>
       <TurnBar state={state} p={final ? null : g.turn} info={`${said.length}/10`}>
-        {([0, 1] as const).map((p) => (
+        {([0, 1] as const).filter((p) => !state.config.solo || p === 0).map((p) => (
           <span key={p} className={`lives ${pc(p)}`} title="errori rimasti">
             {g.out[p] ? "FUORI" : "♥".repeat(2 - g.errors[p]) + "♡".repeat(g.errors[p])}
           </span>
@@ -245,7 +252,7 @@ function Decina({ state, g, dispatch, ctx, start }: GameProps) {
         ))}
       </div>
       {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={`${g.turn}-${said.length}-${g.errors.join()}`} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
-      {g.stage === "feedback" && <Result last={g.last} players={state.config.players} />}
+      {g.stage === "feedback" && <Result last={g.last} players={namesOf(state)} />}
       {final && (
         <>
           <Members item={item} said={said} />
@@ -272,7 +279,7 @@ function Asta({ state, g, dispatch, ctx, start }: GameProps) {
       </div>
       {g.stage === "bidding" && (
         <>
-          <TurnBar state={state} p={g.turn} text="RILANCIA" info={`CATEGORIA ${g.k + 1}/2`} />
+          <TurnBar state={state} p={g.turn} text="RILANCIA" info={`CATEGORIA ${g.k + 1}/${g.items.length}`} />
           <div className="row">
             <span className="px">PUNTATA ATTUALE</span>
             <span className={`led big ${current ? pc(g.bid.player) : ""}`}>{current || "–"}</span>
@@ -292,9 +299,11 @@ function Asta({ state, g, dispatch, ctx, start }: GameProps) {
               <button className="btn" onClick={() => dispatch({ type: "BID", player: g.turn, amount })}>
                 NE DICO {amount}
               </button>
-              <button className="btn ko" onClick={() => dispatch({ type: "PASS", player: g.turn })}>
-                PASSO
-              </button>
+              {!state.config.solo && (
+                <button className="btn ko" onClick={() => dispatch({ type: "PASS", player: g.turn })}>
+                  PASSO
+                </button>
+              )}
             </div>
           )}
         </>
@@ -316,6 +325,7 @@ function Asta({ state, g, dispatch, ctx, start }: GameProps) {
               </div>
             ))}
           </div>
+          <WrongSaid text={g.wrong?.text} who={namesOf(state)[g.wrong?.player as PlayerIdx]} />
           {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />}
         </>
       )}
@@ -362,7 +372,7 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
         </div>
       </div>
       <TurnBar state={state} p={final ? null : g.turn} text="TIRA">
-        {([0, 1] as const).map((p) => (
+        {([0, 1] as const).filter((p) => !state.config.solo || p === 0).map((p) => (
           <span key={p} className={`kicks ${pc(p)}`}>
             {state.config.players[p]}
             {Array.from({ length: 5 }, (_, k) => (
@@ -383,7 +393,12 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
       </div>
       {spare.length > 0 && <div className="sub">A pari merito, valevano anche: {spare.map((r) => r.name).join(", ")}.</div>}
       {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={g.shots.join()} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} submitLabel="TIRA!" />)}
-      {g.stage === "feedback" && <div className={`shout ${g.last?.ok ? "c-ok" : "c-ko"}`}>{g.last?.ok ? "GOOOL!" : "PARATA!"}</div>}
+      {g.stage === "feedback" && (
+        <>
+          <div className={`shout ${g.last?.ok ? "c-ok" : "c-ko"}`}>{g.last?.ok ? "GOOOL!" : "PARATA!"}</div>
+          {!g.last?.ok && <WrongSaid text={g.last?.said} who={namesOf(state)[g.last?.player as PlayerIdx]} />}
+        </>
+      )}
       {final && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
     </>
   );
@@ -471,6 +486,7 @@ function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
             <PhoneHint />
           ) : (
             <>
+              <WrongSaid text={g.wrong?.text} who={namesOf(state)[g.wrong?.player as PlayerIdx]} />
               <AnswerBox index={ctx.index} placeholder="Un titolare oscurato" onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />
               <button className="btn ghost small" onClick={() => dispatch({ type: "FINISH" })}>
                 HO FINITO
@@ -508,24 +524,24 @@ function Timeline({ item }: { item: FrameItem }) {
 
 function Frame({ state, g, dispatch, start }: GameProps) {
   const { pad } = usePlay();
-  const item = g.items[g.turn] as FrameItem;
+  const item = g.items[g.i] as FrameItem;
   const reveal = g.stage === "reveal";
   return (
     <div className="duo">
       <div className="side" style={pad ? undefined : { flex: "0 0 40%" }}>
-        <div className="q-card" key={g.turn}>
+        <div className="q-card" key={g.i}>
           <div className="q small">{item.heading}</div>
           <div className="sub">{item.mode === "match" ? "Cronologia di gol e cartellini" : "Gol e cartellini (solo i minuti)"}</div>
         </div>
         <Timeline item={item} />
       </div>
       <div className="side">
-        <TurnBar state={state} p={g.turn} />
+        <TurnBar state={state} p={g.turn} info={`PARTITA ${g.i + 1}/${g.items.length}`} />
         <StateTimer state={state} start={start} />
         <div className="q-card">
           <div className="q small">{item.question}</div>
         </div>
-        <FourOptions key={`o${g.turn}`} item={item} g={g} dispatch={dispatch} />
+        <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
         {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
       </div>
     </div>

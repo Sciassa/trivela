@@ -36,16 +36,23 @@ export interface AudioPrefs {
 function loadPrefs(): AudioPrefs {
   try {
     const raw = localStorage.getItem("trivela.audio");
-    if (raw) return { music: 0.5, sfx: 0.8, muted: false, ...JSON.parse(raw) };
+    if (raw) return { music: DEFAULT_MUSIC, sfx: 0.8, muted: false, ...JSON.parse(raw) };
   } catch {
     /* storage unavailable */
   }
-  return { music: 0.5, sfx: 0.8, muted: false };
+  return { music: DEFAULT_MUSIC, sfx: 0.8, muted: false };
 }
+
+/** The background music sits well under the effects by default. */
+const DEFAULT_MUSIC = 0.3;
+/** Mix level of the music bus at music = 1 (it was 0.35 with the old, brighter loop). */
+const MUSIC_MIX = 0.24;
 
 export class AudioEngine {
   private ctx: AudioContext | null = null;
   private musicGain: GainNode | null = null;
+  /** Soft low-pass in front of the music: takes the edge off every note. */
+  private musicBus: BiquadFilterNode | null = null;
   private sfxGain: GainNode | null = null;
   private noiseBuf: AudioBuffer | null = null;
   private timer: number | null = null;
@@ -67,6 +74,11 @@ export class AudioEngine {
       this.ctx = new AC();
       this.musicGain = this.ctx.createGain();
       this.sfxGain = this.ctx.createGain();
+      this.musicBus = this.ctx.createBiquadFilter();
+      this.musicBus.type = "lowpass";
+      this.musicBus.frequency.value = 1500;
+      this.musicBus.Q.value = 0.4;
+      this.musicBus.connect(this.musicGain);
       this.musicGain.connect(this.ctx.destination);
       this.sfxGain.connect(this.ctx.destination);
       const len = this.ctx.sampleRate;
@@ -101,7 +113,7 @@ export class AudioEngine {
 
   private applyPrefs() {
     if (!this.ctx || !this.musicGain || !this.sfxGain) return;
-    const m = this.prefs.muted ? 0 : this.prefs.music * 0.35;
+    const m = this.musicLevel();
     const s = this.prefs.muted ? 0 : this.prefs.sfx * 0.6;
     this.musicGain.gain.setTargetAtTime(m, this.ctx.currentTime, 0.05);
     this.sfxGain.gain.setTargetAtTime(s, this.ctx.currentTime, 0.02);
@@ -253,18 +265,34 @@ export class AudioEngine {
     }
   }
 
+  private musicLevel(): number {
+    return this.prefs.muted ? 0 : this.prefs.music * MUSIC_MIX;
+  }
+
   private duck() {
     if (!this.ctx || !this.musicGain) return;
     const now = this.ctx.currentTime;
-    const base = this.prefs.muted ? 0 : this.prefs.music * 0.35;
+    const base = this.musicLevel();
     this.musicGain.gain.cancelScheduledValues(now);
     this.musicGain.gain.setTargetAtTime(base * 0.35, now, 0.02);
     this.musicGain.gain.setTargetAtTime(base, now + 0.6, 0.3);
   }
 
-  /** Original 16-step loop in A minor; layers are added with intensity. */
-  private static LEAD = [69, -1, 72, 74, 76, -1, 74, 72, 69, -1, 67, 69, 72, -1, -1, -1, 69, -1, 72, 74, 76, 79, 77, 76, 74, -1, 72, 71, 72, -1, -1, -1];
-  private static BASS = [45, 45, 52, 45, 41, 41, 48, 41, 43, 43, 50, 43, 40, 40, 47, 40];
+  /**
+   * Ambient loop, deliberately slow and soft: eight bars of Am9 - Fmaj7 - Cmaj7 - G6 (two bars each), a step being an eighth note.
+   * Only sine and triangle waves, long attacks and releases, no noise: a background carpet, not a tune.
+   * Intensity only nudges the tempo and adds a quiet pulse and a higher echo.
+   */
+  private static CHORDS = [
+    { bass: 45, pad: [60, 64, 67, 71], arp: [57, 60, 64, 67, 71] },
+    { bass: 41, pad: [57, 60, 64, 69], arp: [53, 57, 60, 64, 69] },
+    { bass: 48, pad: [55, 59, 64, 67], arp: [52, 55, 59, 64, 67] },
+    { bass: 43, pad: [55, 59, 62, 64], arp: [50, 55, 59, 62, 64] },
+  ];
+  private static ARP = [0, 2, 1, 3, 2, 4, 3, 1];
+  /** Sparse bell-like notes (A minor pentatonic) over the 64 steps of the loop. */
+  private static BELLS: Record<number, number> = { 4: 76, 10: 79, 20: 74, 26: 72, 36: 76, 42: 74, 52: 72, 58: 69, 60: 72 };
+  private static BPM = [66, 72, 78] as const;
 
   setIntensity(level: Intensity): void {
     this.intensity = level;
@@ -277,13 +305,12 @@ export class AudioEngine {
     this.nextTime = this.ctx.currentTime + 0.1;
     const tick = () => {
       if (!this.ctx || !this.playing) return;
-      while (this.nextTime < this.ctx.currentTime + 0.2) {
+      while (this.nextTime < this.ctx.currentTime + 0.3) {
         this.scheduleStep(this.step, this.nextTime);
-        const bpm = this.intensity === 2 ? 150 : this.intensity === 1 ? 132 : 112;
-        this.nextTime += 60 / bpm / 2;
+        this.nextTime += 60 / AudioEngine.BPM[this.intensity] / 2;
         this.step++;
       }
-      this.timer = window.setTimeout(tick, 50);
+      this.timer = window.setTimeout(tick, 80);
     };
     tick();
   }
@@ -293,23 +320,42 @@ export class AudioEngine {
     if (this.timer) window.clearTimeout(this.timer);
   }
 
+  /** A soft note: slow attack, long release, no hard edges. */
+  private soft(freq: number, start: number, dur: number, type: "sine" | "triangle", vol: number, attack: number, release: number) {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(0, start);
+    g.gain.linearRampToValueAtTime(vol, start + attack);
+    g.gain.setValueAtTime(vol, start + Math.max(attack, dur - release));
+    g.gain.linearRampToValueAtTime(0, start + dur);
+    o.connect(g).connect(this.musicBus!);
+    o.start(start);
+    o.stop(start + dur + 0.05);
+  }
+
   private scheduleStep(step: number, t: number) {
-    const o = this.musicGain!;
-    const s = step % 32;
-    const lead = AudioEngine.LEAD[s]!;
-    if (lead > 0) this.tone(NOTE(lead), t, 0.16, "square", 0.12, o);
+    const s = step % 64;
+    const beat = 60 / AudioEngine.BPM[this.intensity] / 2; // one step
+    const chord = AudioEngine.CHORDS[Math.floor(s / 16)]!;
+    const inChord = s % 16;
+    if (inChord === 0) {
+      // pad: the whole chord, swelling slowly over two bars
+      chord.pad.forEach((n, k) => this.soft(NOTE(n), t + k * 0.04, beat * 16, k % 2 ? "sine" : "triangle", 0.055, beat * 5, beat * 6));
+      this.soft(NOTE(chord.bass), t, beat * 7, "sine", 0.2, 0.08, beat * 3);
+    }
+    if (inChord === 8) this.soft(NOTE(chord.bass), t, beat * 7, "sine", 0.16, 0.08, beat * 3);
+    // a gentle arpeggio, one note every two steps
     if (s % 2 === 0) {
-      const b = AudioEngine.BASS[(s / 2) % 16]!;
-      this.tone(NOTE(b), t, 0.22, "triangle", 0.3, o);
+      const idx = AudioEngine.ARP[(s / 2) % AudioEngine.ARP.length]!;
+      this.soft(NOTE(chord.arp[idx]!), t, beat * 3.2, "triangle", 0.045, 0.02, beat * 2.4);
     }
-    if (this.intensity >= 1) {
-      if (s % 4 === 0) this.tone(NOTE(36), t, 0.08, "sine", 0.5, o, { slideTo: NOTE(24) });
-      if (s % 4 === 2) this.noise(t, 0.06, 0.15, o, 6000, "highpass");
-    }
-    if (this.intensity >= 2) {
-      this.noise(t, 0.03, 0.08, o, 9000, "highpass");
-      if (s % 8 === 4) this.tone(NOTE(lead > 0 ? lead + 12 : 81), t, 0.08, "square", 0.06, o);
-    }
+    const bell = AudioEngine.BELLS[s];
+    if (bell) this.soft(NOTE(bell), t, beat * 6, "sine", 0.07, 0.01, beat * 5.5);
+    if (this.intensity >= 1 && s % 8 === 0) this.soft(NOTE(chord.bass - 12), t, beat * 2.5, "sine", 0.16, 0.02, beat * 2); // quiet pulse
+    if (this.intensity >= 2 && s % 4 === 2) this.soft(NOTE(chord.arp[AudioEngine.ARP[(s / 2) % 8]!]! + 12), t, beat * 2, "sine", 0.03, 0.02, beat * 1.6);
   }
 }
 

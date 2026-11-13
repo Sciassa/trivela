@@ -9,6 +9,8 @@ Si gioca aprendo il sito, senza installare né avviare nulla:
 - **Un solo schermo**: tablet, PC o telefono in orizzontale; ci si passa il dispositivo.
 - **Schermo + 2 telefoni** (senza conduttore): ogni giocatore usa il proprio telefono come pulsantiera e tastiera.
 - **Schermo + 1 telefono** (con conduttore): il conduttore vede soluzioni e copione sul telefono e convalida le risposte date a voce.
+- **Sfida Rapida**: due giocatori, un solo gioco a scelta, 3 round a testa (anche con i telefoni).
+- **Allenamento**: da solo, un gioco a scelta, nessun avversario.
 - **Torneo** da 4 a 12 giocatori con classifica, semifinali e finale.
 
 Per le modalità con i telefoni: sullo schermo principale scegli *Schermo + telefoni*, poi inquadra il QR con ogni telefono (oppure apri lo stesso sito sul telefono, tocca *Entra con codice* e scrivi il codice di 5 lettere). Non serve la stessa Wi-Fi: basta internet su ogni dispositivo. Lo schermo principale può essere anche un telefono in orizzontale.

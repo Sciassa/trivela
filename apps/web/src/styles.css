@@ -370,8 +370,9 @@ a { color: var(--p1); }
 @keyframes ballrun { from { transform: translateX(-120px); } to { transform: translateX(2400px); } }
 @keyframes spin { to { transform: rotate(360deg); } }
 .start-cta { font-family: var(--pixel); font-size: 34px; color: var(--accent); text-shadow: 4px 4px 0 #000; margin-top: 30px; }
-.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: min(1320px, 94%); }
-.menu .btn { display: flex; align-items: center; gap: 22px; text-align: left; min-height: 132px; font-size: 22px; }
+.home-menu { display: flex; flex-direction: column; align-items: center; gap: 22px; text-align: center; padding: 10px 20px; }
+.menu { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; width: min(1320px, 94%); }
+.menu .btn { display: flex; align-items: center; gap: 22px; text-align: left; min-height: 116px; font-size: 22px; }
 .menu .btn small { display: block; font-family: var(--term); font-size: 26px; margin-top: 8px; opacity: .8; letter-spacing: 0; }
 .menu .btn:nth-child(1) { animation: rise .4s steps(5) both; }
 .menu .btn:nth-child(2) { animation: rise .4s steps(5) .08s both; }
@@ -505,3 +506,24 @@ table.table tr.top td { color: var(--accent); }
 .card.red { background: var(--ko); }
 .card.second_yellow { background: linear-gradient(135deg, var(--accent) 50%, var(--ko) 50%); }
 .stage.short .ev { min-height: 48px; font-size: 28px; }
+
+/* a wrong answer, in red, for the whole room to read */
+.said-wrong { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; color: var(--ko); font-size: 40px; line-height: 1.05; animation: pop .35s steps(5), shake .4s steps(8); }
+.said-wrong .said-label { font-family: var(--pixel); font-size: 17px; }
+.said-wrong b { font-weight: normal; text-shadow: 3px 3px 0 #000; word-break: break-word; }
+.stage.short .said-wrong { font-size: 32px; }
+.page .said-wrong { font-size: 26px; }
+.pad-canvas .said-wrong { font-size: 40px; }
+
+/* Allenamento: a single player in the HUD */
+.hud.solo { grid-template-columns: 1fr auto 1fr; }
+.buzz-layout.solo { grid-template-columns: minmax(250px, 17%) 1fr minmax(0, 17%); }
+.buzz-layout.solo > :last-child { visibility: hidden; }
+
+/* game picker (Sfida Rapida / Allenamento) */
+.game-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 700px) { .game-pick { grid-template-columns: 1fr; } }
+.game-pick button { display: flex; align-items: center; gap: 14px; text-align: left; padding: 12px; background: var(--panel); border: 3px solid var(--game); color: var(--ink); font-family: var(--term); font-size: 22px; line-height: 1.05; min-height: 84px; }
+.game-pick button b { display: block; font-family: var(--pixel); font-size: 13px; font-weight: normal; color: var(--game); margin-bottom: 8px; line-height: 1.4; }
+.game-pick button:active { background: var(--panel2); }
+.format-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }

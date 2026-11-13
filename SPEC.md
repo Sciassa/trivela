@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5: 10 giochi, niente argomento, round brevi, stanze senza server
 
+> **v5.2** (novembre 2026): nuove modalità **Sfida Rapida** e **Allenamento** (§3.5); il correttore tollera refusi e suoni simili (§10.3); in tutti i giochi una risposta sbagliata compare **in rosso** sullo Schermo (§3.6); musica **ambient** morbida (§13); *Il Frame* a turni alternati (3 partite a testa nella Sfida Rapida).
+>
 > **v5.1** (novembre 2026): *Prima Pagina* sostituita da *L'Anomalia Statistica* (§4.2); *Il Frame* rifatto sulla cronologia di partite iconiche, 1 partita a testa (§4.8); *La Maglia* senza numeri banali e con priorità alle anomalie (§4.10); controlli del tempo per la Regia (§12.1); correttore che riconosce il nome di battesimo raro (§10.3).
 
 Decisione del committente (novembre 2026). Questa sezione prevale su tutte le precedenti.
@@ -321,6 +323,18 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 - Vale per tutti i giochi, **liste e classifiche comprese** (una Top 10 della Ligue 1 esce solo con la Ligue 1 attiva), a differenza del filtro anno.
 - Se i giochi ancora ammissibili sono meno di 5, la partita non parte e lo dice. Con un solo campionato attivo tutti e 10 i giochi hanno abbastanza domande.
 - **Serie B e altri campionati**: il dataset che usiamo non ha la Serie B. Gli altri campionati di prima fascia presenti (Eredivisie, Liga Portugal, Süper Lig…) non sono ancora generati: aggiungerli è una decisione futura.
+
+### 3.5 Sfida Rapida e Allenamento
+
+Due formati su **un solo gioco scelto** dall'elenco dei 10, accanto alla partita completa e al torneo.
+
+- **Sfida Rapida (1 contro 1)**: stesse regole e stessi dispositivi della partita classica (schermo singolo, Schermo + pulsantiere, con Regia, filtri anno e campionati). Il gioco scelto si gioca per **3 round a testa**: 6 domande per Tiro Secco, Anomalia, Maglia e Frame (a turni alternati), 6 profili per Mercato e Giramondo, 6 categorie per l'Asta; per **Decina, Dischetto e Formazione** (un solo elenco per volta) 3 giri consecutivi, ognuno con un elenco diverso. Chi è in svantaggio inizia ogni giro. Nella sala d'attesa si sceglie il formato e il gioco. Se i filtri lasciano troppe poche domande, la partita non parte e dice cosa allargare.
+- **Allenamento (1 giocatore)**: un solo schermo, un solo giocatore, **nessun turno e nessun avversario**. 6 domande (4 profili per Mercato e Giramondo, 3 categorie per l'Asta; un elenco per Decina, Dischetto e Formazione). Differenze: nel Mercato e Giramondo non c'è nessuno da battere sul pulsante e un errore chiude il profilo; nella Decina si hanno 2 errori; nel Dischetto 5 tiri; nell'Asta si dichiara la puntata e basta (niente rilanci), un fallimento non regala punti a nessuno; la Formazione ha una sola squadra. Non c'è vincitore: a fine sessione compaiono i punti e «ANCORA».
+- Nel motore: `MatchConfig.rounds` (Sfida Rapida) e `MatchConfig.solo` (Allenamento) con `forcedGames` di un solo gioco; `singleGamePlan` decide i giri e le istanze; il contenuto è per slot, non per gioco.
+
+### 3.6 Risposta sbagliata in rosso
+
+In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **rosso** cosa si è risposto («Anna ha risposto: Galatasaray»; in Allenamento «Hai risposto: …»), perché lo vedano tutti. Vale per le opzioni (Tiro Secco, Anomalia, Frame), i numeri della Maglia, i nomi di Mercato, Giramondo, Decina, Dischetto, Formazione e Asta. Non c'è nulla da mostrare per un tempo scaduto o per un verdetto dato a voce dal conduttore. L'etichetta **ESATTO!** compare solo per una risposta del tutto giusta: la Formazione parziale mostra «3/5 TROVATI».
 
 ---
 
@@ -619,9 +633,10 @@ NFKD + rimozione diacritici; mappe speciali (ø→o, ł→l, ß→ss, đ→d, æ
 
 ### 10.3 Aiuto ortografico "a zero informazione"
 
-- **Correttore, non completatore**: nessun suggerimento a partire dalle prime lettere (digitando «laut» non compare nulla).
+- **Correttore, non completatore**: nessun suggerimento a partire dalle prime lettere (digitando «laut» non compare nulla). Servono almeno **4 lettere**.
+- **Tollerante ai refusi e ai suoni**: un suggerimento compare se l'input è a distanza di **Damerau-Levenshtein** (scambi di lettere compresi) entro la tolleranza della lunghezza del nome (1 errore fino a 9 lettere, 2 fino a 13, 3 oltre) **oppure** ha la stessa chiave fonetica («sczesni», «sczesny» e «szczesni» propongono Wojciech Szczęsny; «kvaratskelia» propone Khvicha Kvaratskhelia; «chalanoglu» Hakan Çalhanoğlu). I nomi di 5 lettere o meno vanno scritti per intero («ross» non propone «Rossi»). Mai per fama.
 - Si corregge una parola **intera** già digitata: cognome, nome completo o **nome di battesimo raro** (al massimo 8 persone con quel nome nell'indice, di almeno 5 lettere): «lautaro» propone Lautaro Giannetti, Lautaro Martínez e Lautaro Valenti. Un nome di battesimo da solo non è mai una risposta valida e nomi comuni come «marco» non producono suggerimenti.
-- Un suggerimento compare solo se l'input è quasi completo: `len(input) ≥ 0.8 × len(candidato)` **e** somiglianza normalizzata ≥ 0.85.
+- Un suggerimento compare solo se l'input è quasi completo: `len(input) ≥ 0.8 × len(candidato)` **e** vale una delle due condizioni di tolleranza qui sopra.
 - **Funzione pura** di (testo digitato, indice globale): non riceve la domanda, il contesto, il gioco né il filtro anno.
 - Indice globale: tutte le persone, club, città del grafo, di tutte le epoche; scaricato interamente sul client (nessuna query al server).
 - Massimo 8 suggerimenti, ordinati per somiglianza e poi alfabeticamente (mai per fama); stile identico per tutti.
@@ -674,7 +689,7 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 ## 13. Audio
 
 - **Sblocco**: la schermata "PREMI START" è il gesto che sblocca l'`AudioContext`. Su iOS: Audio Session API impostata su riproduzione + avviso sull'interruttore silenzioso.
-- **Musica dinamica a livelli**: tracce chiptune composte in un tracker ed esportate in livelli (base, percussioni, tensione). Timer attivo ⇒ entra il livello percussioni; ultimo gioco ⇒ entra il livello tensione. Transizioni con dissolvenza a tempo.
+- **Musica ambient**: un loop lento e morbido, sintetizzato con la Web Audio API, di otto battute (Am9 – Fmaj7 – Cmaj7 – G6, due battute ciascuno) a **66 BPM**. Solo onde **sine e triangle** (mai square o sawtooth), attacchi e rilasci lunghi, un filtro passa-basso a 1500 Hz sul canale musica, nessun rumore: un tappeto sonoro, non un motivetto. Tre livelli appena percettibili: timer attivo ⇒ 72 BPM e un battito lieve; ultimo gioco ⇒ 78 BPM e un'eco più acuta. Volume predefinito basso (0.3, mix massimo 0.24).
 - **Effetti sintetizzati** (procedurali, stile sfxr): bip menu, comparsa indizio, pulsante, risposta esatta, risposta errata, tic del timer (accelera negli ultimi 5 s), sirena tempo scaduto, slot machine del sorteggio.
 - **Tromba triste**: 4 note cromatiche discendenti sintetizzate (dente di sega + filtro "wah", vibrato sull'ultima).
 - **Campioni** (registrati in proprio o CC0, passati in bitcrusher): "GOOOL!", rete che si gonfia, palo/traversa, fischi dello stadio.

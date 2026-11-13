@@ -23,10 +23,10 @@ describe("room authority", () => {
     room.onMessage("h", { t: "intent", intent: { type: "START" } });
     room.onMessage("h", { t: "intent", intent: { type: "BEGIN_GAME" } });
     const pub = last("pub").state!;
-    expect(pub.content).toEqual({});
+    expect(pub.content).toEqual([]);
     expect(JSON.stringify(pub.game!.items[pub.game!.i])).toContain('"correct":-1');
     const host = last("host").state!;
-    expect(host.content).toEqual({}); // the Regia gets the current game only, not the whole match
+    expect(host.content).toEqual([]); // the Regia gets the current game only, not the whole match
     expect(host.game!.items[host.game!.i].correct).toBe(1);
     room.dispose();
   });

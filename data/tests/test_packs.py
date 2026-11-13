@@ -86,6 +86,26 @@ def test_frame_timelines_are_anonymous_and_unambiguous():
             assert n >= 3 and all(sum(map(int, o.split("-"))) == n for o in it["options"])
 
 
+def test_frame_correct_option_is_the_match_in_the_script():
+    """The right option must be the match the facts describe, and no other option may fit them."""
+    for it in load("frame"):
+        label = re.match(r"(.+?) (\d+)-(\d+) \(", it["script"])
+        assert label, it["script"]
+        teams, h, a = label.group(1), int(label.group(2)), int(label.group(3))
+        right = it["options"][it["correct"]]
+        wrong = [o for k, o in enumerate(it["options"]) if k != it["correct"]]
+        if it["mode"] == "match":
+            assert right.split(" · ")[0] == teams, (right, teams)
+            assert all(o.split(" · ")[0] != teams or o != right for o in wrong)
+            assert sum(1 for e in it["events"] if e["kind"] == "goal") == h + a
+            assert it["events"][[e["kind"] for e in it["events"]].index("goal")]["score"] in ([1, 0], [0, 1])
+            last = [e for e in it["events"] if e["kind"] == "goal"][-1]["score"]
+            assert last == [h, a], (last, h, a)
+        else:
+            assert right == f"{h}-{a}" and f"{h}-{a}" not in wrong
+            assert it["heading"].startswith(teams)
+
+
 def test_maglia_asks_for_a_number_and_skips_banal_ones():
     items = load("maglia")
     for it in items:

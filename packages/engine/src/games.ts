@@ -46,6 +46,8 @@ interface JudgeResult {
   points: number;
   ok: boolean;
   detail?: string;
+  /** The answer given, kept to show a wrong one on the Screen. */
+  said?: string;
 }
 
 interface QuizPhase<I> {
@@ -63,7 +65,8 @@ interface QuizDef<I> {
   mask(item: I): I;
 }
 
-function turnOf(i: number, starter: PlayerIdx): PlayerIdx {
+function turnOf(i: number, starter: PlayerIdx, solo = false): PlayerIdx {
+  if (solo) return 0;
   return i % 2 === 0 ? starter : other(starter);
 }
 
@@ -107,7 +110,7 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
         env.emit(r.ok ? { type: "correct", player, points: r.points } : { type: "wrong", player, points: r.points });
         if (input === null) env.emit({ type: "timeout" });
         s.results.push(r);
-        s.last = { player, points: r.points, ok: r.ok, detail: r.detail };
+        s.last = { player, points: r.points, ok: r.ok, detail: r.detail, said: r.ok ? undefined : r.said };
         if (s.phase < def.phases.length - 1) {
           s.phase += 1;
           env.setTimer(def.phases[s.phase]!.ms, "ask");
@@ -125,7 +128,7 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
           s.stage = "done";
           return;
         }
-        s.turn = turnOf(s.i, s.starter);
+        s.turn = turnOf(s.i, s.starter, env.solo);
         s.phase = 0;
         s.results = [];
         s.last = null;
@@ -160,32 +163,21 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
 const answerOf = (intent: Intent | null) => (intent && intent.type === "ANSWER" ? intent.payload : undefined);
 const verdictOf = (intent: Intent | null) => (intent && intent.type === "VERDICT" ? intent.payload : undefined);
 
+/** Four options, one correct: used by Tiro Secco, L'Anomalia Statistica and Il Frame. */
+const pickOne = (points: number) => (item: { correct: number; options: readonly string[] }, intent: Intent | null) => {
+  if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
+  const a = answerOf(intent);
+  if (a?.choice === undefined || !Number.isInteger(a.choice) || a.choice < 0 || a.choice > 3) return "ignore" as const;
+  const ok = a.choice === item.correct;
+  return { points: ok ? points : 0, ok, detail: `choice:${a.choice}`, said: item.options[a.choice] };
+};
+
 export const tiroSecco = turnQuiz<TiroSeccoItem>({
   id: "tiro_secco",
   count: 4,
-  phases: [
-    {
-      ms: TIMERS.tiro_secco,
-      judge(item, intent) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (a?.choice === undefined) return "ignore";
-        const ok = a.choice === item.correct;
-        return { points: ok ? 2 : 0, ok, detail: `choice:${a.choice}` };
-      },
-    },
-  ],
+  phases: [{ ms: TIMERS.tiro_secco, judge: pickOne(2) }],
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
-
-/** Four options, one correct: used by Tiro Secco, L'Anomalia Statistica and Il Frame. */
-const pickOne = (points: number) => (item: { correct: number }, intent: Intent | null) => {
-  if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-  const a = answerOf(intent);
-  if (a?.choice === undefined) return "ignore" as const;
-  const ok = a.choice === item.correct;
-  return { points: ok ? points : 0, ok, detail: `choice:${a.choice}` };
-};
 
 export const anomalia = turnQuiz<AnomaliaItem>({
   id: "anomalia",
@@ -194,11 +186,10 @@ export const anomalia = turnQuiz<AnomaliaItem>({
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
-/** One iconic match each: the timeline is on screen, the answer is one of four options. */
+/** An iconic match per question, the players taking turns: the timeline is on screen, the answer is one of four options. */
 export const frame = turnQuiz<FrameItem>({
   id: "frame",
-  count: 1,
-  perPlayer: true,
+  count: 2,
   phases: [{ ms: TIMERS.frame, judge: pickOne(3) }],
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
@@ -217,7 +208,7 @@ export const maglia = turnQuiz<MagliaItem>({
         if (v?.correct !== undefined) ok = v.correct;
         else if (a?.text !== undefined) ok = judgeText(a.text, item.answer, env.ctx.index);
         else return "ignore";
-        return { points: ok ? 3 : 0, ok };
+        return { points: ok ? 3 : 0, ok, said: a?.text };
       },
     },
   ],
@@ -236,7 +227,7 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
   const startItem = (s: GameStateAny, env: Env) => {
     s.stage = "ready";
     s.revealed = 0;
-    s.out = [false, false];
+    s.out = [false, env.solo];
     s.locked = [false, false];
     s.buzzer = null;
     s.free = false;
@@ -306,11 +297,13 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
           return;
         case "answering": {
           let ok: boolean;
+          let said: string | undefined;
           if (intent.type === "TIMEOUT") ok = false;
           else if (intent.type === "VERDICT" && intent.payload.correct !== undefined) ok = intent.payload.correct;
           else if (intent.type === "ANSWER" && intent.payload.text !== undefined) {
             if (intent.player !== undefined && intent.player !== s.buzzer) return;
             ok = judgeText(intent.payload.text, item.answer, env.ctx.index);
+            said = intent.payload.text;
           } else return;
           const p = s.buzzer as PlayerIdx;
           if (ok) {
@@ -323,7 +316,7 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
             return;
           }
           s.out[p] = true;
-          s.last = { player: p, points: 0, ok: false };
+          s.last = { player: p, points: 0, ok: false, said };
           env.emit({ type: "wrong", player: p, points: 0 });
           s.buzzer = null;
           s.turn = null;
@@ -403,7 +396,7 @@ export const decina: GameModule = {
       item: items[0],
       said: [],
       errors: [0, 0],
-      out: [false, false],
+      out: [false, env.solo],
       last: null,
       script: null,
     };
@@ -425,7 +418,7 @@ export const decina: GameModule = {
         if (s.errors[p] >= 2) s.out[p] = true;
         env.emit({ type: "wrong", player: p, points: 0 });
         if (intent.type === "TIMEOUT") env.emit({ type: "timeout" });
-        s.last = { player: p, points: 0, ok: false };
+        s.last = { player: p, points: 0, ok: false, said: typedText(intent) };
         if (s.out[0] && s.out[1]) return final(s, env);
       }
       s.stage = "feedback";
@@ -451,6 +444,9 @@ export const decina: GameModule = {
   },
 };
 
+/** The text of an answer, if one was typed (nothing when the host judged or the time ran out). */
+const typedText = (intent: Intent): string | undefined => (intent.type === "ANSWER" ? intent.payload.text : undefined);
+
 function final(s: GameStateAny, env: Env) {
   s.stage = "final";
   s.script = (s.item ?? s.items[s.k ?? 0])?.script ?? null;
@@ -474,7 +470,7 @@ export const dischetto: GameModule = {
       items,
       item: items[0],
       said: [],
-      shots: [0, 0],
+      shots: [0, env.solo ? 5 : 0],
       kicks: [[], []],
       last: null,
       script: null,
@@ -508,7 +504,7 @@ export const dischetto: GameModule = {
       } else {
         s.kicks[p].push(false);
         env.emit({ type: "miss", player: p });
-        s.last = { player: p, points: 0, ok: false };
+        s.last = { player: p, points: 0, ok: false, said: typedText(intent) };
       }
       s.stage = "feedback";
       env.setTimer(TIMERS.feedback, "feedback");
@@ -561,6 +557,7 @@ export const formazione: GameModule = {
       item: items[0],
       teamOf: [null, null],
       round: 0,
+      wrong: null,
       found: [],
       results: [null, null],
       last: null,
@@ -577,6 +574,7 @@ export const formazione: GameModule = {
       env.emit(pts ? { type: "correct", player: p, points: pts } : { type: "wrong", player: p, points: 0 });
       s.results[p] = n;
       s.last = { player: p, points: pts, ok: n > 0, detail: `${n}/5` };
+      s.wrong = null;
       s.stage = "reveal";
       s.script = item.script;
       env.clearTimer();
@@ -599,9 +597,11 @@ export const formazione: GameModule = {
         const m = judgeInSet(intent.payload.text, hidden, env.ctx.index);
         if (m) {
           s.found.push(m.id);
+          s.wrong = null;
           env.emit({ type: "notice", text: m.name });
           if (s.found.length >= 5) score();
         } else {
+          s.wrong = { player: s.turn, text: intent.payload.text };
           env.emit({ type: "miss", player: s.turn });
         }
         return;
@@ -617,7 +617,7 @@ export const formazione: GameModule = {
     }
     if (s.stage === "reveal" && intent.type === "NEXT") {
       s.round += 1;
-      if (s.round >= 2) {
+      if (s.round >= (env.solo ? 1 : 2)) {
         s.stage = "done";
         return;
       }
@@ -670,6 +670,7 @@ export const asta: GameModule = {
       item: first,
       max: Math.min(10, first.members.length),
       bid: null,
+      wrong: null,
       said: [],
       last: null,
       script: null,
@@ -690,11 +691,15 @@ export const asta: GameModule = {
         env.addPoints(w, s.bid.amount);
         env.emit({ type: "correct", player: w, points: s.bid.amount });
         s.last = { player: w, points: s.bid.amount, ok: true };
+      } else if (env.solo) {
+        env.emit({ type: "wrong", player: w, points: 0 });
+        s.last = { player: w, points: 0, ok: false };
       } else {
         env.addPoints(other(w), 5);
         env.emit({ type: "wrong", player: w, points: 0 });
         s.last = { player: other(w), points: 5, ok: false };
       }
+      s.wrong = null;
       s.stage = "reveal";
       s.script = item.script;
       env.clearTimer();
@@ -706,12 +711,12 @@ export const asta: GameModule = {
         const current = s.bid?.amount ?? 0;
         if (intent.amount <= current || intent.amount > s.max) return;
         s.bid = { player: intent.player, amount: intent.amount };
-        if (intent.amount === s.max) return startProving(intent.player, intent.amount);
+        if (intent.amount === s.max || env.solo) return startProving(intent.player, intent.amount); // alone: no one to outbid
         s.turn = other(intent.player);
         return;
       }
       if (intent.type === "PASS") {
-        if (intent.player !== s.turn) return;
+        if (env.solo || intent.player !== s.turn) return;
         if (!s.bid) return startProving(other(intent.player), 1);
         return startProving(s.bid.player, s.bid.amount);
       }
@@ -723,9 +728,11 @@ export const asta: GameModule = {
       if (m === "ignore") return;
       if (m) {
         s.said.push({ ...m, player: s.turn });
+        s.wrong = null;
         env.emit({ type: "notice", text: m.name });
         if (s.said.length >= s.bid.amount) resolveAuction(true);
       } else {
+        s.wrong = { player: s.turn, text: typedText(intent) ?? null };
         env.emit({ type: "miss", player: s.turn });
       }
       return;
@@ -742,7 +749,8 @@ export const asta: GameModule = {
       s.said = [];
       s.last = null;
       s.script = null;
-      s.turn = other(s.starter);
+      s.turn = env.solo ? 0 : other(s.starter);
+      s.wrong = null;
       s.stage = "bidding";
     }
   },

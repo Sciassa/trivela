@@ -240,7 +240,7 @@ export class RoomCore {
   /** The Regia sees the solutions of the current game; everybody else the redacted view. */
   viewFor(role: AnyRole): MatchState | null {
     if (!this.state) return null;
-    if (role === "host") return { ...this.state, content: {} };
+    if (role === "host") return { ...this.state, content: [] };
     return viewFor(this.state, "screen");
   }
 

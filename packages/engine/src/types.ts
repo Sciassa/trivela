@@ -12,6 +12,12 @@ export interface MatchConfig {
   /** Domestic leagues the questions may come from (SPEC §3.4); undefined or null = all of them. */
   leagues?: string[] | null;
   seed: number;
+  /**
+   * Single-game formats (forcedGames holds that one game). `rounds`: Sfida Rapida, both players play that many
+   * rounds each. `solo`: Allenamento, one player and no opponent.
+   */
+  rounds?: number;
+  solo?: boolean;
   /** Instance ids that must not be used (tournament / device history). */
   excludeIds?: string[];
   /** Force the 4 drawn games (tests, debug). */
@@ -88,8 +94,8 @@ export interface MatchState {
   gamePoints: [number, number][];
   /** Game-specific state of the current game. */
   game: GameStateAny | null;
-  /** Items selected for every game at creation (deterministic). */
-  content: Partial<Record<GameId, unknown[]>>;
+  /** Items selected for every game slot (aligned with `order`) at creation (deterministic). */
+  content: unknown[][];
   timer: Timer | null;
   timerSeq: number;
   events: EngineEvent[];
@@ -102,7 +108,7 @@ export interface GameStateBase {
   /** Player whose turn it is (if any). */
   turn: PlayerIdx | null;
   /** Points of the last resolved answer, for UI feedback. */
-  last: { player: PlayerIdx | null; points: number; ok: boolean; detail?: string } | null;
+  last: { player: PlayerIdx | null; points: number; ok: boolean; detail?: string; /** What a wrong answer said. */ said?: string } | null;
   /** Narrative to show after an answer. */
   script: string | null;
 }
@@ -113,6 +119,8 @@ export type GameStateAny = { game: GameId } & Record<string, any>;
 export interface Env {
   ctx: EngineCtx;
   judging: Judging;
+  /** Allenamento: a single player, the opponent never plays. */
+  solo: boolean;
   starter: PlayerIdx;
   addPoints(player: PlayerIdx, points: number): void;
   emit(e: EngineEvent): void;
