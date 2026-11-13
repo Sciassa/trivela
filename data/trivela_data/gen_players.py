@@ -86,32 +86,69 @@ def giramondo(t: TM, limit: int = 2000) -> list[dict]:
     return out[:limit]
 
 
-def maglia(t: TM, limit: int = 1500) -> list[dict]:
-    """Player + club + season -> shirt number worn (at least 25 league games with it, 10 for iconic numbers)."""
+# Shirt numbers by the role that usually wears them: a number outside its role is an "anomaly".
+GROUP = {"Goalkeeper": "GK", "Centre-Back": "DEF", "Left-Back": "DEF", "Right-Back": "DEF", "Sweeper": "DEF", "Defender": "DEF",
+         "Defensive Midfield": "MID", "Central Midfield": "MID", "midfield": "MID", "Midfield": "MID", "Right Midfield": "MID",
+         "Left Midfield": "MID", "Attacking Midfield": "MID", "Right Winger": "ATT", "Left Winger": "ATT", "Centre-Forward": "ATT",
+         "Second Striker": "ATT", "Attack": "ATT"}
+CLASSIC = {1: {"GK"}, 2: {"DEF", "MID"}, 3: {"DEF", "MID"}, 4: {"DEF", "MID"}, 5: {"DEF", "MID"}, 6: {"DEF", "MID"}, 7: {"ATT", "MID"},
+           8: {"MID", "ATT"}, 9: {"ATT"}, 10: {"MID", "ATT"}, 11: {"ATT", "MID"}}
+ROLE_IT = {"GK": "portiere", "DEF": "difensore", "MID": "centrocampista", "ATT": "attaccante"}
+
+
+def maglia_kind(num: int, group: str) -> str | None:
+    """None: banal (1 for a goalkeeper, 9 for a forward); otherwise a number out of its role, a heavy number (20+) or a plain one."""
+    if num == 1 and group == "GK" or num == 9 and group == "ATT":
+        return None
+    if num in CLASSIC and group not in CLASSIC[num]:
+        return "anomala"  # e.g. a defender wearing the 10, a goalkeeper the 8
+    if num in CLASSIC:
+        return "classica"
+    return "pesante" if num >= 20 else "insolita"  # 20 and up: 21, 22, 45, 77, 99...; 12 to 19: squad numbers
+
+
+def maglia(t: TM, classic_share: float = 0.02) -> list[dict]:
+    """Player + club + season -> shirt number worn (at least 25 league games with it, 10 for iconic numbers).
+
+    No banal number (1 for goalkeepers, 9 for centre-forwards); the unusual ones and the numbers worn out of role come first.
+    """
     comps = ",".join(f"'{c}'" for c in L5)
-    rows = t.q(f"""select gm.comp, gm.season, l.club, l.pid, l.num, count(*) from lu l join gm using(gid)
-                   where gm.comp in ({comps}) and l.num is not null group by 1, 2, 3, 4, 5""")
-    per = defaultdict(Counter)
-    for comp, season, club, pid, num, n in rows:
-        per[(comp, int(season), int(club), int(pid))][int(num)] += int(n)
-    out = []
+    rows = t.q(f"""select gm.comp, gm.season, l.club, l.pid, l.num, l.starter, l.pos, count(*) from lu l join gm using(gid)
+                   where gm.comp in ({comps}) and l.num is not null group by 1, 2, 3, 4, 5, 6, 7""")
+    per, roles = defaultdict(Counter), defaultdict(Counter)
+    for comp, season, club, pid, num, starter, pos, n in rows:
+        key = (comp, int(season), int(club), int(pid))
+        per[key][int(num)] += int(n)
+        if starter and pos in GROUP:
+            roles[key][GROUP[pos]] += int(n)
+    found: dict[str, list[dict]] = {"anomala": [], "pesante": [], "insolita": [], "classica": []}
     for (comp, season, club, pid), c in per.items():
-        if not t.is_notable(pid) or len(c) != 1:
+        if not t.is_notable(pid) or len(c) != 1 or not roles[(comp, season, club, pid)]:
             continue  # one single number in the whole season, no ambiguity
         (num, n), = c.items()
-        if not (n >= 25 or (n >= 10 and num in ICONIC)) or not 1 <= num <= 99:
+        if not 1 <= num <= 99:
             continue
-        it = base("maglia" if comp == "IT1" else "maglia@estero", (comp, season, club, pid), year=season, fame=t.fame(pid),
+        group = roles[(comp, season, club, pid)].most_common(1)[0][0]
+        kind = maglia_kind(num, group)
+        if kind is None:
+            continue
+        # a number out of its role is rare enough to be worth 12 games; the others need a full season
+        if not (n >= 25 or (n >= 10 and num in ICONIC) or (kind == "anomala" and n >= 12)):
+            continue
+        # three generators (drawn evenly): out of role, heavy numbers, and squad numbers with a few classic ones (2%)
+        gen = {"anomala": "maglia_anomala", "pesante": "maglia_pesante"}.get(kind, "maglia_numero")
+        it = base(gen if comp == "IT1" else f"{gen}@estero", (comp, season, club, pid), year=season, fame=t.fame(pid),
                   entities=[f"comp:{comp}", t.cid(club), t.pid(pid)], sources=[t.src_player(pid), SRC_DATASET],
-                  script=f"Nella {COMP_IT[comp]} {season_label(season)} {t.pname(pid)} indossava il numero {num} {t.di(club)}.")
+                  script=f"Nella {COMP_IT[comp]} {season_label(season)} {t.pname(pid)} ({ROLE_IT[group]}) indossava il numero {num} {t.di(club)}.")
         it.update({"player": t.pname(pid), "team": t.club(club), "season": f"{COMP_IT[comp]} {season_label(season)}",
                    "question": f"Che numero di maglia aveva {t.pname(pid)} {t.con(club)} nella {COMP_IT[comp]} {season_label(season)}?",
-                   "answer": {"kind": "number", "value": num, "display": str(num)}})
-        out.append(it)
-    out.sort(key=lambda x: (-x["fame"], x["id"]))
-    ita = [x for x in out if x["generator"] == "maglia"][:limit]
-    est = [x for x in out if x["generator"] != "maglia"][: limit // 3]
-    return ita + est
+                   "answer": {"kind": "number", "value": num, "display": str(num)}, "role": group})
+        found[kind].append(it)
+    for v in found.values():
+        v.sort(key=lambda x: (-x["fame"], x["id"]))
+    classic = found["classica"][: int(len(found["insolita"]) * classic_share)]
+    out = sorted(found["anomala"] + found["pesante"] + found["insolita"] + classic, key=lambda x: (-x["fame"], x["id"]))
+    return out
 
 
 def generate(t: TM) -> dict[str, list[dict]]:

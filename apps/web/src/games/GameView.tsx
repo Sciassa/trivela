@@ -1,8 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, PrimaPaginaItem, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
+import type { AnomaliaItem, DischettoItem, FormazioneItem, FrameEvent, FrameItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
 import type { EngineCtx, GameStateAny, Intent, MatchState } from "@trivela/engine";
-import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, ScorePicker, StateTimer, TextEntry, usePlay } from "../components/ui";
-import { Newspaper } from "../components/Newspaper";
+import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay } from "../components/ui";
 import { Sprite } from "../components/sprites";
 
 export interface GameProps {
@@ -48,11 +47,11 @@ function RevealFooter({ g, state, dispatch, sources, solution }: { g: GameStateA
   );
 }
 
-/* ------------------------------------------------------------ Tiro Secco */
+/* ------------------------------------------------------------ Four-option quizzes: Tiro Secco, L'Anomalia, Il Frame */
 
-function TiroSecco({ state, g, dispatch, start }: GameProps) {
+/** The four options with the keyboard shortcuts, the reveal colours and the answers disabled on a read-only Screen. */
+function FourOptions({ item, g, dispatch }: { item: { options: string[]; correct: number }; g: GameStateAny; dispatch: (i: Intent) => void }) {
   const { readonly } = usePlay();
-  const item = g.items[g.i] as TiroSeccoItem;
   const reveal = g.stage === "reveal";
   const picked = Number(String(g.last?.detail ?? "").split(":")[1] ?? -1);
   useEffect(() => {
@@ -65,65 +64,37 @@ function TiroSecco({ state, g, dispatch, start }: GameProps) {
     return () => window.removeEventListener("keydown", h);
   }, [reveal, readonly, dispatch]);
   return (
+    <div className="options">
+      {item.options.map((o, k) => (
+        <button
+          key={k}
+          style={{ "--i": k } as CSSProperties}
+          className={`option ${reveal && k === item.correct ? "right" : ""} ${reveal && k === picked && k !== item.correct ? "wrongpick" : ""}`}
+          disabled={reveal || readonly}
+          onClick={() => dispatch({ type: "ANSWER", payload: { choice: k } })}
+        >
+          <span className="key">{"ABCD"[k]}</span>
+          {o}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function TiroSecco({ state, g, dispatch, start }: GameProps) {
+  const item = g.items[g.i] as TiroSeccoItem | AnomaliaItem;
+  const anomaly = g.game === "anomalia";
+  return (
     <>
       <TurnBar state={state} p={g.turn} info={`DOMANDA ${g.i + 1}/${g.items.length}`} />
       <StateTimer state={state} start={start} />
       <div className="q-card" key={g.i}>
+        {anomaly && <div className="anomaly-tag">⚠ RECORD BIZZARRO · {String((item as AnomaliaItem).kind).toUpperCase()}</div>}
         <div className="q">{item.question}</div>
       </div>
-      <div className="options" key={`o${g.i}`}>
-        {item.options.map((o, k) => (
-          <button
-            key={k}
-            style={{ "--i": k } as CSSProperties}
-            className={`option ${reveal && k === item.correct ? "right" : ""} ${reveal && k === picked && k !== item.correct ? "wrongpick" : ""}`}
-            disabled={reveal || readonly}
-            onClick={() => dispatch({ type: "ANSWER", payload: { choice: k } })}
-          >
-            <span className="key">{"ABCD"[k]}</span>
-            {o}
-          </button>
-        ))}
-      </div>
-      {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+      <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
+      {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
     </>
-  );
-}
-
-/* ------------------------------------------------------------ Prima Pagina */
-
-function PrimaPagina({ state, g, dispatch, ctx, start }: GameProps) {
-  const { readonly, pad } = usePlay();
-  const item = g.items[g.turn] as PrimaPaginaItem;
-  const reveal = g.stage === "reveal";
-  const [vals, setVals] = useState(["", ""]);
-  useEffect(() => setVals(["", ""]), [g.turn]);
-  const hits = String(g.last?.detail ?? "").split(":")[1] ?? "";
-  const send = () => dispatch({ type: "ANSWER", payload: { texts: vals } });
-  return (
-    <div className="duo">
-      {!pad && <Newspaper key={g.turn} page={item.page} slots={item.slots} revealed={reveal} />}
-      <div className="side">
-        <TurnBar state={state} p={g.turn} />
-        <StateTimer state={state} start={start} />
-        {item.slots.map((sl, k) => (
-          <div key={k} className="field">
-            <label>
-              {k + 1}. {sl.label.toUpperCase()}
-            </label>
-            {reveal ? (
-              <div className={`solution ${hits[k] === "1" ? "" : "c-ko"}`}>
-                {hits[k] === "1" ? "✔" : "✘"} {sl.answer.display}
-              </div>
-            ) : readonly ? null : (
-              <TextEntry value={vals[k]!} onChange={(v) => setVals((x) => x.map((y, i) => (i === k ? v : y)))} onEnter={k === 1 ? send : undefined} index={ctx.index} placeholder="Chi è?" autoFocus={k === 0} />
-            )}
-          </div>
-        ))}
-        {!reveal && (readonly ? <PhoneHint /> : <button className="btn wide" onClick={send}>INVIA</button>)}
-        {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
-      </div>
-    </div>
   );
 }
 
@@ -514,56 +485,50 @@ function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
 
 /* ------------------------------------------------------------ Il Frame */
 
-function Frame({ state, g, dispatch, ctx, start }: GameProps) {
-  const { readonly } = usePlay();
-  const item = g.items[g.i] as FrameItem;
-  const [scorer, setScorer] = useState("");
-  useEffect(() => setScorer(""), [g.i]);
+const EVENT_LABEL: Record<FrameEvent["kind"], string> = { goal: "Gol", yellow: "Ammonizione", second_yellow: "Seconda ammonizione", red: "Espulsione" };
+
+/** The anonymous timeline of an iconic match: goals (with the running score in `match` mode) and cards. */
+function Timeline({ item }: { item: FrameItem }) {
+  return (
+    <div className="timeline">
+      {item.events.map((e, k) => (
+        <div key={k} className={`ev ${e.kind}`} style={{ "--i": k } as CSSProperties}>
+          <span className="min">{e.minute}'</span>
+          {e.kind === "goal" ? <Sprite name="ball" size={34} /> : <i className={`card ${e.kind}`} />}
+          <span className="what">
+            {EVENT_LABEL[e.kind]}
+            {e.score && <b className="led-score">{e.score[0]}-{e.score[1]}</b>}
+            {e.side !== undefined && <small> · {e.side === 0 ? "casa" : "ospite"}</small>}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Frame({ state, g, dispatch, start }: GameProps) {
+  const { pad } = usePlay();
+  const item = g.items[g.turn] as FrameItem;
   const reveal = g.stage === "reveal";
   return (
-    <>
-      <TurnBar state={state} p={g.turn} info={`PARTITA ${g.i + 1}/${g.items.length}`} />
-      <StateTimer state={state} start={start} />
-      <div className="q-card" key={g.i}>
-        <div className="minute">
-          <Sprite name="frame" size={72} />
-          <span className="led big">{item.minute}'</span>
-          <div className="grow">
-            <div className="q small">Qual era il risultato a quel minuto?</div>
-            <div className="sub">
-              {item.match} · {item.date}
-            </div>
-          </div>
+    <div className="duo">
+      <div className="side" style={pad ? undefined : { flex: "0 0 40%" }}>
+        <div className="q-card" key={g.turn}>
+          <div className="q small">{item.heading}</div>
+          <div className="sub">{item.mode === "match" ? "Cronologia di gol e cartellini" : "Gol e cartellini (solo i minuti)"}</div>
         </div>
+        <Timeline item={item} />
       </div>
-      {!reveal &&
-        (readonly ? (
-          <PhoneHint />
-        ) : (
-          <ScorePicker key={g.i} teams={item.teams} onSubmit={(score) => dispatch({ type: "ANSWER", payload: { score, scorer } })}>
-            {item.lastScorer && (
-              <div className="field">
-                <label>BONUS +2 · CHI AVEVA SEGNATO L'ULTIMO GOL FINO A QUEL MINUTO? (FACOLTATIVO)</label>
-                <TextEntry value={scorer} onChange={setScorer} index={ctx.index} placeholder="Ultimo marcatore" />
-              </div>
-            )}
-          </ScorePicker>
-        ))}
-      {reveal && (
-        <RevealFooter
-          g={g}
-          state={state}
-          dispatch={dispatch}
-          sources={item.sources}
-          solution={
-            <>
-              {item.teams[0]} {item.scoreAt[0]}-{item.scoreAt[1]} {item.teams[1]}
-              {item.lastScorer ? ` · ${item.lastScorer.display}` : ""}
-            </>
-          }
-        />
-      )}
-    </>
+      <div className="side">
+        <TurnBar state={state} p={g.turn} />
+        <StateTimer state={state} start={start} />
+        <div className="q-card">
+          <div className="q small">{item.question}</div>
+        </div>
+        <FourOptions key={`o${g.turn}`} item={item} g={g} dispatch={dispatch} />
+        {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+      </div>
+    </div>
   );
 }
 
@@ -608,8 +573,8 @@ export function GameView(props: GameProps) {
   switch (props.g.game) {
     case "tiro_secco":
       return <TiroSecco {...props} />;
-    case "prima_pagina":
-      return <PrimaPagina {...props} />;
+    case "anomalia":
+      return <TiroSecco {...props} />;
     case "decina":
       return <Decina {...props} />;
     case "asta":

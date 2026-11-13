@@ -31,10 +31,37 @@ const entities: EntityRecord[] = [
   P("p9", "Cesare Maldini", 40, "Maldini"),
   P("p10", "Nikola Bjelanović", 2, "Bjelanović"),
   P("p11", "Martin Ødegaard", 50, "Ødegaard"),
+  P("l1", "Lautaro Martínez", 85, "Martínez"),
+  P("l2", "Lautaro Valenti", 40, "Valenti"),
+  P("l3", "Lautaro Giannetti", 35, "Giannetti"),
+  P("c1", "Marco Rossi", 10, "Rossi"),
+  P("c2", "Marco Bianchi", 10, "Bianchi"),
+  P("c3", "Marco Verdi", 10, "Verdi"),
+  P("c4", "Marco Neri", 10, "Neri"),
+  P("c5", "Marco Gialli", 10, "Gialli"),
+  P("c6", "Marco Blu", 10, "Blu"),
+  P("c7", "Marco Viola", 10, "Viola"),
+  P("c8", "Marco Rosa", 10, "Rosa"),
+  P("c9", "Marco Grigi", 10, "Grigi"),
   P("m1", "Thiago Motta", 70, "Motta"),
   P("m2", "Thiago Motta", 55, "Motta"),
 ];
 const index = buildIndex(entities, 10);
+
+it("a whole first name points to the people who have it, but a prefix suggests nothing", () => {
+  const names = suggest("lautaro", index).map((x) => x.name);
+  expect(names).toEqual(["Lautaro Giannetti", "Lautaro Martínez", "Lautaro Valenti"]);
+  expect(suggest("Lautaro", index)).toEqual(suggest("lautaro", index)); // case does not matter
+  expect(suggest("laut", index)).toEqual([]);
+  expect(suggest("lauta", index)).toEqual([]);
+  expect(suggest("lautarro", index).map((x) => x.name)).toContain("Lautaro Martínez"); // typo
+  expect(suggest("marco", index)).toEqual([]); // too many people called Marco: it would point nowhere
+});
+
+it("a first name alone is never an answer", () => {
+  expect(resolve("Lautaro", index)).toEqual({ status: "none" });
+  expect(judgeText("Lautaro", { kind: "entity", ids: ["l1"], display: "Lautaro Martínez" }, index)).toBe(false);
+});
 
 it("suggests one entry per person even when two profiles share a name", () => {
   expect(suggest("Thiago Mota", index).map((s) => s.name)).toEqual(["Thiago Motta"]);

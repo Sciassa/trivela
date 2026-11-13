@@ -1,4 +1,5 @@
 import type {
+  AnomaliaItem,
   DischettoItem,
   FormazioneItem,
   FrameItem,
@@ -7,7 +8,6 @@ import type {
   MagliaItem,
   MercatoItem,
   PlayerIdx,
-  PrimaPaginaItem,
   Role,
   SetItem,
   TiroSeccoItem,
@@ -18,7 +18,7 @@ import { other, type Env, type GameModule, type GameStateAny, type Intent } from
 /** Default timers (ms). */
 export const TIMERS = {
   tiro_secco: 20_000,
-  prima_pagina: 45_000,
+  anomalia: 25_000,
   ready: 2_000,
   clue: 8_000,
   freeClue: 20_000,
@@ -26,7 +26,7 @@ export const TIMERS = {
   list: 30_000,
   feedback: 1_500,
   formazione: 60_000,
-  frame: 30_000,
+  frame: 40_000,
   asta: 60_000,
   maglia: 30_000,
 } as const;
@@ -178,58 +178,29 @@ export const tiroSecco = turnQuiz<TiroSeccoItem>({
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
-export const primaPagina = turnQuiz<PrimaPaginaItem>({
-  id: "prima_pagina",
-  count: 1,
-  perPlayer: true,
-  phases: [
-    {
-      ms: TIMERS.prima_pagina,
-      judge(item, intent, env) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        let hits: boolean[];
-        const v = verdictOf(intent);
-        const a = answerOf(intent);
-        if (v?.slots) hits = item.slots.map((_, k) => !!v.slots![k]);
-        else if (a?.texts) hits = item.slots.map((slot, k) => judgeText(a.texts![k] ?? "", slot.answer, env.ctx.index));
-        else return "ignore";
-        const n = hits.filter(Boolean).length;
-        return { points: n * 2, ok: n > 0, detail: `slots:${hits.map((h) => (h ? 1 : 0)).join("")}` };
-      },
-    },
-  ],
-  mask: (it) => ({
-    ...it,
-    slots: it.slots.map((sl) => ({ ...sl, answer: { kind: "text", accepted: [], display: "" } })) as unknown as PrimaPaginaItem["slots"],
-    script: "",
-  }),
+/** Four options, one correct: used by Tiro Secco, L'Anomalia Statistica and Il Frame. */
+const pickOne = (points: number) => (item: { correct: number }, intent: Intent | null) => {
+  if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
+  const a = answerOf(intent);
+  if (a?.choice === undefined) return "ignore" as const;
+  const ok = a.choice === item.correct;
+  return { points: ok ? points : 0, ok, detail: `choice:${a.choice}` };
+};
+
+export const anomalia = turnQuiz<AnomaliaItem>({
+  id: "anomalia",
+  count: 4,
+  phases: [{ ms: TIMERS.anomalia, judge: pickOne(3) }],
+  mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
+/** One iconic match each: the timeline is on screen, the answer is one of four options. */
 export const frame = turnQuiz<FrameItem>({
   id: "frame",
-  count: 4,
-  phases: [
-    {
-      ms: TIMERS.frame,
-      judge(item, intent, env) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const a = answerOf(intent);
-        if (!a?.score) return "ignore";
-        const [h, w] = a.score;
-        const [eh, ew] = item.scoreAt;
-        const exact = h === eh && w === ew;
-        const sign = Math.sign(h - w) === Math.sign(eh - ew);
-        let points = exact ? 3 : sign ? 1 : 0;
-        let bonus = false;
-        if (item.lastScorer) {
-          bonus = a.scorerCorrect ?? (a.scorer ? judgeText(a.scorer, item.lastScorer, env.ctx.index) : false);
-          if (bonus) points += 2;
-        }
-        return { points, ok: points > 0, detail: `exact:${exact ? 1 : 0},sign:${sign ? 1 : 0},bonus:${bonus ? 1 : 0}` };
-      },
-    },
-  ],
-  mask: (it) => ({ ...it, scoreAt: [-1, -1], lastScorer: it.lastScorer ? { kind: "text", accepted: [], display: "" } : undefined, script: "" }),
+  count: 1,
+  perPlayer: true,
+  phases: [{ ms: TIMERS.frame, judge: pickOne(3) }],
+  mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
 export const maglia = turnQuiz<MagliaItem>({
@@ -791,7 +762,7 @@ export const asta: GameModule = {
 
 export const MODULES: Record<GameId, GameModule> = {
   tiro_secco: tiroSecco,
-  prima_pagina: primaPagina,
+  anomalia,
   mercato,
   decina,
   dischetto,

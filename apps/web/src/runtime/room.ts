@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { EngineCtx, Intent, MatchState } from "@trivela/engine";
 import { playEvents } from "./useMatch";
+import type { TimerClock } from "../components/ui";
 import { openRoom, relayParam, type RoomLink } from "./transport";
 import { RoomCore, roomCode, type ClientRole, type DownMsg, type Roster, type UpMsg } from "./roomCore";
 
@@ -64,6 +65,7 @@ export function useHostedRoom(ctx: EngineCtx) {
     state: room?.state ?? null,
     roster: room?.roster() ?? NOBODY,
     timerStart: room?.timerStart ?? 0,
+    timer: { ms: room?.timerMs ?? null, pausedLeft: room?.pausedLeft ?? null } as TimerClock,
     judging: () => core.current?.judging() ?? "auto",
     dispatch: (intent: Intent) => core.current?.intent("screen", intent),
     start: (state: MatchState | null, matchCtx?: EngineCtx) => core.current?.start(state, matchCtx),
@@ -77,6 +79,7 @@ export function useRoom(role: ClientRole, code: string) {
   const [connected, setConnected] = useState(false);
   const [live, setLive] = useState(false);
   const [timerStart, setTimerStart] = useState(Date.now());
+  const [timer, setTimer] = useState<TimerClock>({ ms: null, pausedLeft: null });
   const link = useRef<RoomLink | null>(null);
   const offset = useRef(0);
 
@@ -101,6 +104,7 @@ export function useRoom(role: ClientRole, code: string) {
           setState(m.state);
           setRoster(m.roster);
           setTimerStart(samples.length ? m.timerStart - offset.current : Date.now() - (m.now - m.timerStart));
+          setTimer({ ms: m.timerMs, pausedLeft: m.pausedLeft });
         }
       },
       (ok) => {
@@ -139,6 +143,9 @@ export function useRoom(role: ClientRole, code: string) {
     connected,
     live,
     timerStart,
+    timer,
+    /** Host only: pause or resume the countdown, or move it by `ms`. */
+    timerOp: (op: "pause" | "resume" | "add", ms?: number) => link.current?.send("up", { t: "timer", op, ms } satisfies UpMsg),
     dispatch: (intent: Intent) => link.current?.send("up", { t: "intent", intent } satisfies UpMsg),
     buzz: () => link.current?.send("up", { t: "buzz", at: Date.now() + offset.current } satisfies UpMsg),
   };

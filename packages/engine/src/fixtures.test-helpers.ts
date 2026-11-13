@@ -33,15 +33,20 @@ export function makePacks(): Packs {
   for (let k = 0; k < 20; k++) {
     items.tiro_secco.push({ ...meta({ yearMin: 2005 + k, yearMax: 2005 + k }), question: `Q${k}`, options: ["a", "b", "c", "d"], correct: 1, archetype: 1 });
     items.maglia.push({ ...meta({ yearMin: 2010 + k }), player: P(k).name, team: "Juventus", season: "Serie A 2015/16", question: "Che numero?", answer: { kind: "number", value: 10 + k, display: String(10 + k) } });
-    items.frame.push({ ...meta(), match: "A-B", date: "2015-01-01", minute: 30, teams: ["A", "B"], scoreAt: [2, 1], lastScorer: { kind: "entity", ids: ["p1"], display: P(1).name } });
-    items.prima_pagina.push({
+    items.frame.push({
       ...meta(),
-      page: { masthead: "La Trivela Sportiva", date: "2015-01-01", weekday: "venerdì", kicker: "k", headline: "{{0}} decide", subhead: "s", body: ["{{1}} in panchina"], boxTitle: "Tabellino", boxLines: [] },
-      slots: [
-        { label: "Marcatore", answer: { kind: "entity", ids: ["p2"], display: P(2).name }, lengthBucket: 2 },
-        { label: "Allenatore", answer: { kind: "entity", ids: ["p3"], display: P(3).name }, lengthBucket: 2 },
+      mode: "match",
+      heading: "Champions League · finale",
+      events: [
+        { minute: 22, kind: "goal", score: [1, 0] },
+        { minute: 40, kind: "yellow", side: 1 },
+        { minute: 78, kind: "goal", score: [1, 1] },
       ],
+      question: "Di quale partita si tratta?",
+      options: ["A-B · 2015/16", "C-D · 2016/17", "E-F · 2017/18", "G-H · 2018/19"],
+      correct: 2,
     });
+    items.anomalia.push({ ...meta(), question: `Anomalia ${k}?`, options: ["a", "b", "c", "d"], correct: 3, kind: "difensore" });
   }
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });

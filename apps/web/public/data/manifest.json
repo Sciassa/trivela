@@ -1,10 +1,10 @@
 {
-  "version": "2026-11-12",
-  "generatedAt": "2026-11-12T19:16:03+00:00",
+  "version": "2026-11-13",
+  "generatedAt": "2026-11-13T10:17:48+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 2400,
-    "prima_pagina": 1300,
+    "anomalia": 1379,
     "mercato": 1300,
     "decina": 1400,
     "dischetto": 1150,
@@ -16,15 +16,15 @@
   },
   "generators": {
     "tiro_secco": 35,
-    "prima_pagina": 1,
+    "anomalia": 30,
     "mercato": 1,
     "decina": 23,
     "dischetto": 53,
     "formazione": 1,
     "giramondo": 1,
-    "frame": 1,
+    "frame": 2,
     "asta": 26,
-    "maglia": 2
+    "maglia": 6
   },
   "sources": [
     {
@@ -46,9 +46,9 @@
       "excluded_show": 215,
       "excluded_not_notable": 0
     },
-    "prima_pagina": {
-      "kept": 2482,
-      "excluded_show": 18,
+    "anomalia": {
+      "kept": 1379,
+      "excluded_show": 3,
       "excluded_not_notable": 0
     },
     "mercato": {
@@ -57,7 +57,7 @@
       "excluded_not_notable": 0
     },
     "decina": {
-      "kept": 1403,
+      "kept": 1406,
       "excluded_show": 1,
       "excluded_not_notable": 0
     },
@@ -77,17 +77,17 @@
       "excluded_not_notable": 0
     },
     "frame": {
-      "kept": 2480,
+      "kept": 1987,
       "excluded_show": 20,
       "excluded_not_notable": 0
     },
     "asta": {
-      "kept": 3163,
+      "kept": 3167,
       "excluded_show": 5,
       "excluded_not_notable": 0
     },
     "maglia": {
-      "kept": 2000,
+      "kept": 10264,
       "excluded_show": 0,
       "excluded_not_notable": 0
     }

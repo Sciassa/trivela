@@ -9,7 +9,7 @@ const { chromium } = require("playwright");
 const PORT = 8798;
 const OUT = "test-results/shots";
 mkdirSync(OUT, { recursive: true });
-const ALL = ["tiro_secco", "maglia", "frame", "prima_pagina", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo"];
+const ALL = ["tiro_secco", "maglia", "frame", "anomalia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo"];
 const games = (process.argv[2] ?? ALL.join(",")).split(",");
 const VIEWPORTS = { pc: { width: 1366, height: 768 }, phone: { width: 844, height: 390 }, tablet: { width: 1024, height: 768 } };
 

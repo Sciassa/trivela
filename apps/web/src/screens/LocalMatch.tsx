@@ -3,12 +3,13 @@ import { usedIds, viewFor, type EngineCtx, type Intent, type MatchState } from "
 import { audio } from "@trivela/audio";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
-import { Confetti, Fit, NextButton, PlayCtx, Scoreboard, Stage, useWakeLock, type PlayMode } from "../components/ui";
+import { Confetti, Fit, NextButton, PlayCtx, Scoreboard, Stage, TimerClockCtx, useWakeLock, type PlayMode, type TimerClock } from "../components/ui";
 import { GAME_COLORS, GameIcon, Sprite } from "../components/sprites";
 import { ClueBuzzer, GameView, isBuzzerGame } from "../games/GameView";
 import { GAME_NAMES, GAME_RULES } from "../rules";
 
 const LOCAL: PlayMode = { readonly: false, flow: true, pad: false };
+const NO_CLOCK: TimerClock = { ms: null, pausedLeft: null };
 
 /** Green/red flash (and confetti) after every judged answer. */
 function useFx(state: MatchState) {
@@ -33,6 +34,7 @@ export function MatchShell({
   onExit,
   tableMode,
   mode = LOCAL,
+  clock = NO_CLOCK,
 }: {
   state: MatchState;
   dispatch: (i: Intent) => void;
@@ -41,6 +43,8 @@ export function MatchShell({
   onExit: (s: MatchState) => void;
   tableMode?: boolean;
   mode?: PlayMode;
+  /** Timer adjustments made by the host (pause, +10, -10). */
+  clock?: TimerClock;
 }) {
   const view = useMemo(() => viewFor(state, "screen"), [state]);
   const g = state.order[state.gameIdx];
@@ -49,6 +53,7 @@ export function MatchShell({
   return (
     <Stage>
       <PlayCtx.Provider value={mode}>
+        <TimerClockCtx.Provider value={clock}>
         <Scoreboard state={state} />
         <main className={`arena ${fx ? `fx-${fx.kind}` : ""}`}>
           {fx?.party && <Confetti key={fx.id} />}
@@ -120,6 +125,7 @@ export function MatchShell({
           )}
           {state.phase === "match_over" && <MatchOver state={state} onExit={() => onExit(state)} />}
         </main>
+        </TimerClockCtx.Provider>
       </PlayCtx.Provider>
     </Stage>
   );

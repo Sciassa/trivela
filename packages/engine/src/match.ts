@@ -11,7 +11,7 @@ export const GAMES_PER_MATCH = 5;
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "prima_pagina", "mercato", "formazione", "frame", "maglia"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "anomalia", "mercato", "formazione", "frame", "maglia"];
 const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
