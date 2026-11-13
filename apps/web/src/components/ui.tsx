@@ -189,13 +189,15 @@ function useCountUp(value: number): number {
 function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
   const score = state.scores[p];
   const shown = useCountUp(score);
-  const [delta, setDelta] = useState<{ v: number; id: number } | null>(null);
   const [coin, setCoin] = useState(0);
   const prev = useRef(score);
+  const seq = useRef(0);
   useEffect(() => {
     if (score !== prev.current) {
-      setDelta({ v: score - prev.current, id: Date.now() });
-      setCoin(score > prev.current ? Date.now() : 0);
+      // the "+N" that rises over the board is drawn by PointsPops; here only the score box flashes (a counter, not a
+      // timestamp: two equal keys made React keep duplicated score boxes in the top bar)
+      seq.current += 1;
+      setCoin(score > prev.current ? seq.current : 0);
       prev.current = score;
     }
   }, [score]);
@@ -204,15 +206,10 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
     <div className={`hud-player p${p + 1} ${turn ? "turn" : ""}`}>
       <Sprite name="face" size={64} className="hud-face" />
       <div className="hud-id">
-        <span className="hud-name">{state.config.players[p]}</span>
+        <span className={`hud-name ${state.config.players[p].length > 10 ? "long" : ""}`}>{state.config.players[p]}</span>
         <span className="hud-tag">{state.config.solo ? "ALLENAMENTO" : turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
       </div>
-      <span key={coin} className={`hud-score ${shown !== score ? "rolling" : ""} ${coin ? "coin" : ""}`}>{shown}</span>
-      {delta && (
-        <span key={delta.id} className={`hud-delta ${delta.v > 0 ? "plus" : "minus"}`}>
-          {delta.v > 0 ? `+${delta.v}` : delta.v}
-        </span>
-      )}
+      <span key={`score${coin}`} className={`hud-score ${shown !== score ? "rolling" : ""} ${coin ? "coin" : ""}`}>{shown}</span>
     </div>
   );
 }

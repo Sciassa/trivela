@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6: 9 giochi, niente argomento, round brevi, stanze senza server
 
+> **v6.1** (novembre 2026): *L'Anomalia Statistica* ricalibrata su record **davvero rari** (§4.2); corretto il bug della barra superiore con punteggi duplicati (§14.1); animazioni a 60 fps (§14.1).
+>
 > **v6** (novembre 2026): **Il Frame è stato rimosso del tutto** (dati, generatore, motore, interfaccia, test): restano **9 giochi** (§4). Nuova identità visiva «tramonto pixel» con menu principale rifatto (§0.7), uscite discrete con conferma (§3.7), effetti di «juiciness» (§14.1), telefoni verticali senza scorrimento per le azioni principali (§12.5). I punti che nominano *Il Frame* più sotto sono storici e non più in vigore.
 >
 > **v5.2** (novembre 2026): nuove modalità **Sfida Rapida** e **Allenamento** (§3.5); il correttore tollera refusi e suoni simili (§10.3); in tutti i giochi una risposta sbagliata compare **in rosso** sullo Schermo (§3.6); musica **ambient** morbida (§13).
@@ -197,7 +199,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 **Dati**
 
-- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, anomalia 1379, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, asta 1500, maglia 1500 (13.129 in tutto).
+- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, anomalia 1500, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, asta 1500, maglia 1500 (13.129 in tutto).
 - Fonte unica Transfermarkt (§0.5) con uno **strato di fatti verificati**: una partita entra nelle statistiche solo se gli eventi-gol tornano con il risultato (rigori delle serie finali ricalcolati a parte) e, dove serve, se presenze e formazioni sono complete (11 + 11). Classifiche ed elenchi si calcolano solo su finestre (competizione, squadra, stagioni) interamente coperte, e le dichiarano nel titolo.
 - **Unica eccezione alla fonte unica**: le **date di nascita degli allenatori**, che Transfermarkt non fornisce nel dataset, vengono da **Wikidata** (CC0; allenatori con identificativo Transfermarkt P2447, abbinati solo per nome esatto e univoco). File versionato: `data/static/managers.json`. Servono alle curiosità del tipo «quale allenatore ha vinto nel giorno del suo compleanno?» e «quali due allenatori nati lo stesso giorno si sono affrontati?».
 - 18 tipi di curiosità per il Tiro Secco (compleanni, gemelli di data di nascita, gol e autogol nella stessa partita, rossi lampo, rimonte, gol dalla panchina, omonimi, doppie maglie…), ognuno con distrattori verificati come errati.
@@ -363,11 +365,23 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 
 ### 4.2 `anomalia` — L'Anomalia Statistica
 - Sostituisce *Prima Pagina* (rimossa insieme alla testata di fantasia e alle sue pagine).
-- **2 domande a testa** (4 totali) a risposta multipla A/B/C/D su **record bizzarri e controintuitivi** calcolati sui dati. Timer 25 s. Punti: **+3** esatta.
-- Una sola opzione ha davvero fatto quella cosa; le altre tre sono **giocatori noti** per i quali il record è falso sugli stessi dati. Tutte e quattro passano il filtro notorietà.
-- Tipi di record (15 generatori, `data/trivela_data/gen_anomalie.py`): difensori con una tripletta o una doppietta in una partita; centrocampisti con una tripletta; attaccanti con quattro gol in una partita; portieri che hanno segnato o fornito un assist; giocatori entrati dalla panchina che segnano due o tre gol (anche difensori subentrati); difensori con almeno 6 gol in una stagione; attaccanti con 25 presenze e nessun gol in una stagione; attaccanti con almeno 15 gol senza nemmeno un rigore; giocatori che segnano per due squadre diverse nella stessa stagione; attaccanti e centrocampisti con almeno 100 presenze senza mai un'espulsione; difensori e centrocampisti con 30 presenze in una stagione senza un'ammonizione.
-- **Affermazioni «mai» solo dove i dati lo permettono**: le finestre di stagioni si limitano a quelle in cui ogni partita ha i dati necessari (gol, formazioni, assist) e sono scritte nella domanda. Per i cartellini si considerano solo le partite in cui eventi e righe di presenza danno gli stessi totali, e il giocatore deve avere zero cartellini in entrambe le fonti. Una verifica indipendente sulle tabelle grezze conferma i campioni di espulsioni, ammonizioni e assist.
+- **2 domande a testa** (4 totali) a risposta multipla A/B/C/D su **record davvero rari**, calcolati sui dati. Timer 25 s. Punti: **+3** esatta.
+- **Regola di rarità (v6.1)**: entrano solo eventi che nelle prime cinque leghe europee e in Champions League succedono poche volte l'anno. Sono stati **tolti** i record comuni: un subentrato che segna (anche una doppietta), un difensore con almeno 6 gol in stagione, un attaccante a secco in 25 partite, 15 gol senza rigori, 100 presenze senza espulsioni, 30 partite senza ammonizioni, un gol con due squadre diverse nella stessa stagione, una tripletta di un centrocampista.
+- Una sola opzione ha davvero fatto quella cosa; le altre tre sono **giocatori noti** (o partite) per cui il record è falso sugli stessi dati. Tutte e quattro passano il filtro notorietà.
+- Tipi di record (13 generatori, `data/trivela_data/gen_anomalie.py`):
+  - un **portiere che ha segnato** un gol; un portiere con almeno un **assist**;
+  - un **difensore con una tripletta** (almeno tre gol in una partita) o con **una doppietta**;
+  - un giocatore **entrato dalla panchina con almeno tre gol** nella stessa partita; un attaccante con **almeno quattro gol** in una partita;
+  - un **autogol e un gol per la propria squadra nella stessa partita** (la domanda dice solo «autogol e gol»; lo script riporta i minuti);
+  - un **subentrato espulso meno di 5 minuti** dopo l'ingresso (e, con una domanda separata, tra 5 e 9 minuti): lo script dice quanti minuti dopo;
+  - un **titolare espulso nei primi 5 minuti** di una partita (e, separata, tra il 6° e il 10°);
+  - una partita in cui **una stessa squadra ha chiuso con almeno tre espulsi** (le opzioni sono partite, con stagione; le false hanno al massimo due espulsi per squadra);
+  - un giocatore che, **nella stessa stagione e competizione, ha giocato per una squadra all'andata e per l'avversaria al ritorno** (trasferimento tra le due partite).
+- **Non fattibile con i dati**: i **rigori sbagliati in partita** non sono nel dataset (Transfermarkt registra solo i tiri delle serie finali), quindi «due rigori sbagliati nella stessa partita» non viene generata: servirebbe una fonte che al momento non è ammessa (SofaScore è scartata, SPEC §0.5).
+- **Più varianti per evento**: i fatti rarissimi sono pochi (es. 9 gol di portieri), quindi lo stesso evento compare con **terne di distrattori diverse** (fino a 6 varianti) per arrivare a 1000 istanze senza abbassare la soglia di rarità. Un'istanza è identificata da evento + variante.
+- **Affermazioni «mai» solo dove i dati lo permettono**: i distrattori sono giocatori senza quell'evento in stagioni con dati completi (gol, formazioni o cartellini concordanti tra eventi e righe di presenza) e la finestra «stagioni 2012/13–2025/26» è scritta nella domanda.
 - Le istanze portano il campionato (`comp:`), quindi rispettano il filtro campionati (§3.4).
+- Test: `test_anomalia_only_genuinely_rare_records` (solo generatori ammessi, soglie verificate dagli script).
 
 ### 4.3 `mercato` — Il Mercato
 - **2 trasferimenti** legati alla Serie A, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
@@ -721,14 +735,18 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 - Accessibilità: contrasto AA sui testi, `prefers-reduced-motion` (niente flash e scanline), dimensioni minime dei target touch 48 px.
 - Box **Copione**: riquadro "terminale" che scrive il testo carattere per carattere (salto immediato al tocco).
 
-### 14.1 «Juiciness» (v6)
+### 14.1 «Juiciness» e fluidità (v6, v6.1)
 
 Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefers-reduced-motion`:
 
 - **Scossa dello schermo** a ogni risposta sbagliata (oltre al rosso di §3.6).
 - **Punti volanti**: un «+2» / «+3» in pixel verde (con una scintilla a forma di moneta sul punteggio) sale dal giocatore che segna.
 - **Wipe a scacchiera** a pixel tra un gioco e il successivo e verso i risultati.
-- **Scanline CRT** leggere e sfarfallio lento, elementi di sfondo che scorrono piano (nuvole, stelle, un pallone).
+- **Scanline CRT** leggere (statiche) e elementi di sfondo che scorrono piano (nuvole, stelle, un pallone).
+
+**Fluidità a 60 fps (v6.1)**: le animazioni di movimento (comparsa, scossa, wipe, punti volanti, lucido dei pulsanti) usano solo `transform` e `opacity`, con curve morbide (`cubic-bezier`); lo stile a scatti (`steps()`) resta solo per il lampeggio, le stelle, il cursore e simili. Niente animazioni di `clip-path`, `left/top`, `box-shadow`, né `mix-blend-mode` a schermo intero: i fasci di luce dei riflettori sono immagini già disegnate ruotate con `transform`. Misura: con `requestAnimationFrame` in Chromium senza GPU la schermata di gioco passa da 30 a 60 fps (mediana 16,7 ms, nessun frame sopra i 20 ms).
+
+**Barra superiore (v6.1)**: la barra del tabellone sta sopra il contenuto (`z-index`), ha sfondo pieno e `overflow: hidden`; i nomi lunghi vanno a capo su due righe; il «+N» che sale è disegnato solo dai punti volanti nell'arena. Corretto un bug per cui i riquadri del punteggio si duplicavano nella barra: due chiavi React uguali (due `Date.now()` nello stesso millisecondo) facevano restare vecchi riquadri. Ora le chiavi vengono da un contatore.
 
 ---
 

@@ -1,10 +1,10 @@
 {
   "version": "2026-11-13",
-  "generatedAt": "2026-11-13T11:52:41+00:00",
+  "generatedAt": "2026-11-13T13:12:34+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 2400,
-    "anomalia": 1379,
+    "anomalia": 1500,
     "mercato": 1300,
     "decina": 1400,
     "dischetto": 1150,
@@ -15,7 +15,7 @@
   },
   "generators": {
     "tiro_secco": 35,
-    "anomalia": 30,
+    "anomalia": 26,
     "mercato": 1,
     "decina": 23,
     "dischetto": 53,
@@ -45,7 +45,7 @@
       "excluded_not_notable": 0
     },
     "anomalia": {
-      "kept": 1379,
+      "kept": 2320,
       "excluded_show": 3,
       "excluded_not_notable": 0
     },

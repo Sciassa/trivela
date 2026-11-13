@@ -59,11 +59,41 @@ def test_anomalia_has_four_famous_options_and_variety():
     items = load("anomalia")
     for it in items:
         assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4 and it["kind"]
-        assert re.search(r"\d{4}/\d{2}|\d{4}", it["question"]) or "stagioni" in it["question"]
+        # the perimeter is stated in the question, or (for "which game") in every option
+        assert re.search(r"\d{4}/\d{2}|\d{4}", it["question"]) or "stagioni" in it["question"] or all(re.search(r"\d{4}/\d{2}", o) for o in it["options"])
     assert len({it["generator"].split("@")[0] for it in items}) >= 8
     assert any("tripletta" in it["question"] and "difensori" in it["question"] for it in items)  # the flagship anomaly
     assert any("portieri" in it["question"] and "assist" in it["question"] for it in items)
     assert any("panchina" in it["question"] for it in items)
+
+
+RARE_ANOMALIES = {"an_portiere_gol", "an_difensore_tripletta", "an_difensore_doppietta", "an_panchina_tripletta", "an_poker", "an_autogol_e_gol",
+                  "an_subentrato_espulso_5", "an_subentrato_espulso_10", "an_espulso_presto_5", "an_espulso_presto_10", "an_tre_espulsi",
+                  "an_andata_ritorno", "an_portiere_assist"}
+
+
+def test_anomalia_only_genuinely_rare_records():
+    """Everyday events (a substitute scoring, a forward without a goal, 100 games without a red card) are not anomalies."""
+    items = load("anomalia")
+    gens = {it["generator"].split("@")[0] for it in items}
+    assert gens <= RARE_ANOMALIES, gens - RARE_ANOMALIES
+    # the headline records the game promises are all there
+    for must in ("an_portiere_gol", "an_autogol_e_gol", "an_subentrato_espulso_5", "an_difensore_tripletta", "an_tre_espulsi", "an_andata_ritorno"):
+        assert must in gens, must
+    for it in items:
+        g = it["generator"].split("@")[0]
+        if g == "an_subentrato_espulso_5":
+            assert int(re.search(r"\((\d+) minuti dopo\)", it["script"]).group(1)) < 5, it["script"]
+        if g == "an_subentrato_espulso_10":
+            assert 5 <= int(re.search(r"\((\d+) minuti dopo\)", it["script"]).group(1)) < 10, it["script"]
+        if g == "an_espulso_presto_5":
+            assert int(re.search(r"espulso al (\d+)'", it["script"]).group(1)) <= 5, it["script"]
+        if g == "an_espulso_presto_10":
+            assert 5 < int(re.search(r"espulso al (\d+)'", it["script"]).group(1)) <= 10, it["script"]
+        if g == "an_tre_espulsi":
+            assert int(re.search(r"con (\d+) giocatori espulsi", it["script"]).group(1)) >= 3, it["script"]
+        if g == "an_autogol_e_gol":
+            assert "autogol" in it["script"] and "gol per la propria squadra" in it["script"]
 
 
 def test_maglia_asks_for_a_number_and_skips_banal_ones():

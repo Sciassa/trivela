@@ -29,15 +29,16 @@ function useFx(state: MatchState) {
 /** Floating point gains: one per scoring event, gone after a second and a half. */
 function usePops(state: MatchState): Pop[] {
   const [pops, setPops] = useState<Pop[]>([]);
+  const seq = useRef(0);
   useEffect(() => {
     const fresh: Pop[] = [];
-    state.events.forEach((e, k) => {
-      if ((e.type === "correct" || e.type === "goal") && e.points !== 0) fresh.push({ id: Date.now() * 10 + k, value: e.points, player: e.player });
+    state.events.forEach((e) => {
+      if ((e.type === "correct" || e.type === "goal") && e.points !== 0) fresh.push({ id: ++seq.current, value: e.points, player: e.player });
     });
     if (!fresh.length) return;
     setPops((p) => [...p, ...fresh]);
-    const t = window.setTimeout(() => setPops((p) => p.filter((x) => !fresh.includes(x))), 1500);
-    return () => window.clearTimeout(t);
+    // not cleared when the next event arrives: every pop must go away on its own, or earlier ones would pile up
+    window.setTimeout(() => setPops((p) => p.filter((x) => !fresh.includes(x))), 1500);
   }, [state.events]);
   return pops;
 }
