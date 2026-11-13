@@ -10,7 +10,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "prima_pagina", "mercato", "decina", "dischetto", "formazione", "giramondo", "frame", "asta", "maglia"]
+GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "frame", "asta", "maglia"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -55,10 +55,48 @@ def test_league_tags():
         assert len(enough) >= 5, (lg, enough)
 
 
-def test_maglia_asks_for_a_number():
-    for it in load("maglia"):
+def test_anomalia_has_four_famous_options_and_variety():
+    items = load("anomalia")
+    for it in items:
+        assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4 and it["kind"]
+        assert re.search(r"\d{4}/\d{2}|\d{4}", it["question"]) or "stagioni" in it["question"]
+    assert len({it["generator"].split("@")[0] for it in items}) >= 8
+    assert any("tripletta" in it["question"] and "difensori" in it["question"] for it in items)  # the flagship anomaly
+    assert any("portieri" in it["question"] and "assist" in it["question"] for it in items)
+    assert any("panchina" in it["question"] for it in items)
+
+
+def test_frame_timelines_are_anonymous_and_unambiguous():
+    items = load("frame")
+    assert {it["mode"] for it in items} == {"match", "score"}
+    for it in items:
+        mins = [e["minute"] for e in it["events"]]
+        assert mins == sorted(mins) and any(e["kind"] == "goal" for e in it["events"])
+        assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4
+        if it["mode"] == "match":
+            goals = [e for e in it["events"] if e["kind"] == "goal"]
+            assert all("score" in e for e in goals)
+            assert goals[-1]["score"][0] + goals[-1]["score"][1] == len(goals)
+            assert "side" in next(e for e in it["events"] if e["kind"] != "goal") or all(e["kind"] == "goal" for e in it["events"])
+            assert it["options"][it["correct"]].split(" · ")[0] in it["script"]
+        else:
+            # goals and cards are bare minutes: nothing but the number of goals can be read off
+            assert all(set(e) == {"minute", "kind"} for e in it["events"])
+            n = sum(1 for e in it["events"] if e["kind"] == "goal")
+            assert n >= 3 and all(sum(map(int, o.split("-"))) == n for o in it["options"])
+
+
+def test_maglia_asks_for_a_number_and_skips_banal_ones():
+    items = load("maglia")
+    for it in items:
         assert it["answer"]["kind"] == "number" and 1 <= it["answer"]["value"] <= 99
         assert it["player"] in it["question"]
+        v, role = it["answer"]["value"], it["role"]
+        assert not (v == 1 and role == "GK") and not (v == 9 and role == "ATT"), it["question"]
+    kinds = [it["generator"].split("@")[0] for it in items]
+    assert kinds.count("maglia_anomala") >= 150 and kinds.count("maglia_pesante") >= 300
+    classic = [it for it in items if it["generator"].startswith("maglia_numero") and it["answer"]["value"] < 12]
+    assert len(classic) <= 0.08 * len(items)  # plain numbers are the exception
 
 
 def test_rankings_and_sets():

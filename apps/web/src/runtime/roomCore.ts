@@ -22,11 +22,13 @@ export type UpMsg =
   | { t: "ping"; c: number }
   | { t: "intent"; intent: Intent }
   /** `at` is already expressed in the Screen clock. */
-  | { t: "buzz"; at: number };
+  | { t: "buzz"; at: number }
+  /** Timer controls of the host: pause, resume, or move the remaining time by `ms` (negative to shorten). */
+  | { t: "timer"; op: "pause" | "resume" | "add"; ms?: number };
 
 /** Messages from the Screen to the phones. */
 export type DownMsg =
-  | { t: "view"; rev: number; state: MatchState | null; timerStart: number; now: number; roster: Roster }
+  | { t: "view"; rev: number; state: MatchState | null; timerStart: number; timerMs: number; pausedLeft: number | null; now: number; roster: Roster }
   | { t: "pong"; c: number; s: number; rev: number };
 
 /** "pub": controllers (never receives solutions). "host": the Regia. */
@@ -37,7 +39,10 @@ export const CLIENT_TTL_MS = 12_000;
 
 export class RoomCore {
   state: MatchState | null = null;
+  /** The running timer ends at timerStart + timerMs; paused: pausedLeft holds the time still to go. */
   timerStart = 0;
+  timerMs = 0;
+  pausedLeft: number | null = null;
   rev = 0;
   private clients = new Map<string, { role: ClientRole; seen: number }>();
   private timer: ReturnType<typeof setTimeout> | null = null;
@@ -94,6 +99,9 @@ export class RoomCore {
         return;
       case "buzz":
         if (known && known.role !== "host") this.queueBuzz(known.role === "p1" ? 0 : 1, msg.at);
+        return;
+      case "timer":
+        if (known?.role === "host") this.timerControl(msg.op, msg.ms ?? 0);
         return;
     }
   }
@@ -181,10 +189,52 @@ export class RoomCore {
   private armTimer() {
     if (this.timer) clearTimeout(this.timer);
     this.timer = null;
+    this.pausedLeft = null;
     const t = this.state?.timer;
     if (!t) return;
     this.timerStart = this.now();
-    this.timer = setTimeout(() => this.apply({ type: "TIMEOUT", timerId: t.id }), t.ms);
+    this.timerMs = t.ms;
+    this.schedule(t.id, t.ms);
+  }
+
+  private schedule(id: number, ms: number) {
+    if (this.timer) clearTimeout(this.timer);
+    this.timer = setTimeout(() => this.apply({ type: "TIMEOUT", timerId: id }), Math.max(0, ms));
+  }
+
+  /** Time left on the current countdown, or null when there is none worth controlling (pauses between questions). */
+  timeLeft(): number | null {
+    const t = this.state?.timer;
+    if (!t || t.kind === "feedback" || t.kind === "ready") return null;
+    return this.pausedLeft ?? Math.max(0, this.timerStart + this.timerMs - this.now());
+  }
+
+  /** Host controls: pause, resume, or add/remove time. The Screen follows at once through the new view. */
+  timerControl(op: "pause" | "resume" | "add", ms: number): void {
+    const t = this.state?.timer;
+    const left = this.timeLeft();
+    if (!t || left === null) return;
+    if (op === "pause") {
+      if (this.pausedLeft !== null) return;
+      if (this.timer) clearTimeout(this.timer);
+      this.timer = null;
+      this.pausedLeft = left;
+    } else if (op === "resume") {
+      if (this.pausedLeft === null) return;
+      this.pausedLeft = null;
+      this.timerStart = this.now();
+      this.timerMs = left;
+      this.schedule(t.id, left);
+    } else {
+      const next = Math.max(0, left + Math.round(ms));
+      if (this.pausedLeft !== null) this.pausedLeft = next;
+      else {
+        this.timerStart = this.now();
+        this.timerMs = next;
+        this.schedule(t.id, next);
+      }
+    }
+    this.broadcast();
   }
 
   /** The Regia sees the solutions of the current game; everybody else the redacted view. */
@@ -195,7 +245,7 @@ export class RoomCore {
   }
 
   private sendView(ch: "pub" | "host") {
-    this.out(ch, { t: "view", rev: this.rev, state: this.viewFor(ch === "host" ? "host" : "p1"), timerStart: this.timerStart, now: this.now(), roster: this.roster() });
+    this.out(ch, { t: "view", rev: this.rev, state: this.viewFor(ch === "host" ? "host" : "p1"), timerStart: this.timerStart, timerMs: this.timerMs, pausedLeft: this.pausedLeft, now: this.now(), roster: this.roster() });
   }
 
   broadcast(): void {

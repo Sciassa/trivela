@@ -1,4 +1,4 @@
-"""Games built on single famous matches: Il Frame, Prima Pagina, La Formazione."""
+"""La Formazione, built on single famous matches (Il Frame lives in gen_frame)."""
 
 from __future__ import annotations
 
@@ -53,99 +53,6 @@ class Matches:
         tag = " (aut.)" if x["own"] else " (rig.)" if x["pen"] else ""
         return f"{x['min']}' {name}{tag}"
 
-    # ------------------------------------------------------------------ Il Frame
-    def frame(self) -> list[dict]:
-        t, out = self.t, []
-        for g in self.games:
-            gl = self.goals.get(g["gid"])
-            if not g["ev_ok"] or not gl or len(gl) < 2:
-                continue
-            mins = [x["min"] for x in gl]
-            cands = [m for m in range(6, 86) if m not in (44, 45, 46, 47) and all(abs(m - x) >= 2 for x in mins) and any(x < m for x in mins)]
-            if not cands:
-                continue
-            m = random.Random(g["gid"]).choice(cands)
-            before = [x for x in gl if x["min"] < m]
-            sc = [sum(1 for x in before if x["club"] == g["home"]), sum(1 for x in before if x["club"] == g["away"])]
-            last = before[-1]
-            home, away = t.club(g["home"], g["hname"]), t.club(g["away"], g["aname"])
-            it = base("frame", (g["gid"], m), year=g["date"].year, fame=weight(t, g), entities=self.ents(g), sources=[t.src_game(g)],
-                      script=f"{t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}). Al {m}' il punteggio era {sc[0]}-{sc[1]}. "
-                             f"I gol: {', '.join(self.goal_txt(g, x) for x in gl)}.")
-            it.update({"match": f"{home}-{away} · {t.ctx(g)}", "date": date_it(g["date"]), "minute": m, "teams": [home, away], "scoreAt": sc})
-            if not last["own"] and t.is_notable(last["pid"]):
-                it["lastScorer"] = t.answer(last["pid"])
-            out.append(it)
-        return out
-
-    # ------------------------------------------------------------------ Prima Pagina
-    def prima_pagina(self) -> list[dict]:
-        t, out = self.t, []
-        for g in self.games:
-            gl = self.goals.get(g["gid"])
-            if not g["ev_ok"] or not gl:
-                continue
-            scorers = [x for x in gl if not x["own"] and t.is_notable(x["pid"])]
-            if not scorers:
-                continue
-            r = random.Random(g["gid"])
-            hid = r.choice(scorers)
-            home, away = t.club(g["home"], g["hname"]), t.club(g["away"], g["aname"])
-            kinds = []
-            if g["referee"]:
-                kinds.append(("Arbitro", {"kind": "entity", "ids": [t.rid(g["referee"])], "display": g["referee"]}, g["referee"]))
-            for man, club in ((g["hman"], home), (g["aman"], away)):
-                if man:
-                    kinds.append((f"Allenatore · {club}", {"kind": "entity", "ids": [t.mid(man)], "display": man}, man))
-            others = [x for x in scorers if x["pid"] != hid["pid"]]
-            if others:
-                o = r.choice(others)
-                kinds.append(("Altro marcatore", t.answer(o["pid"]), t.pname(o["pid"])))
-            if not kinds:
-                continue
-            label2, ans2, hidden2 = r.choice(kinds)
-
-            def mask(text: str) -> str:
-                return text.replace(hidden2, "{{1}}") if hidden2 else text
-
-            goals_txt = ", ".join(self.goal_txt(g, x, hid["pid"]) for x in gl)
-            goals_txt = mask(goals_txt)
-            sa, sb = g["fh"], g["fa"]
-            cap = lambda x: x[:1].upper() + x[1:]  # noqa: E731
-            head = (f"{cap(t.il(g['home']))} batte {t.il(g['away'])} {sa}-{sb}" if sa > sb
-                    else f"{cap(t.il(g['away']))} passa in casa {t.di(g['home'])}: {sb}-{sa}" if sb > sa
-                    else f"{home}-{away}, finisce {sa}-{sb}")
-            if g["pens"]:
-                head = f"{home}-{away} {sa}-{sb}: decidono i rigori"
-            box = [f"{home}-{away} {sa}-{sb}", f"Reti: {goals_txt}"]
-            if g["referee"]:
-                box.append(mask(f"Arbitro: {g['referee']}"))
-            if g["hman"] and g["aman"]:
-                box.append(mask(f"Allenatori: {g['hman']} ({home}), {g['aman']} ({away})"))
-            if g["stadium"]:
-                box.append(f"Stadio: {g['stadium']}" + (f" · spettatori {int(g['attendance']):,}".replace(",", ".") if g["attendance"] else ""))
-            for club, nm in ((g["home"], home), (g["away"], away)):
-                lu = self.lineups.get((g["gid"], club))
-                if lu and len(lu) == 11 and all(p["pos"] in POS_XY for p in lu):
-                    lu = sorted(lu, key=lambda p: (POS_XY[p["pos"]][1], POS_XY[p["pos"]][0]))
-                    names = ", ".join("{{0}}" if p["pid"] == hid["pid"] else t.surname(p["pid"]) for p in lu)
-                    box.append(mask(f"{nm} ({(g['hform'] if club == g['home'] else g['aform']) or 'titolari'}): {names}"))
-            who = ", ".join(dict.fromkeys(("{{0}}" if x["pid"] == hid["pid"] else t.surname(x["pid"])) for x in gl if not x["own"]))
-            page = {"masthead": "La Trivela Sportiva", "date": date_it(g["date"]), "weekday": WEEKDAYS[g["date"].weekday()],
-                    "kicker": t.ctx(g), "headline": head, "subhead": mask(f"A segno {who}"),
-                    "body": [mask(f"{date_it(g['date']).capitalize()}. {home} e {away} si affrontano"
-                                  f"{' allo stadio ' + g['stadium'] if g['stadium'] else ''}: finisce {sa}-{sb}."),
-                             f"La sequenza delle reti: {goals_txt}."],
-                    "boxTitle": "Il tabellino", "boxLines": box}
-            n1, n2 = t.pname(hid["pid"]), hidden2
-            it = base("prima_pagina", g["gid"], year=g["date"].year, fame=max(weight(t, g), t.fame(hid["pid"])), entities=self.ents(g) + [t.pid(hid["pid"])],
-                      sources=[t.src_game(g)], script=f"{t.label(g)} ({t.ctx(g)}): tra i marcatori {n1}; {label2.split(' · ')[0].lower()}: {n2}.")
-            bucket = lambda s: 1 if len(s) < 9 else 2 if len(s) < 16 else 3  # noqa: E731
-            it.update({"page": page, "slots": [{"label": "Marcatore", "answer": t.answer(hid["pid"]), "lengthBucket": bucket(n1)},
-                                               {"label": label2, "answer": ans2, "lengthBucket": bucket(n2)}]})
-            out.append(it)
-        return out
-
     # ------------------------------------------------------------------ La Formazione
     def formazione(self) -> list[dict]:
         t, out = self.t, []
@@ -188,14 +95,9 @@ class Matches:
 
 
 def generate(t: TM) -> dict[str, list[dict]]:
-    m = Matches(t)
-    out = {"frame": m.frame(), "prima_pagina": m.prima_pagina(), "formazione": m.formazione()}
-    for k in out:
-        out[k].sort(key=lambda x: -x["fame"])
-    out["frame"] = out["frame"][:2500]
-    out["prima_pagina"] = out["prima_pagina"][:2500]
-    out["formazione"] = out["formazione"][:2000]
-    return out
+    items = Matches(t).formazione()
+    items.sort(key=lambda x: -x["fame"])
+    return {"formazione": items[:2000]}
 
 
 __all__ = ["generate", "famous_games", "season_label"]

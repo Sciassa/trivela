@@ -12,6 +12,16 @@ import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
 /** True inside the scaled stage (text inputs open the typing bar on touch devices). */
 const StageCtx = createContext(false);
 
+/**
+ * The host can pause the countdown or move it: `ms` is the effective duration of the running timer (null: the
+ * nominal one), `pausedLeft` the time still to go while it is paused.
+ */
+export interface TimerClock {
+  ms: number | null;
+  pausedLeft: number | null;
+}
+export const TimerClockCtx = createContext<TimerClock>({ ms: null, pausedLeft: null });
+
 export interface PlayMode {
   /** Screen of a room with phones connected: inputs live on the phones. */
   readonly: boolean;
@@ -63,17 +73,6 @@ export function Stage({ children }: { children: ReactNode }) {
           <div className="stage-body">{children}</div>
           <div className="scanlines" />
         </div>
-        <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden>
-          <filter id="paper-noise">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" result="n" />
-            <feColorMatrix in="n" type="saturate" values="0" result="g" />
-            <feComponentTransfer in="g" result="a">
-              <feFuncA type="table" tableValues="0 0.08" />
-            </feComponentTransfer>
-            <feComposite in="a" in2="SourceGraphic" operator="in" result="m" />
-            <feBlend in="SourceGraphic" in2="m" mode="multiply" />
-          </filter>
-        </svg>
       </div>
     </StageCtx.Provider>
   );
@@ -252,34 +251,44 @@ export function Scoreboard({ state }: { state: MatchState }) {
 
 /* ------------------------------------------------------------ Timer */
 
-export function TimerBar({ ms, start, id }: { ms: number; start: number; id: number }) {
+/** Seconds left on a countdown, ticking every 100 ms (a paused one stays where it is). */
+export function useTimeLeft(ms: number, start: number, pausedLeft: number | null): number {
   const [now, setNow] = useState(Date.now());
-  const lastTick = useRef(-1);
   useEffect(() => {
+    if (pausedLeft !== null) return;
     const t = window.setInterval(() => setNow(Date.now()), 100);
     return () => window.clearInterval(t);
-  }, [id]);
-  const left = Math.max(0, Math.min(ms, ms - (now - start)));
+  }, [pausedLeft]);
+  return pausedLeft ?? Math.max(0, ms - (now - start));
+}
+
+export function TimerBar({ ms, start, id, nominal }: { ms: number; start: number; id: number; nominal?: number }) {
+  const { pausedLeft } = useContext(TimerClockCtx);
+  const lastTick = useRef(-1);
+  const left = useTimeLeft(ms, start, pausedLeft);
   const sec = Math.ceil(left / 1000);
   useEffect(() => {
-    if (sec <= 5 && sec > 0 && sec !== lastTick.current) {
+    if (pausedLeft === null && sec <= 5 && sec > 0 && sec !== lastTick.current) {
       lastTick.current = sec;
       audio.play("tick");
     }
-  }, [sec]);
+  }, [sec, pausedLeft, id]);
+  const total = Math.max(nominal ?? ms, 1);
   return (
-    <div className={`timer ${left < 5000 ? "hurry" : ""}`}>
+    <div className={`timer ${left < 5000 ? "hurry" : ""} ${pausedLeft !== null ? "paused" : ""}`}>
       <div className="timer-track">
-        <div className="timer-fill" style={{ transform: `scaleX(${left / ms})` }} />
+        <div className="timer-fill" style={{ transform: `scaleX(${Math.min(1, left / total)})` }} />
       </div>
-      <span className="timer-num">{sec}</span>
+      <span className="timer-num">{pausedLeft !== null ? "II" : sec}</span>
+      {pausedLeft !== null && <span className="timer-pause">PAUSA · {sec}</span>}
     </div>
   );
 }
 
 export function StateTimer({ state, start }: { state: MatchState; start: number }) {
+  const clock = useContext(TimerClockCtx);
   if (!state.timer || state.timer.kind === "feedback" || state.timer.kind === "ready") return <div className="timer idle" />;
-  return <TimerBar key={state.timer.id} ms={state.timer.ms} start={start} id={state.timer.id} />;
+  return <TimerBar key={state.timer.id} ms={clock.ms ?? state.timer.ms} nominal={state.timer.ms} start={start} id={state.timer.id} />;
 }
 
 /* ------------------------------------------------------------ Copione */
@@ -501,38 +510,6 @@ export function PhoneHint({ text = "Si risponde dal telefono" }: { text?: string
 }
 
 /* ------------------------------------------------------------ Pickers */
-
-export function ScorePicker({ teams, onSubmit, children }: { teams: [string, string]; onSubmit: (s: [number, number]) => void; children?: ReactNode }) {
-  const [s, setS] = useState<[number, number]>([0, 0]);
-  const step = (i: 0 | 1, d: number) => {
-    audio.play("blip");
-    setS((x) => (i === 0 ? [Math.max(0, Math.min(15, x[0] + d)), x[1]] : [x[0], Math.max(0, Math.min(15, x[1] + d))]));
-  };
-  return (
-    <div className="col">
-      <div className="score-picker">
-        {([0, 1] as const).map((i) => (
-          <div key={i} className="sp-team">
-            <span className="sp-name">{teams[i]}</span>
-            <div className="sp-ctl">
-              <button className="btn ghost sq" onClick={() => step(i, -1)} aria-label={`meno ${teams[i]}`}>
-                −
-              </button>
-              <span className="led big">{s[i]}</span>
-              <button className="btn ghost sq" onClick={() => step(i, 1)} aria-label={`più ${teams[i]}`}>
-                +
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
-      {children}
-      <button className="btn wide" onClick={() => onSubmit(s)}>
-        CONFERMA IL RISULTATO
-      </button>
-    </div>
-  );
-}
 
 /** Numeric keypad for shirt numbers (also driven by the physical keyboard). */
 export function NumberPad({ onSubmit }: { onSubmit: (n: string) => void }) {

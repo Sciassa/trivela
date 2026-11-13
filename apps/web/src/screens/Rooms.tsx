@@ -1,14 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import type { DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, PrimaPaginaItem, SetItem, TiroSeccoItem } from "@trivela/protocol";
+import type { AnomaliaItem, DischettoItem, FormazioneItem, FrameItem, MagliaItem, PlayerIdx, SetItem, TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
-import { AnswerBox, Page, PlayCtx, ScorePicker, useWakeLock } from "../components/ui";
+import { AnswerBox, Page, PlayCtx, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
 
@@ -56,6 +56,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
         dispatch={room.dispatch}
         ctx={matchCtx}
         start={room.timerStart}
+        clock={room.timer}
         mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host, pad: false }}
         onExit={(s) => {
           rememberSeen(usedIds(s));
@@ -202,13 +203,10 @@ function PhoneFrame({ role, room, children }: { role: ClientRole; room: RoomClie
 
 function solutionOf(g: GameStateAny): string[] {
   switch (g.game) {
-    case "tiro_secco": {
-      const it = g.items[g.i] as TiroSeccoItem;
+    case "tiro_secco":
+    case "anomalia": {
+      const it = g.items[g.i] as TiroSeccoItem | AnomaliaItem;
       return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
-    }
-    case "prima_pagina": {
-      const it = g.items[g.turn] as PrimaPaginaItem;
-      return [it.page.headline.replace(/\{\{\d\}\}/g, "▒▒▒"), ...it.slots.map((s, k) => `${k + 1}. ${s.label}: ${s.answer.display}`)];
     }
     case "mercato":
     case "giramondo": {
@@ -227,8 +225,8 @@ function solutionOf(g: GameStateAny): string[] {
       return [`${it.title} · ${it.competition}`, ...it.teams.map((t) => `${t.name}: ${t.players.filter((p) => p.hidden).map((p) => p.name).join(", ")}`)];
     }
     case "frame": {
-      const it = g.items[g.i] as FrameItem;
-      return [`${it.match} (${it.date})`, `Al ${it.minute}': ${it.teams[0]} ${it.scoreAt.join("-")} ${it.teams[1]}`, it.lastScorer ? `Ultimo marcatore: ${it.lastScorer.display}` : ""];
+      const it = g.items[g.turn] as FrameItem;
+      return [it.heading, it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "maglia": {
       const it = g.items[g.i] as MagliaItem;
@@ -240,8 +238,39 @@ function solutionOf(g: GameStateAny): string[] {
 
 function scriptOf(g: GameStateAny): string {
   if (g.script) return g.script;
-  const it = g.item ?? (g.game === "prima_pagina" ? g.items?.[g.turn] : g.items?.[g.i]);
+  const it = g.item ?? (g.game === "frame" ? g.items?.[g.turn] : g.items?.[g.i]);
   return it?.script ?? "";
+}
+
+/** Clock of the host: pause/play and +10 / -10 seconds; the Screen follows at once. */
+function HostTimerPad({ room }: { room: RoomClient }) {
+  const s = room.state!;
+  const t = s.timer;
+  const live = !!t && t.kind !== "feedback" && t.kind !== "ready";
+  const ms = room.timer.ms ?? t?.ms ?? 0;
+  const left = useTimeLeft(ms, room.timerStart, live ? room.timer.pausedLeft : null);
+  if (!live || s.phase !== "playing") return null;
+  const paused = room.timer.pausedLeft !== null;
+  const tap = (f: () => void) => () => (audio.play("blip"), navigator.vibrate?.(20), f());
+  return (
+    <div className={`timerpad ${paused ? "paused" : ""}`}>
+      <div className="timerpad-top">
+        <span className="label">TEMPO · {paused ? "IN PAUSA" : "IN CORSO"}</span>
+        <span className="led">{Math.ceil(left / 1000)}</span>
+      </div>
+      <div className="timerpad-keys">
+        <button className={`btn ${paused ? "ok" : ""}`} onClick={tap(() => room.timerOp(paused ? "resume" : "pause"))}>
+          {paused ? "PLAY ▶" : "II PAUSA"}
+        </button>
+        <button className="btn ghost" onClick={tap(() => room.timerOp("add", 10_000))}>
+          +10 s
+        </button>
+        <button className="btn ghost" onClick={tap(() => room.timerOp("add", -10_000))}>
+          −10 s
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export function HostRoom({ code }: { code: string }) {
@@ -250,13 +279,9 @@ export function HostRoom({ code }: { code: string }) {
   const s = room.state;
   const d = room.dispatch;
   const [sel, setSel] = useState<string[]>([]);
-  const [slots, setSlots] = useState([false, false]);
-  const [bonus, setBonus] = useState(false);
   const g = s?.game;
   useEffect(() => {
     setSel([]);
-    setSlots([false, false]);
-    setBonus(false);
   }, [g?.i, g?.round, g?.k, g?.turn, g?.stage]);
   if (!s) {
     return (
@@ -288,8 +313,10 @@ export function HostRoom({ code }: { code: string }) {
     if (["reveal", "final"].includes(g.stage)) controls = <Btn label="AVANTI ▶" onClick={() => d({ type: "NEXT" })} />;
     else
       switch (g.game) {
-        case "tiro_secco": {
-          const it = g.items[g.i] as TiroSeccoItem;
+        case "tiro_secco":
+        case "anomalia":
+        case "frame": {
+          const it = g.items[g.game === "frame" ? g.turn : g.i] as TiroSeccoItem;
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
         }
@@ -378,40 +405,9 @@ export function HostRoom({ code }: { code: string }) {
           );
           break;
         }
-        case "prima_pagina": {
-          const it = g.items[g.turn] as PrimaPaginaItem;
-          controls = (
-            <>
-              <span className="label">TOCCA I NOMI INDOVINATI</span>
-              {it.slots.map((sl, k) => (
-                <button key={k} className={`btn big ${slots[k] ? "ok" : "ghost"}`} onClick={() => setSlots((x) => x.map((v, i) => (i === k ? !v : v)))}>
-                  {slots[k] ? "✓" : "✗"} {sl.answer.display}
-                </button>
-              ))}
-              <Btn label="CONFERMA" onClick={() => d({ type: "VERDICT", payload: { slots } })} />
-            </>
-          );
-          break;
-        }
         case "maglia":
           controls = okKo;
           break;
-        case "frame": {
-          const it = g.items[g.i] as FrameItem;
-          controls = (
-            <>
-              <span className="label">RISULTATO DETTO DAL GIOCATORE</span>
-              <ScorePicker key={g.i} teams={it.teams} onSubmit={(score) => d({ type: "ANSWER", payload: { score, scorerCorrect: bonus } })}>
-                {it.lastScorer && (
-                  <button className={`btn ${bonus ? "ok" : "ghost"}`} onClick={() => setBonus(!bonus)}>
-                    BONUS MARCATORE {bonus ? "✓" : "✗"}
-                  </button>
-                )}
-              </ScorePicker>
-            </>
-          );
-          break;
-        }
       }
   }
   return (
@@ -423,6 +419,7 @@ export function HostRoom({ code }: { code: string }) {
               TOCCA A {s.config.players[g.turn as PlayerIdx]}
             </div>
           )}
+          <HostTimerPad room={room} />
           <div className="solution-box">
             <span className="label">SOLUZIONE (SOLO PER TE)</span>
             {solutionOf(g)
@@ -567,9 +564,11 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
         </div>
       ) : turn ? (
         <PlayCtx.Provider value={{ readonly: false, flow, pad: true }}>
-          <PadCanvas>
-            <GameView state={s} g={g} dispatch={room.dispatch} ctx={padCtx} start={room.timerStart} />
-          </PadCanvas>
+          <TimerClockCtx.Provider value={room.timer}>
+            <PadCanvas>
+              <GameView state={s} g={g} dispatch={room.dispatch} ctx={padCtx} start={room.timerStart} />
+            </PadCanvas>
+          </TimerClockCtx.Provider>
         </PlayCtx.Provider>
       ) : (
         <div className="panel waiting">{closed || g.stage === "feedback" ? "GUARDA LO SCHERMO" : `TOCCA A ${s.config.players[(g.turn ?? g.starter ?? 0) as PlayerIdx]}`}</div>

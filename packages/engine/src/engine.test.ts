@@ -9,7 +9,7 @@ import { makeCtx, makePacks, meta, P } from "./fixtures.test-helpers";
 
 const packs = makePacks();
 const ctx = makeCtx(packs);
-const g5: GameId[] = ["tiro_secco", "maglia", "frame", "prima_pagina", "decina"];
+const g5: GameId[] = ["tiro_secco", "maglia", "frame", "anomalia", "decina"];
 
 function start(games: GameId[], over: Partial<MatchConfig> = {}): MatchState {
   const r = createMatch({ judging: "auto", players: ["Anna", "Bruno"], yearFrom: null, seed: 7, forcedGames: games, ...over }, packs);
@@ -38,9 +38,9 @@ describe("match flow", () => {
 
   it("limits the rounds: at most two per player, one list per game", () => {
     expect(itemsNeeded("tiro_secco")).toBe(4);
-    expect(itemsNeeded("frame")).toBe(4);
+    expect(itemsNeeded("frame")).toBe(2); // one iconic match each
+    expect(itemsNeeded("anomalia")).toBe(4);
     expect(itemsNeeded("maglia")).toBe(4);
-    expect(itemsNeeded("prima_pagina")).toBe(2);
     expect(itemsNeeded("mercato")).toBe(2);
     expect(itemsNeeded("giramondo")).toBe(2);
     expect(itemsNeeded("asta")).toBe(2);
@@ -87,7 +87,7 @@ describe("year filter and sampling", () => {
   const item = { yearMin: 2014, yearMax: 2018, activeYears: [2021] } as never;
   it("applies to events and careers, not to lists", () => {
     expect(passesYearFilter("tiro_secco", item, 2015)).toBe(false);
-    expect(passesYearFilter("prima_pagina", item, 2015)).toBe(false);
+    expect(passesYearFilter("anomalia", item, 2015)).toBe(false);
     expect(passesYearFilter("giramondo", item, 2020)).toBe(true);
     expect(passesYearFilter("decina", item, 2025)).toBe(true);
     expect(passesYearFilter("dischetto", item, 2025)).toBe(true);
@@ -127,7 +127,7 @@ describe("league filter", () => {
     p.items.tiro_secco.forEach((q, k) => (q.entities = [k % 2 ? "comp:IT1" : "comp:GB1"]));
     const only = eligibleItems("tiro_secco", p, { judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"] });
     expect(only).toHaveLength(10);
-    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "frame", "prima_pagina", "decina"] }, p);
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 1, leagues: ["GB1"], forcedGames: ["tiro_secco", "maglia", "frame", "anomalia", "decina"] }, p);
     expect(r.ok && (r.state.content.tiro_secco as { entities: string[] }[]).every((q) => q.entities[0] === "comp:GB1")).toBe(true);
   });
 });
@@ -206,12 +206,26 @@ describe("la formazione, l'asta, il frame", () => {
     s = run(s, { type: "ANSWER", payload: { text: P(0).name } }, { type: "FINISH" });
     expect(s.scores[1 - a]).toBe(5);
   });
-  it("frame: exact +3, bonus +2, sign only +1", () => {
+  it("frame: one match each, +3 for the right one, the answer stays hidden from the screen", () => {
     let s = start(first("frame"));
-    s = run(s, { type: "ANSWER", payload: { score: [2, 1], scorer: P(1).name } });
-    expect(s.game!.last.points).toBe(5);
-    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { score: [3, 0] } });
-    expect(s.game!.last.points).toBe(1);
+    expect(s.game!.items).toHaveLength(2);
+    expect(viewFor(s, "screen").game!.items[s.game!.turn].correct).toBe(-1);
+    const first0 = s.game!.turn;
+    s = run(s, { type: "ANSWER", payload: { choice: 2 } });
+    expect(s.game!.last.points).toBe(3);
+    s = run(s, { type: "NEXT" }, { type: "ANSWER", payload: { choice: 0 } });
+    expect(s.game!.last.points).toBe(0);
+    expect(s.game!.turn).not.toBe(first0);
+    s = run(s, { type: "NEXT" });
+    expect(s.phase).toBe("game_over");
+    expect(s.scores[first0]).toBe(3);
+  });
+  it("anomalia: four questions, +3 each, the answer stays hidden from the screen", () => {
+    let s = start(first("anomalia"));
+    expect(s.game!.items).toHaveLength(4);
+    expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
+    for (let k = 0; k < 4; k++) s = run(s, { type: "ANSWER", payload: { choice: 3 } }, { type: "NEXT" });
+    expect(s.scores).toEqual([6, 6]);
   });
 });
 

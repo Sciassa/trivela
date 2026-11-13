@@ -92,6 +92,87 @@ describe("room authority", () => {
     room.dispose();
   });
 
+  describe("timer controls of the host", () => {
+    const started = (withHost = true) => {
+      vi.useFakeTimers();
+      const r = setupRoom(withHost);
+      r.room.start(r.room.state!); // re-arm the timers under fake time
+      r.room.onMessage(withHost ? "h" : "a", { t: "intent", intent: { type: "START" } });
+      r.room.onMessage(withHost ? "h" : "a", { t: "intent", intent: { type: "BEGIN_GAME" } });
+      return r;
+    };
+    const id = (r: ReturnType<typeof setupRoom>) => r.room.state!.timer?.id ?? -1; // -1: the countdown ended (answer revealed)
+
+    it("pause stops the countdown, resume continues from where it was", () => {
+      const r = started();
+      const ms = r.room.state!.timer!.ms;
+      vi.advanceTimersByTime(5000);
+      r.room.onMessage("h", { t: "timer", op: "pause" });
+      expect(r.room.pausedLeft).toBe(ms - 5000);
+      const t0 = id(r);
+      vi.advanceTimersByTime(ms * 2);
+      expect(id(r)).toBe(t0); // no timeout while paused
+      expect(r.last("pub").pausedLeft).toBe(ms - 5000);
+      r.room.onMessage("h", { t: "timer", op: "resume" });
+      expect(r.room.pausedLeft).toBeNull();
+      vi.advanceTimersByTime(ms - 5001);
+      expect(id(r)).toBe(t0);
+      vi.advanceTimersByTime(2);
+      expect(id(r)).not.toBe(t0); // the question timed out
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("+10 and -10 move the remaining time, and a countdown cut to zero ends at once", () => {
+      const r = started();
+      const ms = r.room.state!.timer!.ms;
+      r.room.onMessage("h", { t: "timer", op: "add", ms: 10_000 });
+      expect(r.room.timeLeft()).toBe(ms + 10_000);
+      r.room.onMessage("h", { t: "timer", op: "add", ms: -10_000 });
+      expect(r.room.timeLeft()).toBe(ms);
+      vi.advanceTimersByTime(ms - 1000);
+      const t0 = id(r);
+      r.room.onMessage("h", { t: "timer", op: "add", ms: 10_000 });
+      vi.advanceTimersByTime(9000);
+      expect(id(r)).toBe(t0); // the extra time was granted
+      r.room.onMessage("h", { t: "timer", op: "add", ms: -60_000 });
+      vi.advanceTimersByTime(1);
+      expect(id(r)).not.toBe(t0); // shortened below zero: time is up
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("adding time while paused keeps it paused", () => {
+      const r = started();
+      r.room.onMessage("h", { t: "timer", op: "pause" });
+      const before = r.room.pausedLeft!;
+      r.room.onMessage("h", { t: "timer", op: "add", ms: 10_000 });
+      expect(r.room.pausedLeft).toBe(before + 10_000);
+      r.room.onMessage("h", { t: "timer", op: "add", ms: -999_000 });
+      expect(r.room.pausedLeft).toBe(0);
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("only the host can touch the timer", () => {
+      const r = started();
+      r.room.onMessage("a", { t: "timer", op: "pause" });
+      r.room.onMessage("stranger", { t: "timer", op: "pause" });
+      expect(r.room.pausedLeft).toBeNull();
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("a new question starts a fresh timer even if the previous one was paused", () => {
+      const r = started();
+      r.room.onMessage("h", { t: "timer", op: "pause" });
+      r.room.onMessage("h", { t: "intent", intent: { type: "ANSWER", payload: { choice: 0 } } });
+      expect(r.room.pausedLeft).toBeNull();
+      r.room.dispose();
+      vi.useRealTimers();
+    });
+  });
+
   it("creates readable room codes", () => {
     const code = roomCode(() => 0.5);
     expect(code).toMatch(/^[A-HJ-NP-Z]{5}$/);

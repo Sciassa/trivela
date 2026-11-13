@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5: 10 giochi, niente argomento, round brevi, stanze senza server
 
+> **v5.1** (novembre 2026): *Prima Pagina* sostituita da *L'Anomalia Statistica* (§4.2); *Il Frame* rifatto sulla cronologia di partite iconiche, 1 partita a testa (§4.8); *La Maglia* senza numeri banali e con priorità alle anomalie (§4.10); controlli del tempo per la Regia (§12.1); correttore che riconosce il nome di battesimo raro (§10.3).
+
 Decisione del committente (novembre 2026). Questa sezione prevale su tutte le precedenti.
 
 **Giochi e partita**
@@ -191,7 +193,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 **Dati**
 
-- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, prima_pagina 1300, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, frame 1500, asta 1500, maglia 1500.
+- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, anomalia 1379, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, frame 1500, asta 1500, maglia 1500.
 - Fonte unica Transfermarkt (§0.5) con uno **strato di fatti verificati**: una partita entra nelle statistiche solo se gli eventi-gol tornano con il risultato (rigori delle serie finali ricalcolati a parte) e, dove serve, se presenze e formazioni sono complete (11 + 11). Classifiche ed elenchi si calcolano solo su finestre (competizione, squadra, stagioni) interamente coperte, e le dichiarano nel titolo.
 - **Unica eccezione alla fonte unica**: le **date di nascita degli allenatori**, che Transfermarkt non fornisce nel dataset, vengono da **Wikidata** (CC0; allenatori con identificativo Transfermarkt P2447, abbinati solo per nome esatto e univoco). File versionato: `data/static/managers.json`. Servono alle curiosità del tipo «quale allenatore ha vinto nel giorno del suo compleanno?» e «quali due allenatori nati lo stesso giorno si sono affrontati?».
 - 18 tipi di curiosità per il Tiro Secco (compleanni, gemelli di data di nascita, gol e autogol nella stessa partita, rossi lampo, rimonte, gol dalla panchina, omonimi, doppie maglie…), ognuno con distrattori verificati come errati.
@@ -206,6 +208,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 - Canali separati: le pulsantiere ricevono solo la vista pubblica (mai le soluzioni); la Regia riceve le soluzioni del solo gioco in corso.
 - Codice stanza di **5 lettere** + QR per ruolo. Presenza con battiti periodici; arbitraggio del pulsante su tempi corretti con finestra di 250 ms.
 - Il server Node per la rete locale (`apps/realtime`) è stato rimosso.
+- **Controlli del tempo per la Regia**: sul telefono del conduttore, sopra la soluzione, ci sono **II PAUSA / PLAY ▶**, **+10 s** e **−10 s**. Solo la Regia può usarli; il comando passa dal relay allo Schermo, che ferma o sposta il conto alla rovescia e rimanda subito la vista (anche alle pulsantiere): il timer sullo Schermo mostra «PAUSA» e il tempo congelato. Meno 10 secondi oltre lo zero fa scadere il tempo. Una nuova domanda azzera sempre il tempo e la pausa.
 - **Suggerimenti ortografici su tutti i dispositivi**: anche le pulsantiere mostrano il correttore. Per questo scaricano l'**indice dei soli nomi** (`entities.json`: persone, nessuna domanda né soluzione); i file dei giochi restano solo sullo Schermo. La Regia non scrive e non scarica nulla.
 
 **Interfaccia**
@@ -298,7 +301,7 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | Gioco | Filtro | Criterio di ammissibilità |
 |---|---|---|
 | Tiro Secco | ✅ | Tutti i fatti della domanda hanno data ≥ ANNO (`year_min ≥ ANNO`) |
-| Prima Pagina | ✅ | Data della partita ≥ ANNO |
+| L'Anomalia Statistica | ✅ | Data del record ≥ ANNO |
 | Il Mercato | ✅ | Data del trasferimento ≥ ANNO |
 | La Formazione | ✅ | Data della partita ≥ ANNO |
 | Il Frame | ✅ | Data della partita ≥ ANNO |
@@ -330,9 +333,13 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - Timer: 20 s. Punti: **+2** esatta, 0 errata.
 - Curiosità "da maniaco" calcolate sui dati, con distrattori **verificati come errati**.
 
-### 4.2 `prima_pagina` — Prima Pagina
-- Una prima pagina di quotidiano vintage a testa (§11), generata da una partita famosa, con **2 nomi oscurati** (un marcatore noto e un secondo elemento: altro marcatore, allenatore o arbitro).
-- Timer: 45 s. Punti: **+2 per nome** indovinato (0 / +2 / +4).
+### 4.2 `anomalia` — L'Anomalia Statistica
+- Sostituisce *Prima Pagina* (rimossa insieme alla testata di fantasia e alle sue pagine).
+- **2 domande a testa** (4 totali) a risposta multipla A/B/C/D su **record bizzarri e controintuitivi** calcolati sui dati. Timer 25 s. Punti: **+3** esatta.
+- Una sola opzione ha davvero fatto quella cosa; le altre tre sono **giocatori noti** per i quali il record è falso sugli stessi dati. Tutte e quattro passano il filtro notorietà.
+- Tipi di record (15 generatori, `data/trivela_data/gen_anomalie.py`): difensori con una tripletta o una doppietta in una partita; centrocampisti con una tripletta; attaccanti con quattro gol in una partita; portieri che hanno segnato o fornito un assist; giocatori entrati dalla panchina che segnano due o tre gol (anche difensori subentrati); difensori con almeno 6 gol in una stagione; attaccanti con 25 presenze e nessun gol in una stagione; attaccanti con almeno 15 gol senza nemmeno un rigore; giocatori che segnano per due squadre diverse nella stessa stagione; attaccanti e centrocampisti con almeno 100 presenze senza mai un'espulsione; difensori e centrocampisti con 30 presenze in una stagione senza un'ammonizione.
+- **Affermazioni «mai» solo dove i dati lo permettono**: le finestre di stagioni si limitano a quelle in cui ogni partita ha i dati necessari (gol, formazioni, assist) e sono scritte nella domanda. Per i cartellini si considerano solo le partite in cui eventi e righe di presenza danno gli stessi totali, e il giocatore deve avere zero cartellini in entrambe le fonti. Una verifica indipendente sulle tabelle grezze conferma i campioni di espulsioni, ammonizioni e assist.
+- Le istanze portano il campionato (`comp:`), quindi rispettano il filtro campionati (§3.4).
 
 ### 4.3 `mercato` — Il Mercato
 - **2 trasferimenti** legati alla Serie A, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
@@ -360,10 +367,13 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - Punti per indizio: **12 / 9 / 6 / 3 / 1**.
 
 ### 4.8 `frame` — Il Frame
-- **2 domande a testa**: "Partita X, minuto Y: qual era il risultato?". Inserimento con due selettori numerici.
-- Bonus: chi aveva segnato l'ultimo gol prima di quel minuto (se 0-0 il bonus non c'è). Timer 30 s.
-- Punti: risultato esatto **+3**; solo segno corretto **+1**; bonus **+2**.
-- Ammesse solo partite in cui i minuti di tutti i gol tornano con il risultato, con il minuto Y lontano da ogni gol.
+- **1 partita a testa** (2 totali). Si pescano **solo partite iconiche**: finali, semifinali e quarti di Champions League; fasi a eliminazione diretta di Mondiali ed Europei; finali e semifinali di Europa League, Coppa Italia e Supercoppe; scontri diretti di Serie A tra Juventus, Inter, Milan, Napoli e Roma; scontri tra le prime quattro squadre di Premier League, LaLiga, Bundesliga e Ligue 1.
+- Si mostra la **cronologia anonima** della partita: gol e cartellini (ammonizione, seconda ammonizione, espulsione) con il minuto. Nessun nome di giocatore.
+- Due tipi di domanda sugli stessi dati, entrambi a 4 opzioni, **+3** ciascuna, timer 40 s:
+  - *quale partita?*: si dà solo la competizione e la fase; i gol mostrano il punteggio progressivo e i cartellini la squadra (casa/ospite). Opzioni «Milan-Liverpool · 2004/05»; le tre sbagliate sono altre partite iconiche della stessa competizione, con risultato e cronologia diversi;
+  - *com'è finita?* (solo partite con almeno 3 gol, senza rigori finali): la partita è nominata, gol e cartellini sono solo minuti, le quattro opzioni hanno tutte lo stesso numero totale di gol.
+- La domanda sul marcatore e il risultato a un minuto dato sono stati rimossi.
+- Ammesse solo partite con gol coerenti con il risultato e con almeno un cartellino registrato.
 
 ### 4.9 `asta` — L'Asta
 - **2 categorie** (insiemi come La Decina). Per ognuna: asta a rilanci alternati, puntata da 1 a min(10, dimensione); "passo" assegna l'asta all'altro alla puntata corrente.
@@ -371,9 +381,10 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - Punti: successo **+puntata**; fallimento **+5 all'avversario**.
 
 ### 4.10 `maglia` — La Maglia
-- **2 domande a testa**: giocatore + squadra + stagione ⇒ **che numero aveva?** Risposta con tastierino numerico.
-- Timer 30 s. Punti: **+3**.
-- Solo giocatori con un unico numero in quella stagione e almeno 25 presenze (10 per i numeri iconici).
+- **2 domande a testa**: giocatore + squadra + stagione ⇒ **che numero aveva?** Risposta con tastierino numerico. Timer 30 s. Punti: **+3**.
+- Solo giocatori con un unico numero in quella stagione e almeno 25 presenze (10 per i numeri iconici, 12 per i numeri fuori ruolo).
+- **Niente numeri banali**: mai l'1 di un portiere né il 9 di un attaccante.
+- **Priorità alle anomalie**: tre generatori pescati in parti uguali: *fuori ruolo* (un difensore col 10, un portiere con l'8, un attaccante col 4…; ruolo dedotto dalle partite da titolare), *numeri pesanti* (20 e oltre: 21, 22, 45, 77, 99…) e *numeri di rosa* (12–19, con una piccola quota, circa il 2%, di numeri classici).
 
 ---
 
@@ -384,13 +395,13 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | Gioco | Max a testa | Note |
 |---|---|---|
 | tiro_secco | 4 | |
-| prima_pagina | 4 | |
+| anomalia | 12 | 4 domande × 3 punti |
 | mercato | 40 | 2 profili × 20; tipicamente 5–20 |
 | decina | 20 | se l'altro esce subito |
 | dischetto | 10 | |
 | formazione | 15 | |
 | giramondo | 24 | 2 profili × 12 |
-| frame | 10 | |
+| frame | 3 | 1 partita |
 | asta | 20 | |
 | maglia | 6 | |
 
@@ -608,11 +619,12 @@ NFKD + rimozione diacritici; mappe speciali (ø→o, ł→l, ß→ss, đ→d, æ
 
 ### 10.3 Aiuto ortografico "a zero informazione"
 
-- **Correttore, non completatore**: nessun suggerimento a partire dalle prime lettere.
+- **Correttore, non completatore**: nessun suggerimento a partire dalle prime lettere (digitando «laut» non compare nulla).
+- Si corregge una parola **intera** già digitata: cognome, nome completo o **nome di battesimo raro** (al massimo 8 persone con quel nome nell'indice, di almeno 5 lettere): «lautaro» propone Lautaro Giannetti, Lautaro Martínez e Lautaro Valenti. Un nome di battesimo da solo non è mai una risposta valida e nomi comuni come «marco» non producono suggerimenti.
 - Un suggerimento compare solo se l'input è quasi completo: `len(input) ≥ 0.8 × len(candidato)` **e** somiglianza normalizzata ≥ 0.85.
 - **Funzione pura** di (testo digitato, indice globale): non riceve la domanda, il contesto, il gioco né il filtro anno.
 - Indice globale: tutte le persone, club, città del grafo, di tutte le epoche; scaricato interamente sul client (nessuna query al server).
-- Massimo 5 suggerimenti, ordinati per somiglianza e poi alfabeticamente; stile identico per tutti.
+- Massimo 8 suggerimenti, ordinati per somiglianza e poi alfabeticamente (mai per fama); stile identico per tutti.
 - Disattivabile dalle impostazioni.
 - **Test obbligatorio in CI**: per un campione di input e un campione di domande diverse, l'output deve essere identico ⇒ informazione reciproca nulla.
 
@@ -622,20 +634,9 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 
 ---
 
-## 11. Prima Pagina — quotidiano vintage generato
+## 11. Prima Pagina
 
-- Testata **di fantasia** (provvisoria: *La Trivela Sportiva*), data, giorno della settimana.
-- Blocchi: occhiello, titolo, sommario, cronaca (template su eventi del grafo), **box tabellino** (formazioni, marcatori con minuto, arbitro, stadio, città). **Nessun box pagelle** (i voti sono contenuti editoriali di terzi e non sono fatti verificabili).
-- Layout: canvas virtuale 1600×900 scalato con `transform: scale()`; griglia CSS a 4–5 colonne con filetti; capolettera; `text-align: justify` + `hyphens: auto` (`lang="it"`).
-- Carta: fondo rosa antico, rumore SVG (`feTurbulence`), vignettatura, sbavatura d'inchiostro leggera, piega centrale, micro-rotazione ±0.5°; incorniciato dentro la UI arcade.
-- Font (Google Fonts, licenze aperte): serif condensato per i titoli, serif da testo per la cronaca, monospace per il tabellino.
-- **Censura senza fughe**:
-  - lo Schermo non riceve mai il testo nascosto prima della rivelazione;
-  - lunghezza del rettangolo nero **a fasce** (corto/medio/lungo), non esatta;
-  - ogni occorrenza dell'entità nascosta è sostituita in tutta la pagina;
-  - template neutri (niente perifrasi rivelatrici).
-- Rivelazione: cancellazione a scatti con `clip-path` (effetto pixel) + timbro + effetto sonoro.
-- Regia: versione non censurata con elementi evidenziati.
+**Rimossa con la v5.1** (sostituita da L'Anomalia Statistica, §4.2): niente più testata di fantasia né pagine di quotidiano.
 
 ---
 
@@ -762,7 +763,7 @@ trivela/
 
 ## 19. Questioni aperte
 
-1. Nomi definitivi dei giochi (provvisori: Tiro Secco, Prima Pagina, Il Mercato, La Decina, Dal Dischetto, La Formazione, Il Giramondo, Il Frame, L'Asta, La Maglia) e della testata della Prima Pagina.
+1. Nomi definitivi dei giochi (provvisori: Tiro Secco, L'Anomalia Statistica, Il Mercato, La Decina, Dal Dischetto, La Formazione, Il Giramondo, Il Frame, L'Asta, La Maglia) e della testata della Prima Pagina.
 2. Provider Postgres e hosting del servizio `topic`.
 3. Provider di livello B.
 4. Chi compone la redazione/revisione (autore ≠ revisore).

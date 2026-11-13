@@ -5,7 +5,7 @@
 
 export const GAME_IDS = [
   "tiro_secco",
-  "prima_pagina",
+  "anomalia",
   "mercato",
   "decina",
   "dischetto",
@@ -101,29 +101,13 @@ export interface TiroSeccoItem extends InstanceMeta {
   archetype: 1 | 2 | 3 | 4 | 5 | 6;
 }
 
-/** Newspaper page. Text fields may contain tokens "{{0}}" / "{{1}}" for hidden slots. */
-export interface NewspaperPage {
-  masthead: string;
-  date: string;
-  weekday: string;
-  kicker: string;
-  headline: string;
-  subhead: string;
-  body: string[];
-  boxTitle: string;
-  boxLines: string[];
-}
-
-export interface PrimaPaginaSlot {
-  label: string;
-  answer: AnswerKey;
-  /** 1 short, 2 medium, 3 long: never the exact length. */
-  lengthBucket: 1 | 2 | 3;
-}
-
-export interface PrimaPaginaItem extends InstanceMeta {
-  page: NewspaperPage;
-  slots: [PrimaPaginaSlot, PrimaPaginaSlot];
+/** Statistical anomaly: a bizarre record, one option true and three famous players for whom it is false. */
+export interface AnomaliaItem extends InstanceMeta {
+  question: string;
+  options: [string, string, string, string];
+  correct: 0 | 1 | 2 | 3;
+  /** Kind of record (portiere, difensore, panchina, disciplina…), shown as a label. */
+  kind: string;
 }
 
 export interface MercatoItem extends InstanceMeta {
@@ -177,13 +161,28 @@ export interface GiramondoItem extends InstanceMeta {
   answer: AnswerKey;
 }
 
-export interface FrameItem extends InstanceMeta {
-  match: string;
-  date: string;
+/** One event of the timeline of an iconic match. */
+export interface FrameEvent {
   minute: number;
-  teams: [string, string];
-  scoreAt: [number, number];
-  lastScorer?: AnswerKey;
+  kind: "goal" | "yellow" | "second_yellow" | "red";
+  /** Running score after a goal (`match` mode only). */
+  score?: [number, number];
+  /** 0 = first-named team, 1 = second (cards, `match` mode only). */
+  side?: 0 | 1;
+}
+
+/**
+ * An iconic match told by its anonymous timeline.
+ * `match`: which match is it? (options: "Milan-Liverpool · 2004/05").
+ * `score`: the match is named, goals and cards are bare minutes: what was the final score?
+ */
+export interface FrameItem extends InstanceMeta {
+  mode: "match" | "score";
+  heading: string;
+  events: FrameEvent[];
+  question: string;
+  options: [string, string, string, string];
+  correct: 0 | 1 | 2 | 3;
 }
 
 /** Player + club + season: the answer is the shirt number. */
@@ -197,7 +196,7 @@ export interface MagliaItem extends InstanceMeta {
 
 export interface PackItems {
   tiro_secco: TiroSeccoItem[];
-  prima_pagina: PrimaPaginaItem[];
+  anomalia: AnomaliaItem[];
   mercato: MercatoItem[];
   decina: SetItem[];
   dischetto: DischettoItem[];
@@ -223,5 +222,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], prima_pagina: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], frame: [], asta: [], maglia: [] };
+  return { tiro_secco: [], anomalia: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], frame: [], asta: [], maglia: [] };
 }

@@ -95,7 +95,10 @@ export function similarity(a: string, b: string): number {
 /* Global index                                                        */
 /* ------------------------------------------------------------------ */
 
-type KeyType = "full" | "alias" | "surname";
+type KeyType = "full" | "alias" | "surname" | "given";
+
+const GIVEN_MIN_LENGTH = 5;
+const GIVEN_MAX_PEOPLE = 8;
 
 interface IndexKey {
   key: string;
@@ -108,6 +111,12 @@ export interface MatchIndex {
   entities: EntityRecord[];
   keys: IndexKey[];
   byLength: Map<number, IndexKey[]>;
+  /**
+   * First names of people, used only by the spelling helper (never to judge an
+   * answer: a first name alone is not an answer). Only rare first names are kept,
+   * so a typed first name points to a handful of people at most.
+   */
+  givenByLength: Map<number, IndexKey[]>;
   byId: Map<string, number>;
   /** Fame above which a shared surname makes the surname alone ambiguous. */
   fameThreshold: number;
@@ -142,7 +151,25 @@ export function buildIndex(entities: EntityRecord[], fameThreshold = 45): MatchI
     list.push(k);
     byLength.set(k.key.length, list);
   }
-  return { entities, keys, byLength, byId, fameThreshold };
+  // first names: "lautaro" -> Lautaro Giannetti, Lautaro Martínez, Lautaro Valenti
+  const givens = new Map<string, IndexKey[]>();
+  entities.forEach((e, i) => {
+    if (e.kind !== "person") return;
+    const parts = normalize(e.name).split(" ");
+    const given = parts[0] ?? "";
+    if (parts.length < 2 || given.length < GIVEN_MIN_LENGTH) return;
+    const list = givens.get(given) ?? [];
+    list.push({ key: given, phon: phoneticKey(given), entity: i, type: "given" });
+    givens.set(given, list);
+  });
+  const givenByLength = new Map<number, IndexKey[]>();
+  for (const [given, list] of givens) {
+    if (list.length > GIVEN_MAX_PEOPLE) continue; // "marco", "luca": too common to point anywhere
+    const bucket = givenByLength.get(given.length) ?? [];
+    bucket.push(...list);
+    givenByLength.set(given.length, bucket);
+  }
+  return { entities, keys, byLength, givenByLength, byId, fameThreshold };
 }
 
 export type ResolveResult =
@@ -260,13 +287,15 @@ export interface Suggestion {
 
 export const SPELLER_MIN_COVERAGE = 0.8;
 export const SPELLER_MIN_SIMILARITY = 0.85;
-export const SPELLER_MAX = 5;
+export const SPELLER_MAX = 8;
 
 /**
  * Corrector, not a completer. It is a pure function of the typed text and the
  * global index: it never receives the question, the game, the context or the
  * year filter. A suggestion appears only when the input already covers most of
- * a name (length >= 80%) and is very similar to it (>= 0.85).
+ * a name (length >= 80%) and is very similar to it (>= 0.85): a whole surname,
+ * a whole (rare) first name, or the full name. Never a prefix: "laut" suggests
+ * nothing, "lautaro" suggests the people called Lautaro.
  */
 export function suggest(text: string, index: MatchIndex): Suggestion[] {
   const q = normalize(text);
@@ -274,7 +303,7 @@ export function suggest(text: string, index: MatchIndex): Suggestion[] {
   const maxLen = Math.floor(q.length / SPELLER_MIN_COVERAGE);
   const out = new Map<number, number>();
   for (let len = Math.ceil(q.length * SPELLER_MIN_COVERAGE); len <= maxLen; len++) {
-    for (const k of index.byLength.get(len) ?? []) {
+    for (const k of [...(index.byLength.get(len) ?? []), ...(index.givenByLength.get(len) ?? [])]) {
       const sim = similarity(q, k.key);
       if (sim < SPELLER_MIN_SIMILARITY) continue;
       const prev = out.get(k.entity) ?? 0;

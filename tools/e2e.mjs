@@ -175,6 +175,24 @@ try {
     check((await screen.locator(".option.right").count()) === 0, "the Screen does not show the answer before the reveal");
     check((await screen.locator(".btn.next").count()) === 0, "with a Regia connected only the host moves the game on");
     check(host.dataRequests.length === 0, "the Regia downloads no data at all");
+    // timer controls: pause / play, +10 s, -10 s reach the Screen at once
+    await host.locator(".timerpad").waitFor();
+    const secs = async () => Number((await screen.locator(".timer-num").first().innerText()).replace(/\D/g, "") || "0");
+    await host.getByText("II PAUSA").click();
+    await screen.locator(".timer.paused").waitFor({ timeout: 5000 });
+    const frozen = await screen.locator(".timer-pause").innerText();
+    await screen.waitForTimeout(1500);
+    check((await screen.locator(".timer-pause").innerText()) === frozen, `the Screen countdown stays frozen while paused (${frozen})`);
+    check(await host.getByText("PLAY ▶").isVisible(), "the Regia offers PLAY while paused");
+    await host.getByText("PLAY ▶").click();
+    await screen.locator(".timer.paused").waitFor({ state: "detached", timeout: 5000 });
+    const before = await secs();
+    await host.getByText("+10 s").click();
+    await screen.waitForFunction((b) => Number(document.querySelector(".timer-num")?.textContent) >= b + 8, before, { timeout: 5000 });
+    check(true, "+10 s on the Regia adds ten seconds on the Screen");
+    await host.getByText("−10 s").click();
+    await screen.waitForFunction((b) => Number(document.querySelector(".timer-num")?.textContent) <= b + 1, before, { timeout: 5000 });
+    check(true, "-10 s on the Regia removes ten seconds on the Screen");
     await host.locator(".btn.ok").first().click();
     await screen.locator(".option.right").waitFor();
     await screen.getByText("ESATTO!").waitFor();
