@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v6 — 9 giochi, stanze senza server, interfaccia adattiva in stile «tramonto pixel» (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v7 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -174,8 +174,17 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ---
 
-## 0.6 Decisione v5/v6: 9 giochi, niente argomento, round brevi, stanze senza server
+## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v7** (novembre 2026), decisioni del committente:
+> - *L'Anomalia Statistica* non è più un gioco: i suoi record rari sono una famiglia di domande del **Tiro Secco**, insieme ai nuovi **giochi di nomi** (§4.1). Restano **8 giochi**; il sorteggio cambia di conseguenza (§5.2).
+> - **Lessico dei cognomi** (`data/trivela_data/lexicon.py`): elenco scritto a mano di parole e del loro significato (animali, personaggi storici, città, colori, mestieri…). **Non è una fonte di fatti calcistici**: dice solo che cosa vuol dire un cognome; presenze e gol restano calcolati sul dataset. Ogni opzione è un giocatore vero e noto: nessun nome inventato.
+> - *La Formazione* solo su **partite iconiche** (§4.6); nuove Top 10 per *Dal Dischetto* (§4.5).
+> - **Timer a scelta** e **tempo extra di 10 secondi** per finire di scrivere (§3.8).
+> - **Tastiera di gioco** sui dispositivi touch al posto di quella di sistema (§10.4): sostituisce la barra di scrittura in alto della v5.
+> - Home con le impostazioni in vista (§0.7); telefono in orizzontale, aree sicure e rotazione (§12.6).
+> - I punti qui sotto che parlano di 9 giochi o dell'Anomalia come gioco sono storici.
+>
 > **v6.1** (novembre 2026): *L'Anomalia Statistica* ricalibrata su record **davvero rari** (§4.2); corretto il bug della barra superiore con punteggi duplicati (§14.1); animazioni a 60 fps (§14.1).
 >
 > **v6** (novembre 2026): **Il Frame è stato rimosso del tutto** (dati, generatore, motore, interfaccia, test): restano **9 giochi** (§4). Nuova identità visiva «tramonto pixel» con menu principale rifatto (§0.7), uscite discrete con conferma (§3.7), effetti di «juiciness» (§14.1), telefoni verticali senza scorrimento per le azioni principali (§12.5). I punti che nominano *Il Frame* più sotto sono storici e non più in vigore.
@@ -188,8 +197,8 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 **Giochi e partita**
 
-- **Rimossi**: l'argomento a piacere, *La Cassaforte*, *L'Intruso*, *Il Filo Rosso*, *Il Mappamondo*. *Il Frame* è stato rimosso in v6. Restano 9 giochi (§4).
-- Una partita è fatta di **5 giochi sorteggiati su 9**; non c'è più un gioco finale fisso. Vince chi ha più punti.
+- **Rimossi**: l'argomento a piacere, *La Cassaforte*, *L'Intruso*, *Il Filo Rosso*, *Il Mappamondo*. *Il Frame* è stato rimosso in v6. Restano 9 giochi (§4); 8 dalla v7.
+- Una partita è fatta di **5 giochi sorteggiati su 8** (su 9 fino alla v6); non c'è più un gioco finale fisso. Vince chi ha più punti.
 - **Round brevi**: al massimo 2 domande a testa per gioco (Tiro Secco, Anomalia, Maglia); 2 profili per i giochi a prenotazione (Mercato, Giramondo); 2 categorie per l'Asta; **una sola** lista per Decina e Dischetto, una partita per la Formazione, una prima pagina a testa.
 - **La Maglia** è capovolta: si mostrano giocatore, squadra e stagione e si risponde con il **numero** (tastierino numerico).
 - **Il Giramondo** mostra la carriera in **ordine cronologico**, non più dal club meno noto al più noto. Ogni squadra compare **una volta sola, al primo arrivo**, con l'anno (es. «2019 Real Madrid», «2019 Maiorca», «2020 Villarreal»): i ritorni alla squadra già elencata (fine prestito, secondo periodo) sono omessi, perché nel dataset non c'è l'indicazione del prestito e la sequenza completa («Real Madrid → Maiorca → Real Madrid → Villarreal…») risultava illeggibile. Sullo schermo ogni passaggio è un riquadro con l'anno.
@@ -199,7 +208,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 **Dati**
 
-- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato: tiro_secco 2400, anomalia 1500, mercato 1300, decina 1400, dischetto 1150, formazione 1100, giramondo 1400, asta 1500, maglia 1500 (13.129 in tutto).
+- Almeno **1000 istanze per gioco** (verificato dai test: `data/tests/test_packs.py`). Stato v7: tiro_secco 3600, mercato 1300, decina 1400, dischetto 1336, formazione 1400, giramondo 1400, asta 1500, maglia 1500 (13.436 in tutto).
 - Fonte unica Transfermarkt (§0.5) con uno **strato di fatti verificati**: una partita entra nelle statistiche solo se gli eventi-gol tornano con il risultato (rigori delle serie finali ricalcolati a parte) e, dove serve, se presenze e formazioni sono complete (11 + 11). Classifiche ed elenchi si calcolano solo su finestre (competizione, squadra, stagioni) interamente coperte, e le dichiarano nel titolo.
 - **Unica eccezione alla fonte unica**: le **date di nascita degli allenatori**, che Transfermarkt non fornisce nel dataset, vengono da **Wikidata** (CC0; allenatori con identificativo Transfermarkt P2447, abbinati solo per nome esatto e univoco). File versionato: `data/static/managers.json`. Servono alle curiosità del tipo «quale allenatore ha vinto nel giorno del suo compleanno?» e «quali due allenatori nati lo stesso giorno si sono affrontati?».
 - 18 tipi di curiosità per il Tiro Secco (compleanni, gemelli di data di nascita, gol e autogol nella stessa partita, rossi lampo, rimonte, gol dalla panchina, omonimi, doppie maglie…), ognuno con distrattori verificati come errati.
@@ -221,7 +230,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 - Il palco **riempie sempre lo schermo**: tela virtuale di almeno 1600×900 (più piccola sui telefoni, così testi e pulsanti restano grandi) che si allarga o si alza secondo il formato del dispositivo.
 - **Adattamento automatico**: se il contenuto non entra nell'area, viene rimpicciolito quanto basta (e riceve più larghezza). Niente testi o riquadri tagliati.
-- Sui dispositivi touch, dentro il palco, si scrive in una **barra fissata in alto** con la tastiera di sistema (la tastiera pixel a schermo è stata tolta): la tastiera non copre mai ciò che si sta scrivendo.
+- Sui dispositivi touch si scrive con la **tastiera del gioco** (§10.4); la barra fissata in alto con la tastiera di sistema, usata fino alla v6, è stata tolta.
 - Grafica: stadio notturno animato (stelle, riflettori, pubblico, prato), sprite pixel-art per ogni gioco, tabellone a LED con punteggi animati, sorteggio a carte, coriandoli, lampi verde/rosso, transizioni a scatti. Sempre nel rispetto di `prefers-reduced-motion`.
 - I moduli (nuova sfida, sala d'attesa, torneo) sono pagine a scorrimento normale, a due colonne sugli schermi larghi; le schermate dei telefoni seguono §12.5.
 - Identità visiva «tramonto pixel» (§0.7) e menu principale rifatto.
@@ -230,14 +239,16 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 - **Stile «tramonto pixel»**: cielo a fasce viola → magenta → arancio → crema con retinatura (dithering), nuvole e luna in pixel, stelle scintillanti, logo TRIVELA a due strati (riempimento lavanda e ombra 3D). Nessun countdown. Le partite restano nello stadio notturno, con gli stessi colori di accento, così le schermate sembrano un'unica app.
 - **Menu principale** da app seria: schermata d'avvio con logo e «PREMI START» (serve il gesto per l'audio); poi un menu a **carte** con icona, titolo e una riga di spiegazione per ogni modalità, in due gruppi: «GIOCA SU QUESTO SCHERMO» (Partita completa, consigliata; Sfida Rapida; Allenamento) e «CON GLI AMICI» (Schermo + telefoni; Torneo tra amici; Entra con codice). Bersagli touch ≥ 48 px, nessun testo tagliato su PC, tablet e telefono (verificato con `tools/shots.mjs`).
+- **Home v7**: gerarchia più netta. A sinistra «GIOCA SU QUESTO SCHERMO»: *Partita Classica* in grande, sotto affiancate *Sfida Rapida* e *Allenamento*; a destra «CON GLI AMICI» con tre carte compatte. Sotto, una **barra delle impostazioni** sempre in vista: **TIMER ON/OFF**, **FILTRO ANNO** (tutte le stagioni, oppure dal 2014, 2016, 2018, 2020, 2022, 2024), **Impostazioni** (audio, correttore) e **Fonti dei dati**. Timer e anno sono ricordati sul dispositivo e valgono per ogni partita avviata da lì; le pagine di setup propongono lo stesso anno e lo lasciano cambiare per una sola partita.
+- «PREMI START» reagisce al clic e non al primo contatto: sugli schermi touch lo stesso tocco premeva anche la carta del menu che compariva sotto il dito.
 - Nessun nome, logo o voce di terzi: tutto il pixel art è disegnato nel codice (invariante 8).
 
 ---
 
 ## 1. Glossario
 
-- **Partita**: sfida 1v1 composta da 5 giochi sorteggiati tra i 9 del catalogo.
-- **Gioco / Prova**: uno dei 9 mini-giochi del catalogo (§4).
+- **Partita**: sfida 1v1 composta da 5 giochi sorteggiati tra gli 8 del catalogo.
+- **Gioco / Prova**: uno degli 8 mini-giochi del catalogo (§4).
 - **Schermo**: dispositivo orizzontale che mostra tabellone, grafiche, timer e punteggi.
 - **Regia**: dispositivo verticale del conduttore (Modalità A).
 - **Controller**: smartphone personale di uno sfidante (Modalità B a 3 schermi).
@@ -314,7 +325,6 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | Gioco | Filtro | Criterio di ammissibilità |
 |---|---|---|
 | Tiro Secco | ✅ | Tutti i fatti della domanda hanno data ≥ ANNO (`year_min ≥ ANNO`) |
-| L'Anomalia Statistica | ✅ | Data del record ≥ ANNO |
 | Il Mercato | ✅ | Data del trasferimento ≥ ANNO |
 | La Formazione | ✅ | Data della partita ≥ ANNO |
 | La Maglia | ✅ | Stagione ≥ ANNO |
@@ -331,14 +341,14 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 - **Sempre incluse**: nazionali, Mondiali, Europei, Champions League, Europa League, Conference League, Supercoppa europea.
 - Regola: ogni istanza porta i campionati a cui appartiene (tag `comp:` in `entities`). Un'istanza senza campionato è sempre ammessa; altrimenti basta **uno** dei suoi campionati selezionato (un trasferimento Premier → Serie A esce se è attiva una delle due; una carriera esce se ha toccato un campionato attivo).
 - Vale per tutti i giochi, **liste e classifiche comprese** (una Top 10 della Ligue 1 esce solo con la Ligue 1 attiva), a differenza del filtro anno.
-- Se i giochi ancora ammissibili sono meno di 5, la partita non parte e lo dice. Con un solo campionato attivo tutti e 9 i giochi hanno abbastanza domande.
+- Se i giochi ancora ammissibili sono meno di 5, la partita non parte e lo dice. Con un solo campionato attivo tutti e 8 i giochi hanno abbastanza domande.
 - **Serie B e altri campionati**: il dataset che usiamo non ha la Serie B. Gli altri campionati di prima fascia presenti (Eredivisie, Liga Portugal, Süper Lig…) non sono ancora generati: aggiungerli è una decisione futura.
 
 ### 3.5 Sfida Rapida e Allenamento
 
-Due formati su **un solo gioco scelto** dall'elenco dei 9, accanto alla partita completa e al torneo.
+Due formati su **un solo gioco scelto** dall'elenco degli 8, accanto alla partita completa e al torneo.
 
-- **Sfida Rapida (1 contro 1)**: stesse regole e stessi dispositivi della partita classica (schermo singolo, Schermo + pulsantiere, con Regia, filtri anno e campionati). Il gioco scelto si gioca per **3 round a testa**: 6 domande per Tiro Secco, Anomalia e Maglia (a turni alternati), 6 profili per Mercato e Giramondo, 6 categorie per l'Asta; per **Decina, Dischetto e Formazione** (un solo elenco per volta) 3 giri consecutivi, ognuno con un elenco diverso. Chi è in svantaggio inizia ogni giro. Nella sala d'attesa si sceglie il formato e il gioco. Se i filtri lasciano troppe poche domande, la partita non parte e dice cosa allargare.
+- **Sfida Rapida (1 contro 1)**: stesse regole e stessi dispositivi della partita classica (schermo singolo, Schermo + pulsantiere, con Regia, filtri anno e campionati). Il gioco scelto si gioca per **3 round a testa**: 6 domande per Tiro Secco e Maglia (a turni alternati), 6 profili per Mercato e Giramondo, 6 categorie per l'Asta; per **Decina, Dischetto e Formazione** (un solo elenco per volta) 3 giri consecutivi, ognuno con un elenco diverso. Chi è in svantaggio inizia ogni giro. Nella sala d'attesa si sceglie il formato e il gioco. Se i filtri lasciano troppe poche domande, la partita non parte e dice cosa allargare.
 - **Allenamento (1 giocatore)**: un solo schermo, un solo giocatore, **nessun turno e nessun avversario**. 6 domande (4 profili per Mercato e Giramondo, 3 categorie per l'Asta; un elenco per Decina, Dischetto e Formazione). Differenze: nel Mercato e Giramondo non c'è nessuno da battere sul pulsante e un errore chiude il profilo; nella Decina si hanno 2 errori; nel Dischetto 5 tiri; nell'Asta si dichiara la puntata e basta (niente rilanci), un fallimento non regala punti a nessuno; la Formazione ha una sola squadra. Non c'è vincitore: a fine sessione compaiono i punti e «ANCORA».
 - Nel motore: `MatchConfig.rounds` (Sfida Rapida) e `MatchConfig.solo` (Allenamento) con `forcedGames` di un solo gioco; `singleGamePlan` decide i giri e le istanze; il contenuto è per slot, non per gioco.
 
@@ -352,6 +362,18 @@ In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **
 - **Torna alla Home**: nella schermata dei risultati e nell'Allenamento compare una piccola icona «casa» in alto, discreta quanto la X, e un pulsante «TORNA ALLA HOME» sotto i risultati.
 - Mai pulsanti vistosi che invitino a uscire per sbaglio: la conferma è obbligatoria e `Esc` equivale a CONTINUA.
 
+### 3.8 Timer a scelta e tempo extra per scrivere (v7)
+
+- **Timer ON** (predefinito): ogni risposta ha il suo tempo (§4). Quando il tempo di una risposta **da scrivere** arriva a zero, la manche **non si chiude**: parte un **tempo extra di 10 secondi**, rosso e lampeggiante («TEMPO SCADUTO · FINISCI DI SCRIVERE!»), che serve solo a finire di digitare. La risposta inviata in quei 10 secondi vale come le altre; allo scadere del tempo extra l'errore è definitivo.
+  - Vale per: Decina, Dischetto, la risposta dopo la prenotazione in Mercato e Giramondo, Formazione, la prova dell'Asta.
+  - **Non** vale dove non c'è niente da scrivere: le quattro opzioni del Tiro Secco, il tastierino della Maglia, l'attesa della prenotazione, e quando un conduttore giudica le risposte a voce.
+  - Nel motore: allo scadere di un timer di quei tipi nasce un nuovo timer `grace` (`Timer.grace`), con evento `grace`; il vecchio timer non può più scattare.
+- **Timer OFF**: nessun conto alla rovescia. Restano solo le pause dello spettacolo («PRONTI…», l'esito dopo una risposta).
+  - **Mercato e Giramondo**: gli indizi non escono da soli; un pulsante **PROSSIMO INDIZIO ▶** li scopre a mano (e i punti scendono). Con tutti gli indizi scoperti diventa **NESSUNO LO SA ▶** e chiude il profilo. Sulle pulsantiere lo può premere chi è ancora in gioco.
+  - Chi deve rispondere può rinunciare: **PASSO** (Decina), **NON TIRO** (Dischetto), **NON LO SO** (dopo la prenotazione). Conta come il tempo scaduto. Formazione e Asta hanno già «HO FINITO» e «MI ARRENDO».
+  - Nel motore: `MatchConfig.timer === false`; intento `SKIP` (solo del giocatore di turno, solo senza timer).
+- L'interruttore è nella Home (§0.7) e vale per schermo singolo, stanze e torneo. La pagina di setup ricorda com'è impostato.
+
 ---
 
 ## 4. Catalogo dei giochi
@@ -360,12 +382,28 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 
 ### 4.1 `tiro_secco` — Tiro Secco
 - **2 domande a testa** (4 totali), risposta multipla A/B/C/D, a turno alternato. Nessuna possibilità di rubare.
-- Timer: 20 s. Punti: **+2** esatta, 0 errata.
-- Curiosità "da maniaco" calcolate sui dati, con distrattori **verificati come errati**.
+- Timer: **25 s** (20 fino alla v6: le domande sui record sono più lunghe). Punti: **+2** esatta, 0 errata.
+- Tre famiglie di domande, tutte con distrattori **verificati come errati**; un'etichetta sopra la domanda dice la famiglia:
+  1. **Curiosità** "da maniaco" calcolate sui dati (compleanni, rimonte, omonimi, gol dalla panchina…).
+  2. **Record rarissimi** (`tag: "record"`, generatori `an_*`): erano il gioco *L'Anomalia Statistica*, vedi §4.2.
+  3. **Giochi di nomi** (`tag: "nomi"`, generatori `nomi_*`, `data/trivela_data/gen_nomi.py`): che cosa vuol dire un cognome, **incrociato con statistiche vere**.
+- **Giochi di nomi**. Undici significati: animali (Leão, Falcao, Gatti, Wolf…), personaggi storici (Zapata, Pizarro, Dante, Verdi…), **dittatori** (Castro…), città (Lodi, Lucca, Valencia, Guimarães…), colori, mestieri (Müller, Pastore, Cacciatore…), cibo (Fagioli, Lasagna, Rice…), piante (Olmo, Pino…), titoli nobiliari (King, Conti, Caballero…), parole di chiesa (Chiesa, Pope, Abate…), calendario (Di Natale, Quaresma, Sommer…). Sei tipi di domanda:
+  - *chi è?* «Quale di questi giocatori, che hanno tutti giocato in Serie A, porta nel cognome il nome di un animale?»: uno ce l'ha, gli altri tre hanno cognomi che vogliono dire altro;
+  - *l'intruso*: tre lo portano, uno no;
+  - *più gol*: quattro giocatori della stessa famiglia di cognomi, chi ha segnato di più in quel campionato;
+  - *la soglia*: «…ha segnato almeno 20 gol in Serie A?», gli altri ne hanno al massimo un quarto;
+  - *più presenze* nel campionato, sulla finestra con formazioni complete (dichiarata nella domanda);
+  - *chi ci ha giocato*: uno ha giocato in quel campionato, gli altri tre mai in quella finestra.
+- **Regole dei giochi di nomi**:
+  - un cognome combacia con una voce del lessico solo come **parola intera, accenti compresi** («Di Natale» sì, «Conté» non è «conte»); i nomi d'arte fatti di nomi di battesimo contano solo per l'ultima parola;
+  - protagonisti e distrattori sono **giocatori veri e noti** (filtro notorietà), tutti con presenze verificate nel campionato della domanda: l'istanza porta quel `comp:` e rispetta il filtro campionati;
+  - un giocatore il cui cognome può essere letto anche in un'altra famiglia (Viola è un colore e un fiore, «papa» è una patata in spagnolo) non è mai l'opzione sbagliata di una domanda su quell'altra famiglia (`lexicon.ALSO`); due opzioni non hanno mai lo stesso cognome;
+  - i gol si confrontano solo tra giocatori le cui partite hanno tutte i gol completi; lo script dice sempre **quale parola** e **che cosa significa**, in quale lingua;
+  - niente giocatori inventati: l'idea di «tre nomi finti» è stata scartata per l'invariante 1.
+- Stato: 3600 domande (circa 1500 curiosità, 1100 record, 1000 giochi di nomi) su 91 generatori. Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
 
-### 4.2 `anomalia` — L'Anomalia Statistica
-- Sostituisce *Prima Pagina* (rimossa insieme alla testata di fantasia e alle sue pagine).
-- **2 domande a testa** (4 totali) a risposta multipla A/B/C/D su **record davvero rari**, calcolati sui dati. Timer 25 s. Punti: **+3** esatta.
+### 4.2 I record rarissimi del Tiro Secco (ex *L'Anomalia Statistica*)
+- Fino alla v6 erano un gioco a sé (`anomalia`, +3 a domanda); dalla v7 sono domande del Tiro Secco (+2), generate da `data/trivela_data/gen_anomalie.py`.
 - **Regola di rarità (v6.1)**: entrano solo eventi che nelle prime cinque leghe europee e in Champions League succedono poche volte l'anno. Sono stati **tolti** i record comuni: un subentrato che segna (anche una doppietta), un difensore con almeno 6 gol in stagione, un attaccante a secco in 25 partite, 15 gol senza rigori, 100 presenze senza espulsioni, 30 partite senza ammonizioni, un gol con due squadre diverse nella stessa stagione, una tripletta di un centrocampista.
 - Una sola opzione ha davvero fatto quella cosa; le altre tre sono **giocatori noti** (o partite) per cui il record è falso sugli stessi dati. Tutte e quattro passano il filtro notorietà.
 - Tipi di record (13 generatori, `data/trivela_data/gen_anomalie.py`):
@@ -381,12 +419,12 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - **Più varianti per evento**: i fatti rarissimi sono pochi (es. 9 gol di portieri), quindi lo stesso evento compare con **terne di distrattori diverse** (fino a 6 varianti) per arrivare a 1000 istanze senza abbassare la soglia di rarità. Un'istanza è identificata da evento + variante.
 - **Affermazioni «mai» solo dove i dati lo permettono**: i distrattori sono giocatori senza quell'evento in stagioni con dati completi (gol, formazioni o cartellini concordanti tra eventi e righe di presenza) e la finestra «stagioni 2012/13–2025/26» è scritta nella domanda.
 - Le istanze portano il campionato (`comp:`), quindi rispettano il filtro campionati (§3.4).
-- Test: `test_anomalia_only_genuinely_rare_records` (solo generatori ammessi, soglie verificate dagli script).
+- Test: `test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare` (solo generatori ammessi, soglie verificate dagli script).
 
 ### 4.3 `mercato` — Il Mercato
 - **2 trasferimenti** legati alla Serie A, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
 - Prenotazione col pulsante. **Un solo tentativo per giocatore per profilo.** Chi sbaglia è fuori per quel profilo (nessuna penalità); l'avversario può farsi scoprire gli altri indizi prima di rispondere, prendendo i punti dell'ultimo indizio scoperto.
-- Con conduttore: gli indizi li scopre la Regia. Senza: un indizio ogni 8 s; dopo un errore l'avversario li scopre a comando. Tempo di risposta dopo la prenotazione: 10 s.
+- Con conduttore: gli indizi li scopre la Regia. Senza: un indizio ogni 8 s; dopo un errore l'avversario li scopre a comando. Tempo di risposta dopo la prenotazione: 10 s (più il tempo extra, §3.8). Con il timer spento gli indizi si scoprono con «PROSSIMO INDIZIO ▶».
 
 ### 4.4 `decina` — La Decina
 - **Una** categoria con **14–17 risposte valide**. Si devono dire **10 risposte in totale**, una a testa a turno alternato. Timer: 30 s per turno. Punti: **+2** per risposta valida.
@@ -397,11 +435,28 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - **5 tiri a testa**, a turno alternato. Timer 30 s a tiro. Punti: **+2** per ogni nome in classifica.
 - Pari merito all'ultimo posto utile: i nomi a pari merito valgono finché restano posti nella Top 10.
 - Nome fuori classifica, già detto o tempo scaduto = tiro sbagliato.
+- **Classifiche aggiunte in v7** (1336 in tutto, 67 generatori):
+  - **più espulsi** di un campionato (rossi diretti e doppie ammonizioni). Le espulsioni hanno due registrazioni, gli eventi di gara e le righe di presenza, e circa il 6% degli eventi non trova conferma nell'altra: la classifica esce **solo** dove le due coincidono per tutti i giocatori che possono entrare nei dieci. Oggi: Bundesliga e Champions League; Serie A, Premier, Liga e Ligue 1 no;
+  - **più ingressi dalla panchina** di un campionato, in tutto e stagione per stagione (quelli per squadra c'erano già);
+  - **più maglie diverse** in un campionato (squadre con almeno una presenza): esce dove i pari merito all'ultimo posto sono al massimo 20, cioè Serie A e Ligue 1; negli altri campionati diventa un insieme per Decina e Asta («almeno N maglie»);
+  - **marcatori più anziani e più giovani** di ogni stagione (quelli di sempre c'erano già);
+  - **Mondiali ed Europei** conclusi (2006–2022, 2008–2024): migliori marcatori di sempre e di ogni edizione.
+- **Non fattibile: «i 10 portieri con più rigori parati»**. Il dataset non registra i rigori parati in partita; registra solo i tiri delle serie finali, senza dire chi era in porta. Ricostruendo il portiere dalle formazioni restano 29 serie tra Champions, Europa League e Supercoppa europea (Mondiali ed Europei non hanno le formazioni): due portieri a 4 parate, due a 3, più di dodici a 2. Non è una classifica giocabile né completa, quindi non viene generata. SofaScore resta esclusa (§0.5).
+- Una classifica in cui compare un giocatore che il dataset non conosce per nome viene scartata.
 
 ### 4.6 `formazione` — La Formazione
 - **Una** partita con i moduli di entrambe le squadre: **6 titolari visibili, 5 oscurati** per squadra (solo giocatori noti di movimento).
 - Chi è in svantaggio **sceglie quale squadra completare**; l'avversario completa l'altra. **60 s** a testa.
 - Punti: 5/5 = **15**, 4/5 = **10**, 3/5 = **5**, 2/5 = **3**, 1/5 = **2**, 0/5 = **0**.
+- **Solo partite iconiche (v7)**, quattro generatori (`formazione_coppa`, `_derby`, `_vetta`, `_punteggio`) che il sorteggio alterna:
+  - **coppe: solo dai quarti di finale in poi** (quarti, semifinali, finali) di Champions, Europa e Conference League, Coppa Italia; le Supercoppe, che sono finali. Niente gironi né ottavi;
+  - **derby e grandi classiche** dei cinque campionati, da un elenco scritto a mano (`gen_matches.DERBIES`: Inter-Milan, Roma-Lazio, Juventus-Torino, Juventus-Inter, Arsenal-Tottenham, Real Madrid-Barcellona, Bayern-Dortmund, PSG-Marsiglia…);
+  - **scontri al vertice**: prima contro seconda in classifica, dalla 10ª giornata, con la classifica ricalcolata sui risultati prima del calcio d'inizio e nessuna terza a pari punti con la seconda;
+  - **risultati fuori scala**: almeno 8 gol in tutto o almeno 6 di scarto.
+- Il motivo compare accanto alla competizione («Scontro al vertice: prima contro seconda»). Le partite di coppa possono tornare una seconda volta con cinque titolari diversi da trovare.
+- **Filtro campionati**: come per ogni gioco (§3.4). Con la sola Serie A escono le coppe europee, la Coppa Italia e le partite iconiche di Serie A.
+- **Mondiali ed Europei non ci sono**: per le nazionali il dataset non ha le formazioni con i ruoli, quindi non si può disegnare il campo. Servirebbe un'altra fonte.
+- Stato: 1400 partite (su circa 2400 generate).
 
 ### 4.7 `giramondo` — Il Giramondo
 - **2 carriere**, rivelate in **ordine cronologico** (anno del trasferimento → squadra), in 5 indizi.
@@ -431,7 +486,6 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | Gioco | Max a testa | Note |
 |---|---|---|
 | tiro_secco | 4 | |
-| anomalia | 12 | 4 domande × 3 punti |
 | mercato | 40 | 2 profili × 20; tipicamente 5–20 |
 | decina | 20 | se l'altro esce subito |
 | dischetto | 10 | |
@@ -442,11 +496,11 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: i 9 giochi.
+- Pool: gli 8 giochi.
 - Vincoli:
   - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
-  - al massimo 1 tra {`decina`, `dischetto`, `asta`} (elenchi);
-  - il primo gioco è pescato tra i rapidi {`tiro_secco`, `anomalia`, `maglia`};
+  - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
+  - il primo gioco è pescato tra i rapidi {`tiro_secco`, `maglia`};
   - un gioco è escluso se non ha abbastanza istanze ammissibili con il filtro corrente.
 - Le domande di ogni gioco sono pescate **alternando i tipi di domanda** (un generatore alla volta).
 - Sorteggio deterministico dal seme della partita (riproducibile nei test).
@@ -663,7 +717,17 @@ NFKD + rimozione diacritici; mappe speciali (ø→o, ł→l, ß→ss, đ→d, æ
 - Disattivabile dalle impostazioni.
 - **Test obbligatorio in CI**: per un campione di input e un campione di domande diverse, l'output deve essere identico ⇒ informazione reciproca nulla.
 
-### 10.4 Modalità A
+### 10.4 Tastiera di gioco (v7)
+
+- Sui dispositivi **touch** i campi delle risposte **non aprono mai la tastiera del sistema** (campo `readonly` con `inputmode="none"`): quella di iOS e Android copriva i suggerimenti del correttore. Si scrive con una **tastiera 8-bit del gioco** (`PixelKeyboard`): lettere, apostrofo, trattino, SPAZIO, CANC, INVIA. La prima lettera di ogni parola diventa maiuscola.
+- **Agganciata in basso** dove c'è spazio (tablet, pulsantiere in verticale): il palco o la pagina si accorciano e finiscono dove comincia la tastiera, così tabellone, campo e suggerimenti restano tutti visibili sopra i tasti.
+- **Telefono in orizzontale** (altezza sotto i 560 px): il tabellone non starebbe sopra i tasti, quindi la tastiera porta con sé una striscia con **la domanda, il conto alla rovescia, ciò che si sta scrivendo e i suggerimenti** in una riga scorrevole. «▲ TABELLONE» la chiude per guardare lo schermo; toccando il campo si riapre. I pulsanti per passare (§3.8) restano nella striscia.
+- I **suggerimenti** stanno sempre sopra i tasti e si toccano senza conflitti. Il correttore non cambia: stessa funzione pura di §10.3.
+- Si apre da sola quando tocca scrivere. Una tastiera fisica collegata continua a funzionare; su PC non cambia niente. Il tastierino dei numeri della Maglia era già del gioco.
+- I moduli (nomi dei giocatori, anno, codice stanza) usano ancora la tastiera del sistema: lì non ci sono suggerimenti da coprire e servono tutti i caratteri.
+- La tastiera sta dentro le aree sicure (§12.6).
+
+### 10.5 Modalità A
 
 La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore valida a voce.
 
@@ -711,6 +775,13 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 - **Schermo singolo con pulsanti** (prenotazione): pulsanti grandi ai lati, ergonomici per le due mani, area centrale leggibile.
 - Tecnica: dimensioni con `clamp()` e **Container Queries** (`container-type: inline-size`) per adattare i componenti al loro contenitore e non solo alla finestra.
 - Verifica: `tools/shots.mjs` (PC, tablet, telefono orizzontale) e `tools/e2e.mjs` (opzioni dentro lo schermo senza scorrere, altezza minima dei pulsanti).
+
+### 12.6 Telefono in orizzontale: aree sicure e rotazione (v7)
+
+- L'app è pensata prima di tutto per lo **smartphone in orizzontale**.
+- **Aree sicure**: gli inset del dispositivo (`env(safe-area-inset-*)`: notch, Dynamic Island, foro della fotocamera, barra della home) sono variabili CSS (`--sal`, `--sar`, `--sat`, `--sab`). Dentro il palco, che è una tela scalata, vengono moltiplicati per l'inverso della scala (`--inv`): prima valevano meno pixel reali del dovuto. Tabellone, X di uscita, contenuto del gioco, tastiera e pagine dei telefoni restano dentro.
+- **Rotazione accidentale**: se durante una partita il telefono finisce in verticale, compare a tutto schermo «Per favore, ruota il dispositivo in orizzontale». Sotto non viene smontato né ridimensionato niente: **punteggi, conto alla rovescia e testo già scritto restano dove sono**, e rigirando il telefono si riprende dallo stesso punto. Il tempo continua a scorrere: la rotazione non è una pausa.
+- Verifica in `tools/e2e.mjs` con un telefono touch 844×390 e inset simulati: posizione di tabellone, uscita e tasti; testo e timer dopo la rotazione; durata del tempo extra.
 
 ---
 
@@ -765,13 +836,13 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 trivela/
 ├─ apps/web/               # PWA: schermo singolo, Schermo/Regia/pulsantiere, torneo
 │  ├─ src/components/      # palco adattivo, tabellone, sprite, campi di testo
-│  ├─ src/games/           # viste dei 9 giochi
+│  ├─ src/games/           # viste degli 8 giochi
 │  ├─ src/runtime/         # caricamento pacchetti, stanza (roomCore), trasporto MQTT
 │  ├─ src/screens/         # nuova sfida, partita, sala d'attesa, telefoni, torneo
 │  └─ public/data/         # manifest, indice dei nomi, un pacchetto per gioco (versionati)
 ├─ packages/
 │  ├─ protocol/            # tipi condivisi
-│  ├─ engine/              # 9 giochi, sorteggio, torneo
+│  ├─ engine/              # 8 giochi, sorteggio, torneo
 │  ├─ matcher/             # normalizzazione, accettazione, correttore a zero informazione
 │  └─ audio/               # musica ed effetti sintetizzati
 ├─ data/
