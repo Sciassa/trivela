@@ -8,7 +8,7 @@ import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
-import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
+import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock, VotesCtx } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
 import { savedYear } from "../runtime/settings";
@@ -54,20 +54,24 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   }, [roster.host]);
 
   if (room.state) {
+    // two phones and no Regia: they move the game on together (SPEC §12.8), the Screen only shows who has pressed
+    const consensus = !roster.host && roster.p1 && roster.p2;
     return (
-      <MatchShell
-        state={room.state}
-        dispatch={room.dispatch}
-        ctx={matchCtx}
-        start={room.timerStart}
-        clock={room.timer}
-        mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host, pad: false }}
-        onExit={(s) => {
-          rememberSeen(usedIds(s));
-          room.start(null);
-        }}
-        onAbort={() => room.start(null)}
-      />
+      <VotesCtx.Provider value={consensus ? { votes: room.votes, players: room.state.config.players } : null}>
+        <MatchShell
+          state={room.state}
+          dispatch={room.dispatch}
+          ctx={matchCtx}
+          start={room.timerStart}
+          clock={room.timer}
+          mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host && !consensus, pad: false }}
+          onExit={(s) => {
+            rememberSeen(usedIds(s));
+            room.start(null);
+          }}
+          onAbort={() => room.start(null)}
+        />
+      </VotesCtx.Provider>
     );
   }
 
@@ -546,11 +550,24 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   }, [turn]);
   const color = me === 0 ? "var(--p1)" : "var(--p2)";
   const flow = !room.roster.host;
-  const next = s && flow && s.phase !== "match_over" && (
-    <button className="btn big next" onClick={() => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" })}>
-      {s.phase === "draw" ? "SI PARTE ▶" : s.phase === "intro" ? "VIA! ▶" : "AVANTI ▶"}
-    </button>
-  );
+  // two phones and no Regia: these buttons are votes, the game moves on when both players pressed (SPEC §12.8)
+  const voteOf = (action: "clue" | "next") => {
+    const v = room.votes?.action === action ? room.votes : null;
+    return { mine: !!v?.who[me], other: !!v && v.who.some((w, p) => w && p !== me), done: v ? v.who.filter(Boolean).length : 0, need: v ? v.need.filter(Boolean).length : 2 };
+  };
+  const voteButton = (action: "clue" | "next", label: string, onClick: () => void, cls: string) => {
+    const v = voteOf(action);
+    return (
+      <button className={`btn big ${cls} ${v.mine ? "voted" : ""}`} disabled={v.mine} data-vote={action} onClick={() => (navigator.vibrate?.(20), onClick())}>
+        {v.mine ? `${v.done}/${v.need} · IN ATTESA DELL'AVVERSARIO…` : v.other ? `${label} · ${v.done}/${v.need}` : label}
+      </button>
+    );
+  };
+  const next =
+    s &&
+    flow &&
+    s.phase !== "match_over" &&
+    voteButton("next", s.phase === "draw" ? "SI PARTE ▶" : s.phase === "intro" ? "VIA! ▶" : "AVANTI ▶", () => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" }), "next");
   if (!s || s.phase !== "playing" || !g) {
     return (
       <PhoneFrame role={role} room={room} actions={next}>
@@ -577,11 +594,16 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
         room={room}
         actions={
           <>
-            {(g.free || !isTimed(s.config)) && !g.out[me] && g.stage === "clues" && s.config.judging !== "host" && (
-              <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
-                {g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : isTimed(s.config) ? "SCOPRI UN ALTRO INDIZIO" : "PROSSIMO INDIZIO ▶"}
-              </button>
-            )}
+            {(g.free || !isTimed(s.config)) &&
+              !g.out[me] &&
+              g.stage === "clues" &&
+              s.config.judging !== "host" &&
+              voteButton(
+                "clue",
+                g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : isTimed(s.config) ? "SCOPRI UN ALTRO INDIZIO" : "PROSSIMO INDIZIO ▶",
+                () => room.dispatch({ type: "REVEAL_CLUE" }),
+                "ghost",
+              )}
             {!isTimed(s.config) && g.stage === "answering" && g.buzzer === me && s.config.judging !== "host" && (
               <button className="btn big ghost" onClick={() => room.dispatch({ type: "SKIP" })}>
                 NON LO SO

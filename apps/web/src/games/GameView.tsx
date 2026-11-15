@@ -1,7 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
-import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, WrongSaid } from "../components/ui";
+import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
 
 export interface GameProps {
@@ -182,6 +182,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
             </span>
             <span className="grow" />
             {g.stage === "ready" && <span className="px blink c-accent">PRONTI…</span>}
+            {g.stage === "clues" && readonly && (g.free || !timed) && <VoteBadge action="clue" />}
             {g.stage === "clues" && !readonly && (g.free || !timed) && (
               <button className={`btn small ${timed ? "ghost" : "next-clue"}`} onClick={() => dispatch({ type: "REVEAL_CLUE" })} disabled={timed && g.revealed >= total}>
                 {g.revealed >= total ? "NESSUNO LO SA ▶" : timed ? "SCOPRI INDIZIO" : "PROSSIMO INDIZIO ▶"}

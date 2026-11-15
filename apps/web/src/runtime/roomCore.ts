@@ -28,9 +28,21 @@ export type UpMsg =
   /** The host ends the match for good: everybody goes back to the lobby. */
   | { t: "end" };
 
+/**
+ * Consensus of the two controllers (SPEC §12.8): with two phones and no Regia, "next clue" and the flow buttons
+ * (SI PARTE, VIA, AVANTI) move the game on only when every player still in play has pressed them.
+ */
+export interface Votes {
+  action: "clue" | "next";
+  /** The game moment the votes belong to: when it changes (an answer, a buzz…) the votes are dropped. */
+  key: string;
+  who: [boolean, boolean];
+  need: [boolean, boolean];
+}
+
 /** Messages from the Screen to the phones. */
 export type DownMsg =
-  | { t: "view"; rev: number; state: MatchState | null; timerStart: number; timerMs: number; pausedLeft: number | null; now: number; roster: Roster }
+  | { t: "view"; rev: number; state: MatchState | null; timerStart: number; timerMs: number; pausedLeft: number | null; now: number; roster: Roster; votes: Votes | null }
   | { t: "pong"; c: number; s: number; rev: number };
 
 /** "pub": controllers (never receives solutions). "host": the Regia. */
@@ -46,6 +58,8 @@ export class RoomCore {
   timerMs = 0;
   pausedLeft: number | null = null;
   rev = 0;
+  votes: Votes | null = null;
+  private voteIntent: Intent | null = null;
   private clients = new Map<string, { role: ClientRole; seen: number }>();
   private timer: ReturnType<typeof setTimeout> | null = null;
   private buzzWindow: { entries: { player: PlayerIdx; at: number }[] } | null = null;
@@ -76,6 +90,7 @@ export class RoomCore {
   start(state: MatchState | null, ctx: EngineCtx = this.ctx): void {
     this.ctx = ctx;
     this.state = state;
+    this.votes = null;
     this.armTimer();
     this.broadcast();
   }
@@ -91,7 +106,7 @@ export class RoomCore {
         return;
       }
       case "bye":
-        if (this.clients.delete(clientId)) this.broadcast();
+        if (this.clients.delete(clientId)) this.settleVotes();
         return;
       case "ping":
         this.out({ to: clientId }, { t: "pong", c: msg.c, s: this.now(), rev: this.rev });
@@ -121,7 +136,52 @@ export class RoomCore {
         changed = true;
       }
     }
-    if (changed) this.broadcast();
+    if (changed) this.settleVotes();
+  }
+
+  /** A phone went away: the votes still missing may now be enough. */
+  private settleVotes(): void {
+    const v = this.votes;
+    if (v && this.voteIntent) {
+      const need = [this.hasRole("p1"), this.hasRole("p2")];
+      if (v.who.every((w, p) => w || !need[p] || !v.need[p])) {
+        this.votes = null;
+        this.apply(this.voteIntent);
+        return;
+      }
+    }
+    this.broadcast();
+  }
+
+  /** Two controllers and no Regia: the moments that move the game on are decided together (SPEC §12.8). */
+  consensus(): boolean {
+    return !this.hasRole("host") && this.hasRole("p1") && this.hasRole("p2");
+  }
+
+  /** A fingerprint of the game moment: votes cast for an earlier moment never count. */
+  private momentKey(): string {
+    const s = this.state;
+    if (!s) return "";
+    const g = s.game;
+    return [s.phase, s.gameIdx, g?.stage, g?.i, g?.k, g?.round, g?.revealed, g?.turn, g?.buzzer, s.scores.join("-")].join("|");
+  }
+
+  private vote(player: PlayerIdx, action: Votes["action"], intent: Intent): void {
+    const g = this.state?.game;
+    const key = this.momentKey();
+    // who has a say: the connected players, and for a clue only those still in the profile
+    const need = [0, 1].map((p) => this.hasRole(p === 0 ? "p1" : "p2") && !(action === "clue" && g?.out?.[p])) as [boolean, boolean];
+    if (!need[player]) return;
+    if (!this.votes || this.votes.key !== key || this.votes.action !== action) this.votes = { action, key, who: [false, false], need };
+    this.votes.need = need;
+    this.votes.who[player] = true;
+    this.voteIntent = intent;
+    if (this.votes.who.every((v, p) => v || !need[p])) {
+      this.votes = null;
+      this.apply(intent);
+      return;
+    }
+    this.broadcast();
   }
 
   /** Permission rules per role (SPEC §12.1). */
@@ -130,7 +190,7 @@ export class RoomCore {
     if (role === "host") return intent;
     const flow = intent.type === "START" || intent.type === "BEGIN_GAME" || intent.type === "NEXT";
     if (role === "screen") {
-      if (flow && !this.hasRole("host")) return intent;
+      if (flow && !this.hasRole("host") && !this.consensus()) return intent;
       if (!this.hasRole("host") && !this.hasRole("p1") && !this.hasRole("p2")) return intent;
       return null;
     }
@@ -160,6 +220,11 @@ export class RoomCore {
     if (intent.type === "TIMEOUT") return; // only the authority fires timeouts
     const ok = this.allowed(role, intent);
     if (!ok) return;
+    if ((role === "p1" || role === "p2") && this.consensus()) {
+      const me: PlayerIdx = role === "p1" ? 0 : 1;
+      if (ok.type === "REVEAL_CLUE") return this.vote(me, "clue", ok);
+      if (ok.type === "START" || ok.type === "BEGIN_GAME" || ok.type === "NEXT") return this.vote(me, "next", ok);
+    }
     if (ok.type === "BUZZ") {
       this.queueBuzz(ok.player, this.now());
       return;
@@ -190,6 +255,7 @@ export class RoomCore {
     const next = reduce(this.state, intent, this.ctx);
     if (next === this.state) return;
     this.state = next;
+    if (this.votes && this.votes.key !== this.momentKey()) this.votes = null; // the game moved on by itself
     if (next.timer?.id !== prevTimer) this.armTimer();
     this.broadcast();
   }
@@ -253,7 +319,7 @@ export class RoomCore {
   }
 
   private sendView(ch: "pub" | "host") {
-    this.out(ch, { t: "view", rev: this.rev, state: this.viewFor(ch === "host" ? "host" : "p1"), timerStart: this.timerStart, timerMs: this.timerMs, pausedLeft: this.pausedLeft, now: this.now(), roster: this.roster() });
+    this.out(ch, { t: "view", rev: this.rev, state: this.viewFor(ch === "host" ? "host" : "p1"), timerStart: this.timerStart, timerMs: this.timerMs, pausedLeft: this.pausedLeft, now: this.now(), roster: this.roster(), votes: this.votes });
   }
 
   broadcast(): void {

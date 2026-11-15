@@ -3,7 +3,7 @@ import type { EngineCtx, Intent, MatchState } from "@trivela/engine";
 import { playEvents } from "./useMatch";
 import type { TimerClock } from "../components/ui";
 import { openRoom, relayParam, type RoomLink } from "./transport";
-import { RoomCore, roomCode, type ClientRole, type DownMsg, type Roster, type UpMsg } from "./roomCore";
+import { RoomCore, roomCode, type ClientRole, type DownMsg, type Roster, type UpMsg, type Votes } from "./roomCore";
 
 export type { ClientRole, Roster };
 
@@ -64,6 +64,7 @@ export function useHostedRoom(ctx: EngineCtx) {
     connected,
     state: room?.state ?? null,
     roster: room?.roster() ?? NOBODY,
+    votes: room?.votes ?? null,
     timerStart: room?.timerStart ?? 0,
     timer: { ms: room?.timerMs ?? null, pausedLeft: room?.pausedLeft ?? null } as TimerClock,
     judging: () => core.current?.judging() ?? "auto",
@@ -76,6 +77,7 @@ export function useHostedRoom(ctx: EngineCtx) {
 export function useRoom(role: ClientRole, code: string) {
   const [state, setState] = useState<MatchState | null>(null);
   const [roster, setRoster] = useState<Roster>(NOBODY);
+  const [votes, setVotes] = useState<Votes | null>(null);
   const [connected, setConnected] = useState(false);
   const [live, setLive] = useState(false);
   const [timerStart, setTimerStart] = useState(Date.now());
@@ -103,6 +105,7 @@ export function useRoom(role: ClientRole, code: string) {
           rev = m.rev;
           setState(m.state);
           setRoster(m.roster);
+          setVotes(m.votes ?? null);
           setTimerStart(samples.length ? m.timerStart - offset.current : Date.now() - (m.now - m.timerStart));
           setTimer({ ms: m.timerMs, pausedLeft: m.pausedLeft });
         }
@@ -139,6 +142,7 @@ export function useRoom(role: ClientRole, code: string) {
   return {
     state,
     roster,
+    votes,
     code,
     connected,
     live,

@@ -260,7 +260,7 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
                   ANCORA ▶
                 </button>
               )}
-              <NextButton label="TORNA ALLA HOME" onClick={onExit} />
+              <NextButton always label="TORNA ALLA HOME" onClick={onExit} />
             </div>
           </div>
         </Fit>
@@ -301,7 +301,7 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
                 RIVINCITA ▶
               </button>
             )}
-            <NextButton label="TORNA ALLA HOME" onClick={onExit} />
+            <NextButton always label="TORNA ALLA HOME" onClick={onExit} />
           </div>
         </div>
       </Fit>

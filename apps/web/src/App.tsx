@@ -4,6 +4,7 @@ import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { loadCore } from "./runtime/packs";
 import { savedYear, saveYear, setTimerOn, timerOn, YEAR_CHOICES } from "./runtime/settings";
+import { canInstall, enterFullscreenOnPhone, install, isInstalled, isIOS, onInstallChange } from "./runtime/install";
 import { isRoomCode } from "./runtime/roomCore";
 import { Fit, Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
@@ -51,6 +52,8 @@ function MenuCard({ icon, title, text, color, onClick, primary, compact, badge, 
  */
 function HomeSettings({ onOptions, onCredits, total }: { onOptions: () => void; onCredits: () => void; total: number }) {
   const [timer, setTimer] = useState(timerOn);
+  const [installable, setInstallable] = useState(canInstall);
+  useEffect(() => onInstallChange(() => setInstallable(canInstall())), []);
   const [year, setYear] = useState(savedYear);
   const idx = Math.max(0, YEAR_CHOICES.indexOf(year as (typeof YEAR_CHOICES)[number]));
   const step = (d: number) => {
@@ -98,6 +101,11 @@ function HomeSettings({ onOptions, onCredits, total }: { onOptions: () => void; 
         <button className="btn ghost small" onClick={onCredits}>
           FONTI DEI DATI
         </button>
+        {installable && (
+          <button className="btn small install-btn" onClick={() => void install()}>
+            ▼ INSTALLA L'APP
+          </button>
+        )}
         <span className="set-note">{total.toLocaleString("it-IT")} domande · 8 giochi</span>
       </div>
     </section>
@@ -144,6 +152,7 @@ export function App() {
             className="home"
             // a click, not a pointerdown: on touch screens the same tap would also press the menu card that appears under the finger
             onClick={async () => {
+              enterFullscreenOnPhone();
               await audio.unlock();
               audio.startMusic();
               audio.play("coin");
@@ -273,6 +282,18 @@ function AudioSettings({ onBack }: { onBack: () => void }) {
           {speller ? "ACCESO" : "SPENTO"}
         </button>
         <span className="note">Corregge solo l'ortografia di un nome già scritto quasi per intero: non completa e non suggerisce risposte.</span>
+      </div>
+      <div className="field">
+        <label>APP A TUTTO SCHERMO</label>
+        {isInstalled() ? (
+          <span className="note">TRIVELA è installata: si apre a tutto schermo, senza le barre del browser.</span>
+        ) : (
+          <span className="note">
+            {isIOS()
+              ? "Su iPhone e iPad: tocca Condividi (il quadrato con la freccia) in Safari, poi «Aggiungi alla schermata Home». Da lì TRIVELA si apre a tutto schermo, senza barre e senza gesti del browser."
+              : "Su Android: menu del browser (⋮), poi «Installa app» o «Aggiungi a schermata Home». Da lì TRIVELA si apre a tutto schermo, senza barre e senza gesti del browser."}
+          </span>
+        )}
       </div>
       <span className="label">PROVA GLI EFFETTI</span>
       <div className="grid3">

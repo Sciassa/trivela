@@ -185,6 +185,9 @@ try {
     await m.locator(".menu-settings").waitFor();
     await m.waitForTimeout(600);
     check(await m.locator(".menu-settings").isVisible(), "the tap on PREMI START does not press the menu card under the finger");
+    check(await m.evaluate(() => document.fullscreenElement !== null), "on a phone's browser the first tap goes full screen (no address bar)");
+    // the test browser cannot be resized while in full screen: leave it, the app keeps working the same
+    await m.evaluate(() => document.exitFullscreen());
     check((await m.locator('.set-seg button[aria-pressed="true"]').innerText()) === "ON", "the timer is on by default, in sight on the home screen");
     const cards = await m.locator(".menu-card").evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).every((b) => b.left >= 0 && b.right <= innerWidth && b.top >= 0 && b.bottom <= innerHeight));
     check(cards, "every card of the home fits a phone held sideways");
@@ -301,9 +304,21 @@ try {
     await screen.getByPlaceholder("Nome").first().fill("Anna");
     await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
     await screen.getByText("INIZIA LA PARTITA ▶").click();
+    // consensus (SPEC §12.8): one phone alone does not move the game on
     await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
-    await p2.getByText("VIA! ▶").click();
+    await p1.getByText("1/2 · IN ATTESA DELL'AVVERSARIO…").waitFor({ timeout: 5000 });
+    check(await p1.locator('.btn[data-vote="next"]').isDisabled(), "the first phone to press SI PARTE waits: 1/2, button disabled");
+    await screen.locator(".vote-badge.live .vote-who.on").waitFor({ timeout: 5000 });
+    check((await screen.locator(".vote-badge .vote-who.on").count()) === 1 && (await screen.locator(".draw-grid").count()) === 1, "the Screen shows one green check and stays on the draw");
+    check((await screen.locator(".btn.next").count()) === 0, "with two phones the Screen has no AVANTI of its own");
+    check((await p2.getByText(/SI PARTE ▶ · 1\/2/).count()) === 1, "the other phone sees that the opponent is ready");
+    await screen.screenshot({ path: "test-results/room-vote-screen.png" });
+    await p1.screenshot({ path: "test-results/pad-vote.png" });
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
     await screen.locator(".option").first().waitFor();
+    check(true, "with both phones pressing, the game starts");
     check((await screen.locator(".arena input").count()) === 0, "the Screen shows no inputs when the phones are connected");
     // the controller of the player on turn shows the options
     await Promise.race([p1.locator(PAD_OPT).first().waitFor(), p2.locator(PAD_OPT).first().waitFor()]);
@@ -325,7 +340,7 @@ try {
     check(questionFiles.length === 0, "controllers download no question data (only the names index)");
     // go on to the buzzer game to check the buzz path: finish Tiro Secco (3 more questions) and La Maglia
     for (let n = 0; n < 60; n++) {
-      if (await screen.getByText("IL MERCATO").count()) break;
+      if (await screen.locator(".hud-game", { hasText: "IL MERCATO" }).count()) break; // the intro of the buzzer game
       for (const ph of [p1, p2]) {
         if (await ph.locator(".btn.next").count()) await ph.locator(".btn.next").first().click().catch(() => undefined);
         else if (await ph.locator(PAD_OPT).count()) await ph.locator(PAD_OPT).first().click().catch(() => undefined);
@@ -337,7 +352,7 @@ try {
       await screen.waitForTimeout(250);
     }
     await screen.waitForTimeout(600);
-    if (await p1.getByText("VIA! ▶").count()) await p1.getByText("VIA! ▶").click();
+    for (const ph of [p1, p2]) if (await ph.getByText(/^VIA! ▶/).count()) await ph.getByText(/^VIA! ▶/).click();
     await p2.locator(".big-buzz:not(:disabled)").waitFor({ timeout: 15000 }).catch(async (e) => {
       await screen.screenshot({ path: "test-results/debug-screen.png" });
       await p1.screenshot({ path: "test-results/debug-p1.png" });
@@ -427,12 +442,28 @@ try {
     await screen.locator(".game-pick button", { hasText: "IL MERCATO" }).click();
     await screen.getByPlaceholder("Nome").first().fill("Anna");
     await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.evaluate(() => localStorage.setItem("trivela.timer", "off")); // set on the home screen of the Screen
     await screen.getByText("INIZIA LA PARTITA ▶").click();
     await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
-    await screen.waitForTimeout(500);
-    if (await p1.getByText("VIA! ▶").count()) await p1.getByText("VIA! ▶").click();
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
     await screen.getByText(/TRASFERIMENTO 1\/6/).waitFor({ timeout: 15000 });
     check(true, "sfida rapida in a room: six transfers, three rounds each");
+    // timer off: PROSSIMO INDIZIO needs both phones
+    await p1.getByText("PROSSIMO INDIZIO ▶").waitFor({ timeout: 8000 });
+    check((await screen.locator(".clue.shown").count()) === 1, "timer off in a room: one clue, and nothing comes out by itself");
+    await p1.getByText("PROSSIMO INDIZIO ▶").click();
+    await p1.getByText("1/2 · IN ATTESA DELL'AVVERSARIO…").waitFor({ timeout: 5000 });
+    await screen.locator(".vote-badge.live").waitFor({ timeout: 5000 });
+    await screen.waitForTimeout(800);
+    check((await screen.locator(".clue.shown").count()) === 1, "one phone asking for the next clue is not enough");
+    check((await screen.locator(".vote-badge.live").innerText()).includes("PROSSIMO INDIZIO") && (await screen.locator(".vote-badge .vote-who.on").count()) === 1, "the Screen shows who asked for the next clue");
+    await screen.screenshot({ path: "test-results/room-vote-clue.png" });
+    await p2.getByText(/PROSSIMO INDIZIO ▶/).click();
+    await screen.waitForFunction(() => document.querySelectorAll(".clue.shown").length === 2, null, { timeout: 5000 });
+    check(true, "when the second phone asks too, the next clue comes out");
+    check((await p1.getByText("PROSSIMO INDIZIO ▶").count()) === 1, "after the clue the buttons are free again");
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();
