@@ -1,6 +1,6 @@
 {
   "version": "2026-11-15",
-  "generatedAt": "2026-11-15T10:54:42+00:00",
+  "generatedAt": "2026-11-15T16:08:26+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 3600,
@@ -13,7 +13,7 @@
     "maglia": 1500
   },
   "generators": {
-    "tiro_secco": 91,
+    "tiro_secco": 85,
     "mercato": 1,
     "decina": 23,
     "dischetto": 67,
@@ -38,7 +38,7 @@
   ],
   "filters": {
     "tiro_secco": {
-      "kept": 8224,
+      "kept": 7761,
       "excluded_show": 218,
       "excluded_not_notable": 0
     },

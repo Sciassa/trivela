@@ -178,7 +178,7 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 > **v7** (novembre 2026), decisioni del committente:
 > - *L'Anomalia Statistica* non è più un gioco: i suoi record rari sono una famiglia di domande del **Tiro Secco**, insieme ai nuovi **giochi di nomi** (§4.1). Restano **8 giochi**; il sorteggio cambia di conseguenza (§5.2).
-> - **Lessico dei cognomi** (`data/trivela_data/lexicon.py`): elenco scritto a mano di parole e del loro significato (animali, personaggi storici, città, colori, mestieri…). **Non è una fonte di fatti calcistici**: dice solo che cosa vuol dire un cognome; presenze e gol restano calcolati sul dataset. Ogni opzione è un giocatore vero e noto: nessun nome inventato.
+> - **Lessico dei cognomi** (`data/trivela_data/lexicon.py`): elenco scritto a mano di parole e del loro significato (animali, personaggi storici, città, colori, mestieri…), più le parole usate come opzioni sbagliate. **Non è una fonte di fatti calcistici**: dice solo che cosa vuol dire una parola; presenze e gol restano calcolati sul dataset. **v7.1**: le opzioni sono cognomi (Gatti · Cani · Topi · Salmoni); quelli sbagliati sono parole che il dataset dimostra non essere il nome di nessun giocatore della competizione (§4.1).
 > - *La Formazione* solo su **partite iconiche** (§4.6); nuove Top 10 per *Dal Dischetto* (§4.5).
 > - **Timer a scelta** e **tempo extra di 10 secondi** per finire di scrivere (§3.8).
 > - **Tastiera di gioco** sui dispositivi touch al posto di quella di sistema (§10.4): sostituisce la barra di scrittura in alto della v5.
@@ -387,20 +387,17 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   1. **Curiosità** "da maniaco" calcolate sui dati (compleanni, rimonte, omonimi, gol dalla panchina…).
   2. **Record rarissimi** (`tag: "record"`, generatori `an_*`): erano il gioco *L'Anomalia Statistica*, vedi §4.2.
   3. **Giochi di nomi** (`tag: "nomi"`, generatori `nomi_*`, `data/trivela_data/gen_nomi.py`): che cosa vuol dire un cognome, **incrociato con statistiche vere**.
-- **Giochi di nomi**. Undici significati: animali (Leão, Falcao, Gatti, Wolf…), personaggi storici (Zapata, Pizarro, Dante, Verdi…), **dittatori** (Castro…), città (Lodi, Lucca, Valencia, Guimarães…), colori, mestieri (Müller, Pastore, Cacciatore…), cibo (Fagioli, Lasagna, Rice…), piante (Olmo, Pino…), titoli nobiliari (King, Conti, Caballero…), parole di chiesa (Chiesa, Pope, Abate…), calendario (Di Natale, Quaresma, Sommer…). Sei tipi di domanda:
-  - *chi è?* «Quale di questi giocatori, che hanno tutti giocato in Serie A, porta nel cognome il nome di un animale?»: uno ce l'ha, gli altri tre hanno cognomi che vogliono dire altro;
-  - *l'intruso*: tre lo portano, uno no;
-  - *più gol*: quattro giocatori della stessa famiglia di cognomi, chi ha segnato di più in quel campionato;
-  - *la soglia*: «…ha segnato almeno 20 gol in Serie A?», gli altri ne hanno al massimo un quarto;
-  - *più presenze* nel campionato, sulla finestra con formazioni complete (dichiarata nella domanda);
-  - *chi ci ha giocato*: uno ha giocato in quel campionato, gli altri tre mai in quella finestra.
+- **Giochi di nomi (v7.1)**. Le quattro opzioni sono **solo cognomi** della stessa famiglia di parole, e uno solo appartiene davvero a un giocatore che ha fatto la cosa chiesta:
+  - «Quale di questi cognomi (tutti nomi di animali) appartiene a un giocatore che ha giocato in Serie A (dal 2013/14 al 2025/26)?» Gatti · Cani · Topi · Salmoni;
+  - «Quale di questi cognomi (tutti nomi di mestieri in tedesco) appartiene a un giocatore che ha segnato almeno 30 gol in Bundesliga?» Schmid · Bauer · Klempner · Bergmann.
+  Undici famiglie: animali, personaggi storici, **dittatori**, città, colori, mestieri, cibo, piante, titoli nobiliari, parole di chiesa, calendario. Per le famiglie legate a una lingua la domanda dice la lingua («in portoghese») e le opzioni sbagliate sono nella stessa lingua (in italiano anche nello stesso numero: Gatti con Cani, Gallo con Cane).
 - **Regole dei giochi di nomi**:
-  - un cognome combacia con una voce del lessico solo come **parola intera, accenti compresi** («Di Natale» sì, «Conté» non è «conte»); i nomi d'arte fatti di nomi di battesimo contano solo per l'ultima parola;
-  - protagonisti e distrattori sono **giocatori veri e noti** (filtro notorietà), tutti con presenze verificate nel campionato della domanda: l'istanza porta quel `comp:` e rispetta il filtro campionati;
-  - un giocatore il cui cognome può essere letto anche in un'altra famiglia (Viola è un colore e un fiore, «papa» è una patata in spagnolo) non è mai l'opzione sbagliata di una domanda su quell'altra famiglia (`lexicon.ALSO`); due opzioni non hanno mai lo stesso cognome;
-  - i gol si confrontano solo tra giocatori le cui partite hanno tutte i gol completi; lo script dice sempre **quale parola** e **che cosa significa**, in quale lingua;
-  - niente giocatori inventati: l'idea di «tre nomi finti» è stata scartata per l'invariante 1.
-- Stato: 3600 domande (circa 1500 curiosità, 1100 record, 1000 giochi di nomi) su 91 generatori. Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
+  - la risposta giusta è il **cognome di una sola parola** di un giocatore vero e noto (nome e cognome distinti: niente nomi d'arte come «Ganso» o «Chory Castro»), che combacia con una voce del lessico, accenti compresi;
+  - le opzioni sbagliate sono parole di `lexicon.DECOYS` che il dataset dimostra **non essere il nome di nessun giocatore** della competizione: si controllano tutte le righe (presenze, righe di presenza, formazioni, gol), di tutte le stagioni, e ogni parola del nome. Sono parole, non giocatori: nessuno viene inventato;
+  - per i gol una sola persona deve aver raggiunto la soglia (100, 50, 30, 20, 10 o 5), contando solo le stagioni con i gol completi; un'opzione sbagliata può essere anche un cognome vero della stessa famiglia, se tutti quelli che lo portano insieme non arrivano a un quarto della soglia;
+  - una domanda per cognome e competizione; lo script dice di chi è il cognome, che cosa significa e perché le altre tre sono sbagliate;
+  - i tipi «chi è?», «l'intruso», «più gol», «più presenze» e «chi ha giocato» con nomi completi della v7 sono stati **tolti**: non si capiva che cosa c'entrasse il cognome.
+- Stato: 3600 domande (circa 1770 curiosità, 1270 record, 565 giochi di nomi) su 85 generatori. Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
 
 ### 4.2 I record rarissimi del Tiro Secco (ex *L'Anomalia Statistica*)
 - Fino alla v6 erano un gioco a sé (`anomalia`, +3 a domanda); dalla v7 sono domande del Tiro Secco (+2), generate da `data/trivela_data/gen_anomalie.py`.

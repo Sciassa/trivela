@@ -87,8 +87,9 @@ def test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare():
             assert "autogol" in it["script"] and "gol per la propria squadra" in it["script"]
 
 
-def test_name_games_cross_surnames_with_real_players():
-    """Word games on surnames: every option is a real person of the index, and at least six families of meanings are there."""
+def test_name_games_offer_four_surnames_of_one_family():
+    """«Quale di questi cognomi (tutti nomi di animali) appartiene a un giocatore che ha giocato in Serie A?» Gatti · Cani · Topi · Salmoni.
+    The right one is the surname of the player named in the script; the wrong ones are surnames of no player there."""
     from trivela_data import lexicon
 
     items = [it for it in load("tiro_secco") if it.get("tag") == "nomi"]
@@ -96,15 +97,19 @@ def test_name_games_cross_surnames_with_real_players():
     gens = {it["generator"].split("@")[0] for it in items}
     cats = {g[5:] for g in gens if g[5:] in {*lexicon.CATEGORIES, "dittatori"}}
     assert len(cats) >= 6, cats
-    assert {"animali", "dittatori", "citta"} <= cats
-    assert {"nomi_gol", "nomi_soglia", "nomi_presenze", "nomi_campionato"} <= gens  # crossed with statistics
-    people = {e["name"] for e in json.loads((DATA / "entities.json").read_text(encoding="utf-8"))}
+    assert {"animali", "dittatori", "citta", "colori", "mestieri"} <= cats
+    assert "nomi_gol" in gens  # crossed with goals
     for it in items:
-        assert all(o in people for o in it["options"]), it["options"]  # nobody is made up
-        assert sum(1 for e in it["entities"] if e.startswith("tm:p:")) == 4
-        assert "«" in it["script"]  # the script says which word is meant
-    animals = [it for it in items if it["generator"].split("@")[0] == "nomi_soglia" and "animale" in it["question"]]
-    assert animals and all(re.search(r"almeno \d+ gol", it["question"]) for it in animals)
+        assert it["question"].startswith("Quale di questi cognomi (")
+        assert all(" " not in o for o in it["options"]) and len(set(it["options"])) == 4
+        right = it["options"][it["correct"]]
+        assert re.search(rf"\b{re.escape(right)}\b", it["script"]), it["script"]
+        assert sum(1 for e in it["entities"] if e.startswith("tm:p:")) == 1  # one real player: the owner of the right surname
+        assert "«" in it["script"]  # the script says what the word means
+    played = [it for it in items if it["generator"].split("@")[0] != "nomi_gol"]
+    assert all("ha giocato" in it["question"] and "Nessun giocatore di cognome" in it["script"] for it in played)
+    goals = [it for it in items if it["generator"].split("@")[0] == "nomi_gol"]
+    assert all(re.search(r"almeno \d+ gol", it["question"]) for it in goals)
 
 
 def test_lexicon_words_are_lower_case_and_unambiguous():
