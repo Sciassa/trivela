@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v8** (novembre 2026): TRIVELA si **installa come app** a tutto schermo (§12.7); con due telefoni senza Regia «Avanti» e «Prossimo indizio» si decidono **in due** (§12.8); vibrazioni e aree di tocco da 48 px (§12.9); tocchi **3D voxel**: il pulsantone dei telefoni, il pallone delle attese, la coppa del vincitore (§14.2).
+>
 > **v7** (novembre 2026), decisioni del committente:
 > - *L'Anomalia Statistica* non è più un gioco: i suoi record rari sono una famiglia di domande del **Tiro Secco**, insieme ai nuovi **giochi di nomi** (§4.1). Restano **8 giochi**; il sorteggio cambia di conseguenza (§5.2).
 > - **Lessico dei cognomi** (`data/trivela_data/lexicon.py`): elenco scritto a mano di parole e del loro significato (animali, personaggi storici, città, colori, mestieri…), più le parole usate come opzioni sbagliate. **Non è una fonte di fatti calcistici**: dice solo che cosa vuol dire una parola; presenze e gol restano calcolati sul dataset. **v7.1**: le opzioni sono cognomi (Gatti · Cani · Topi · Salmoni); quelli sbagliati sono parole che il dataset dimostra non essere il nome di nessun giocatore della competizione (§4.1).
@@ -780,6 +782,33 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 - **Rotazione accidentale**: se durante una partita il telefono finisce in verticale, compare a tutto schermo «Per favore, ruota il dispositivo in orizzontale». Sotto non viene smontato né ridimensionato niente: **punteggi, conto alla rovescia e testo già scritto restano dove sono**, e rigirando il telefono si riprende dallo stesso punto. Il tempo continua a scorrere: la rotazione non è una pausa.
 - Verifica in `tools/e2e.mjs` con un telefono touch 844×390 e inset simulati: posizione di tabellone, uscita e tasti; testo e timer dopo la rotazione; durata del tempo extra.
 
+### 12.7 App installabile (v8)
+
+- `vite-plugin-pwa` genera il manifest e il service worker. Aggiunta alla schermata Home, TRIVELA si apre **a tutto schermo** (`display: "fullscreen"`, con `standalone` come ripiego), senza barra degli indirizzi né gesti del browser. Orientamento libero: lo Schermo si usa in orizzontale, Regia e pulsantiere in verticale.
+- Icone PNG 192/512, una «maskable» per Android e una per iOS (`tools/icons.mjs` le ridisegna da `icon.svg`); meta tag per iOS (`apple-mobile-web-app-capable`, barra di stato traslucida).
+- Il service worker si **aggiorna da solo** (`autoUpdate`): non serve più ricaricare due volte. Mette in cache l'app; i pacchetti delle domande restano a richiesta (§0.4) e vengono conservati solo dopo essere stati usati (rete prima, cache senza rete). I telefoni continuano a non scaricarli.
+- Niente pull-to-refresh, rimbalzo, zoom al doppio tocco né menu del tocco lungo (`overscroll-behavior: none`, `touch-action: manipulation`).
+- Su Android il menu mostra «▼ INSTALLA L'APP» quando il browser lo permette; le Impostazioni spiegano come aggiungerla alla Home su iPhone (Condividi → Aggiungi alla schermata Home) e su Android.
+- Dal browser di un telefono, senza installare, il primo tocco su «PREMI START» chiede lo schermo intero (non su iPhone, dove il browser non lo consente: lì serve l'installazione).
+
+### 12.8 Consenso dei due telefoni (v8)
+
+- Con **due pulsantiere e nessuna Regia**, i pulsanti che fanno avanzare il gioco sono **voti**: SI PARTE, VIA, AVANTI e **PROSSIMO INDIZIO** (timer spento, o dopo l'errore dell'avversario). Il gioco avanza solo quando hanno premuto tutti i giocatori che hanno voce:
+  - per AVANTI e simili, i due telefoni collegati;
+  - per un indizio, solo chi è ancora in gioco su quel profilo (chi ha sbagliato è fuori e non blocca l'altro).
+- Il telefono che ha premuto mostra **«1/2 · IN ATTESA DELL'AVVERSARIO…»** con il pulsante disattivato; l'altro vede «PROSSIMO INDIZIO ▶ · 1/2». Lo Schermo mostra **«AVANTI DAI TELEFONI»** (o «PROSSIMO INDIZIO DAI TELEFONI») con una **spunta verde** per chi ha premuto, e in questa modalità non ha un suo pulsante AVANTI.
+- I voti valgono per un solo momento del gioco: se il gioco va avanti da solo (una prenotazione, una risposta, il tempo) quelli a metà vengono annullati. Se un telefono si scollega, il suo voto non serve più. Il comando parte dallo Schermo, che è l'autorità (§12.1): non c'è nessun server.
+- Con la Regia decide il conduttore, come prima; sullo schermo singolo i giocatori sono davanti allo stesso dispositivo.
+- Nel codice: `RoomCore.vote`, `Votes` nel messaggio `view`; test in `roomCore.test.ts` ed e2e.
+
+### 12.9 Tocco, aree e vibrazioni sul telefono (v8)
+
+- **Aree di tocco da almeno 48×48 pixel reali**. Dentro il palco, che sul telefono è rimpicciolito, le misure si moltiplicano per `--inv` (l'inverso della scala): la X di uscita, i pulsanti piccoli, i suggerimenti. Fuori: la X della Regia, «▲ TABELLONE», i selettori della Home. I tasti della tastiera di gioco hanno un'area invisibile che copre metà dello spazio tra un tasto e l'altro: nessuna zona morta.
+- **Vibrazioni** (dove il browser le supporta: Android sì, iPhone no), disattivabili dalle Impostazioni:
+  1. **mi prenoto**: un colpo da 50 ms;
+  2. **l'avversario si prenota prima di me**: due colpi brevi (30, 50, 30);
+  3. **scade il tempo e partono i 10 secondi extra** (§3.8), sul telefono di chi sta scrivendo o sul dispositivo dello schermo singolo: due colpi lunghi (120, 60, 120).
+
 ---
 
 ## 13. Audio
@@ -816,6 +845,15 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 
 **Barra superiore (v6.1)**: la barra del tabellone sta sopra il contenuto (`z-index`), ha sfondo pieno e `overflow: hidden`; i nomi lunghi vanno a capo su due righe; il «+N» che sale è disegnato solo dai punti volanti nell'arena. Corretto un bug per cui i riquadri del punteggio si duplicavano nella barra: due chiavi React uguali (due `Date.now()` nello stesso millisecondo) facevano restare vecchi riquadri. Ora le chiavi vengono da un contatore.
 
+### 14.2 Tocchi 3D voxel (v8)
+
+- Pochi elementi in **3D voxel** (cubi a vista, come la pixel art 3D) che non snaturano il 2D: nessuna libreria 3D (Three.js avrebbe pesato più dell'app intera).
+  - **Pulsantone dei telefoni**: un blocco a gradini visto dall'alto in prospettiva (CSS 3D: sette strati sovrapposti con il bordo a pixel). Premendolo, la cima e gli strati **scendono lungo l'asse Z**; solo `transform`, 70 ms.
+  - **Pallone delle attese** (caricamento, telefoni in attesa della partita o della stanza, Regia, sala d'attesa che si collega): sfera voxel bianca con le pezze nere, che ruota piano.
+  - **Coppa del vincitore**: trofeo d'oro voxel con base di legno e due manici, che ruota sotto una **luce che gira** (riflessi che scorrono sull'oro) con un alone che pulsa. In caso di pareggio resta la coppa in pixel art.
+- Pallone e coppa sono disegnati da un piccolo motore su canvas (`components/voxel.ts`): solo le facce che toccano il vuoto e girate verso chi guarda, colorate per faccia (luce diffusa più riflesso sull'oro), dalla più lontana alla più vicina. La tela è piccola (52 e 96 pixel) e la pagina la ingrandisce con `image-rendering: pixelated`: i pixel restano netti. Al massimo 30 fotogrammi al secondo; con «riduci animazioni» un solo fotogramma fermo.
+- Anteprima: `?voxel` nell'indirizzo mostra coppa e pallone (serve ai controlli visivi).
+
 ---
 
 ## 15. Stack e struttura del repository
@@ -823,7 +861,7 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 | Strato | Scelta |
 |---|---|
 | Linguaggi | TypeScript (app, motore, stanze); Python 3.12 (dati e generatori) |
-| App | React + Vite, PWA statica pubblicata su GitHub Pages |
+| App | React + Vite, app installabile (`vite-plugin-pwa`, §12.7) pubblicata su GitHub Pages |
 | Motore | `packages/engine`: TypeScript puro e deterministico (RNG con seme) |
 | Più dispositivi | Nessun server nostro: lo Schermo ospita la stanza, messaggi cifrati via relay MQTT pubblici (§12) |
 | Dati | DuckDB sul dataset Transfermarkt; pacchetti JSON statici, uno per gioco, scaricati a richiesta |

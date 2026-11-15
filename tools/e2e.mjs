@@ -35,6 +35,11 @@ const browser = await chromium.launch();
 const errors = [];
 const open = async (ctxOpts = {}) => {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, ...ctxOpts });
+  // record the vibrations asked by the app (SPEC §12.9)
+  await ctx.addInitScript(() => {
+    window.__vib = [];
+    Object.defineProperty(Navigator.prototype, "vibrate", { configurable: true, value: (p) => (window.__vib.push(Array.isArray(p) ? p.join(",") : String(p)), true) });
+  });
   const p = await ctx.newPage();
   p.on("pageerror", (e) => errors.push(`${e.message}`));
   p.on("console", (m) => m.type() === "error" && !m.text().includes("Failed to load resource") && errors.push(m.text()));
@@ -205,6 +210,13 @@ try {
     const exit = await boxOf(m.locator(".exit-btn"));
     check(hud.x >= 47 && q.x >= 47 && okKey.x + okKey.width <= 844 - 47 + 1 && okKey.y + okKey.height <= 390 - 21 + 1 && exit.x + exit.width <= 844 - 47 + 1,
       `scoreboard and keyboard stay clear of notch, camera and home bar (hud ${Math.round(hud.x)}, exit right ${Math.round(exit.x + exit.width)}, Q ${Math.round(q.x)}, INVIA right ${Math.round(okKey.x + okKey.width)}, bottom ${Math.round(okKey.y + okKey.height)})`);
+    check(exit.width >= 48 && exit.height >= 48, `the exit button is at least 48×48 real pixels on a phone (${Math.round(exit.width)}×${Math.round(exit.height)})`);
+    check((await m.evaluate(() => getComputedStyle(document.documentElement).touchAction)) === "manipulation", "double-tap zoom is off (touch-action: manipulation)");
+    const between = await m.evaluate(() => {
+      const r = document.querySelector('.vk-key[data-key="A"]').getBoundingClientRect();
+      return document.elementFromPoint(r.left + r.width / 2, r.top - 2)?.closest(".vk-key")?.getAttribute("data-key");
+    });
+    check(between === "A" || between === "Q", `the gaps between keys still hit a key (${between})`);
     await typeVK(m, "Lewandowsky");
     check((await m.locator(".vk-mirror").innerText()).trim() === "Lewandowsky", "what is typed is written above the keys");
     const kb = await boxOf(m.locator(".vk"));
@@ -217,6 +229,7 @@ try {
     // grace period: the countdown runs out, ten more seconds to finish typing
     await m.locator('.vk-ctx .timer[data-grace="true"]').waitFor({ timeout: 40000 });
     const graceAt = Date.now() - t0;
+    check((await m.evaluate(() => window.__vib)).includes("120,60,120"), "the phone vibrates when the ten extra seconds start");
     check(graceAt > 27000, `the grace period starts when the 30 seconds are over (${(graceAt / 1000).toFixed(1)} s)`);
     check((await m.locator(".lives").allInnerTexts()).every((x) => !x.includes("♡")), "no error is counted when the countdown runs out");
     await m.screenshot({ path: "test-results/phone-grace.png" });
@@ -301,6 +314,15 @@ try {
     await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
     await screen.screenshot({ path: "test-results/room-lobby.png", fullPage: true });
     await p1.screenshot({ path: "test-results/pad-wait.png" });
+    const painted = (page, sel) => page.locator(sel).first().evaluate((c) => {
+      const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 3; i < d.length; i += 4) if (d[i] > 0) n++;
+      return n / (c.width * c.height);
+    });
+    const cover = await painted(p1, "canvas.voxel");
+    check(cover > 0.2 && cover < 0.9, `the waiting phone shows the voxel ball (${Math.round(cover * 100)}% of its canvas painted)`);
+    check((await p1.locator("canvas.voxel").evaluate((c) => getComputedStyle(c).imageRendering)) === "pixelated", "the voxel canvas is enlarged with nearest-neighbour pixels");
     await screen.getByPlaceholder("Nome").first().fill("Anna");
     await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
     await screen.getByText("INIZIA LA PARTITA ▶").click();
@@ -353,14 +375,21 @@ try {
     }
     await screen.waitForTimeout(600);
     for (const ph of [p1, p2]) if (await ph.getByText(/^VIA! ▶/).count()) await ph.getByText(/^VIA! ▶/).click();
-    await p2.locator(".big-buzz:not(:disabled)").waitFor({ timeout: 15000 }).catch(async (e) => {
+    await p2.locator(".buzz3d:not(:disabled)").waitFor({ timeout: 15000 }).catch(async (e) => {
       await screen.screenshot({ path: "test-results/debug-screen.png" });
       await p1.screenshot({ path: "test-results/debug-p1.png" });
       await p2.screenshot({ path: "test-results/debug-p2.png" });
       throw e;
     });
     await screen.waitForTimeout(2600); // "PRONTI…" is over: the first clue is out
-    await p2.locator(".big-buzz").dispatchEvent("pointerdown");
+    await p2.screenshot({ path: "test-results/pad-buzzer.png" });
+    await p2.locator(".buzz3d").dispatchEvent("pointerdown");
+    check(await p2.locator(".buzz3d.down").count() === 1, "the 3D button sinks while it is pressed");
+    const capZ = await p2.locator(".buzz3d .b3-cap").evaluate((e) => getComputedStyle(e).transform);
+    check(capZ !== "none", `the top of the 3D button moves along Z (${capZ.slice(0, 40)}…)`);
+    check((await p2.evaluate(() => window.__vib)).includes("50"), "pressing the buzzer vibrates once (50 ms)");
+    await p1.waitForFunction(() => window.__vib.includes("30,50,30"), null, { timeout: 5000 });
+    check(true, "the phone that was beaten to the buzzer vibrates twice (30, 50, 30)");
     await screen.getByText("RISPONDE!").waitFor();
     await p2.locator("input.input").waitFor();
     // the controller writes with the game's keyboard: the system one never opens, so nothing covers the suggestions
@@ -404,6 +433,8 @@ try {
     check((await screen.locator(".option.right").count()) === 0, "the Screen does not show the answer before the reveal");
     check((await screen.locator(".btn.next").count()) === 0, "with a Regia connected only the host moves the game on");
     check(host.dataRequests.length === 0, "the Regia downloads no data at all");
+    const end = await boxOf(host.locator(".phone-end"));
+    check(end.width >= 48 && end.height >= 48, `the end button of the Regia is a 48 px target (${Math.round(end.width)}×${Math.round(end.height)})`);
     // timer controls: pause / play, +10 s, -10 s reach the Screen at once
     await host.locator(".timerpad").waitFor();
     const secs = async () => Number((await screen.locator(".timer-num").first().innerText()).replace(/\D/g, "") || "0");
@@ -467,6 +498,18 @@ try {
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();
+  }
+  {
+    const v = await open();
+    await v.goto(`${BASE}/?voxel`);
+    await v.waitForTimeout(400);
+    const shots = [];
+    for (let k = 0; k < 2; k++) {
+      shots.push(await v.locator(".voxel-trophy canvas").evaluate((c) => c.toDataURL()));
+      await v.waitForTimeout(600);
+    }
+    check(shots[0] !== shots[1], "the voxel cup turns (two frames differ)");
+    await v.context().close();
   }
   check(errors.length === 0, `no page errors in rooms (${errors.join(" | ")})`);
 } catch (e) {

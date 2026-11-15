@@ -4,11 +4,13 @@ import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { loadCore } from "./runtime/packs";
 import { savedYear, saveYear, setTimerOn, timerOn, YEAR_CHOICES } from "./runtime/settings";
+import { hapticsOn, setHaptics } from "./runtime/haptics";
 import { canInstall, enterFullscreenOnPhone, install, isInstalled, isIOS, onInstallChange } from "./runtime/install";
 import { isRoomCode } from "./runtime/roomCore";
 import { Fit, Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
 import { Logo } from "./components/scenery";
+import { VoxelBall, VoxelTrophy } from "./components/Voxel3D";
 import { Setup } from "./screens/Setup";
 import { LocalMatch } from "./screens/LocalMatch";
 import { Tournament } from "./screens/Tournament";
@@ -126,12 +128,23 @@ export function App() {
     if (!remote && !data) void loadCore().then(setData);
   }, [remote, data]);
 
+  // visual check of the voxel models (tools/shots.mjs, tools/e2e.mjs): ?voxel
+  if (new URLSearchParams(location.search).has("voxel")) {
+    return (
+      <Stage variant="dusk">
+        <div className="home voxel-preview">
+          <VoxelTrophy size={300} />
+          <VoxelBall size={160} />
+        </div>
+      </Stage>
+    );
+  }
   if (remote) return remote.role === "host" ? <HostRoom key={remote.code} code={remote.code} /> : <PadRoom key={remote.code + remote.role} code={remote.code} role={remote.role} />;
   if (!data) {
     return (
       <Stage variant="sunset">
         <div className="home">
-          <Sprite name="ball" size={120} className="blink" />
+          <VoxelBall size={150} />
           <div className="px blink">CARICAMENTO…</div>
         </div>
       </Stage>
@@ -252,6 +265,7 @@ export function App() {
 function AudioSettings({ onBack }: { onBack: () => void }) {
   const [p, setP] = useState(audio.prefs);
   const [speller, setSp] = useState(spellerOn);
+  const [haptics, setHp] = useState(hapticsOn);
   const upd = (x: Partial<typeof p>) => {
     audio.setPrefs(x);
     setP({ ...audio.prefs });
@@ -282,6 +296,20 @@ function AudioSettings({ onBack }: { onBack: () => void }) {
           {speller ? "ACCESO" : "SPENTO"}
         </button>
         <span className="note">Corregge solo l'ortografia di un nome già scritto quasi per intero: non completa e non suggerisce risposte.</span>
+      </div>
+      <div className="field">
+        <label>VIBRAZIONE DEL TELEFONO</label>
+        <button
+          className={`btn ${haptics ? "" : "ghost"}`}
+          onClick={() => {
+            setHaptics(!haptics);
+            setHp(!haptics);
+            if (!haptics) navigator.vibrate?.(50);
+          }}
+        >
+          {haptics ? "ACCESA" : "SPENTA"}
+        </button>
+        <span className="note">Quando ti prenoti, quando l'avversario si prenota prima di te, e quando scade il tempo e partono i 10 secondi per finire di scrivere. Su iPhone il browser non la supporta.</span>
       </div>
       <div className="field">
         <label>APP A TUTTO SCHERMO</label>

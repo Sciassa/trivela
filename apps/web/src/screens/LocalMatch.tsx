@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { usedIds, viewFor, type EngineCtx, type Intent, type MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
+import { VoxelTrophy } from "../components/Voxel3D";
+import { HAPTIC, vibrate } from "../runtime/haptics";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
 import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, useWakeLock, type PlayMode, type Pop, type TimerClock } from "../components/ui";
@@ -85,6 +87,11 @@ export function MatchShell({
 }) {
   const [asking, setAsking] = useState(false);
   const view = useMemo(() => viewFor(state, "screen"), [state]);
+  // on the device in the players' hands (not on a Screen with phones): the countdown ran out, ten more seconds (SPEC §12.9)
+  const graceId = !mode.readonly && state.timer?.grace ? state.timer.id : null;
+  useEffect(() => {
+    if (graceId !== null) vibrate(HAPTIC.grace);
+  }, [graceId]);
   const g = state.order[state.gameIdx];
   const fx = useFx(state);
   const pops = usePops(state);
@@ -272,7 +279,7 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
       <Confetti rain count={60} />
       <Fit center>
         <div className="splash enter">
-          <Sprite name="trophy" size={150} className="blink-slow" />
+          {winner === null ? <Sprite name="trophy" size={150} className="blink-slow" /> : <VoxelTrophy size={230} />}
           <div className="px c-accent" style={{ fontSize: 34 }}>
             {winner === null ? "PAREGGIO!" : "VINCE"}
           </div>

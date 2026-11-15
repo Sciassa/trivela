@@ -2,12 +2,12 @@
 
 Quiz calcistico arcade **1 contro 1** per veri maniaci del calcio: pixel art anni '80, musica chiptune generata in tempo reale, 8 mini-giochi, tornei tra amici.
 
-Si gioca aprendo il sito, senza installare né avviare nulla:
+Si gioca aprendo il sito, senza installare né avviare nulla. Per giocare a tutto schermo sul telefono, aggiungilo alla schermata Home (iPhone: Condividi → «Aggiungi alla schermata Home»; Android: «Installa app»): si apre come un'app, senza barre del browser.
 
 **https://sciassa.github.io/trivela/**
 
 - **Un solo schermo**: tablet, PC o telefono in orizzontale; ci si passa il dispositivo.
-- **Schermo + 2 telefoni** (senza conduttore): ogni giocatore usa il proprio telefono come pulsantiera e tastiera.
+- **Schermo + 2 telefoni** (senza conduttore): ogni giocatore usa il proprio telefono come pulsantiera e tastiera. «Avanti» e «Prossimo indizio» si premono in due: nessuno salta un indizio da solo.
 - **Schermo + 1 telefono** (con conduttore): il conduttore vede soluzioni e copione sul telefono e convalida le risposte date a voce.
 - **Sfida Rapida**: due giocatori, un solo gioco a scelta, 3 round a testa (anche con i telefoni).
 - **Allenamento**: da solo, un gioco a scelta, nessun avversario.

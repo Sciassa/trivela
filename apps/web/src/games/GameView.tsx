@@ -3,6 +3,7 @@ import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, Sou
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
+import { HAPTIC, vibrate } from "../runtime/haptics";
 
 export interface GameProps {
   state: MatchState;
@@ -135,7 +136,10 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
   const total = points.length;
   const canBuzz = (p: PlayerIdx) => (g.stage === "clues" || g.stage === "ready") && !g.out[p];
   const buzz = (p: PlayerIdx) => {
-    if (!readonly && canBuzz(p)) dispatch({ type: "BUZZ", player: p });
+    if (!readonly && canBuzz(p)) {
+      vibrate(HAPTIC.buzz);
+      dispatch({ type: "BUZZ", player: p });
+    }
   };
   useEffect(() => {
     if (readonly) return;

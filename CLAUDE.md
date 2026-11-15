@@ -34,7 +34,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - `apps/web`: PWA React. `src/components` (palco adattivo `Stage`, `Fit`, tabellone, sprite, scenografia `scenery`, campi di testo), `src/games/GameView.tsx` (gli 8 giochi), `src/screens` (nuova sfida, partita, sala d'attesa e telefoni, torneo), `src/runtime` (`settings` timer e filtro anno della Home, `packs` caricamento a richiesta, `roomCore` autorità della stanza, `transport` + `mqtt` relay cifrato, `room` hook React).
 - `packages/protocol` (tipi condivisi), `packages/engine` (8 giochi, sorteggio, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica ed effetti sintetizzati).
 - `data/trivela_data`: `tm_core` (strato dei fatti verificati e grammatica italiana), `gen_lists` (classifiche e insiemi), `gen_matches` (formazione: solo partite iconiche), `gen_anomalie` (record rarissimi del Tiro Secco), `gen_nomi` + `lexicon` (giochi di nomi del Tiro Secco), `gen_players` (mercato, giramondo, maglia), `gen_quiz` (curiosità del Tiro Secco), `managers` (date di nascita degli allenatori da Wikidata), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
-- `tools/e2e.mjs` (test end-to-end, stanze comprese, con un relay MQTT locale), `tools/shots.mjs` (screenshot di tutti i giochi a più formati).
+- `tools/e2e.mjs` (test end-to-end, stanze comprese, con un relay MQTT locale), `tools/shots.mjs` (screenshot di tutti i giochi a più formati), `tools/icons.mjs` (icone PNG dell'app installabile).
 
 ## Comandi
 
@@ -61,6 +61,10 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - Timer (SPEC §3.8): un gioco nuovo con risposta scritta va aggiunto a `GRACE_KINDS` in `match.ts`; ogni attesa deve restare giocabile con `MatchConfig.timer === false` (un pulsante al posto del conto alla rovescia).
 - Risposte scritte: usa sempre `AnswerBox`/`TextEntry` (tastiera di gioco sui touch, SPEC §10.4), passando `prompt` e `timer`; mai un `<input>` nudo dentro una partita.
 - Aree sicure (SPEC §12.6): usa `var(--sal)`, `var(--sar)`, `var(--sat)`, `var(--sab)`, moltiplicate per `var(--inv)` dentro il palco; mai `env()` diretto.
+- App installabile (SPEC §12.7): manifest e service worker li genera `vite-plugin-pwa` in `vite.config.ts`; i pacchetti delle domande (`data/`) non vanno mai nella precache. Le icone si rigenerano con `node tools/icons.mjs`.
+- Stanze con due telefoni (SPEC §12.8): ogni nuovo pulsante che fa avanzare il gioco dalle pulsantiere passa da `RoomCore.vote` (consenso), mai direttamente.
+- Telefono (SPEC §12.9): aree di tocco ≥ 48 px reali (dentro il palco `calc(48px * var(--inv))`); vibrazioni solo tramite `runtime/haptics.ts` (`HAPTIC`), che rispetta l'interruttore delle Impostazioni.
+- Voxel (SPEC §14.2): niente librerie 3D; modelli e rendering in `components/voxel.ts`, canvas piccolo ingrandito `pixelated`, 30 fps al massimo, fermo con `prefers-reduced-motion`.
 - Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START". La musica resta ambient: solo onde sine/triangle, tempo lento, volume basso (SPEC §13).
 - Ogni risposta sbagliata va scritta in rosso sullo Schermo (`WrongSaid`, SPEC §3.6): un gioco nuovo deve registrare `said` in `last` (o `wrong` mentre la risposta è ancora in corso).
 
@@ -69,7 +73,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 Una modifica è finita quando:
 - lint, typecheck e test passano (`pnpm test`, `uv run pytest` dove pertinente);
 - le regole di gioco toccate hanno test aggiornati;
-- per le stanze, `pnpm e2e` copre Schermo + pulsantiere e Schermo + Regia e verifica che Schermo e pulsantiere non ricevano soluzioni; copre anche telefono touch in orizzontale (tastiera, tempo extra, rotazione, aree sicure) e timer spento;
+- per le stanze, `pnpm e2e` copre Schermo + pulsantiere e Schermo + Regia e verifica che Schermo e pulsantiere non ricevano soluzioni; copre anche telefono touch in orizzontale (tastiera, tempo extra, rotazione, aree sicure, schermo intero), timer spento, consenso 1/2, vibrazioni, aree da 48 px e modelli voxel;
 - per l'interfaccia, gli screenshot di `tools/shots.mjs` non mostrano testi o riquadri tagliati;
 - per i dati, nessuna istanza usa campi mancanti o incoerenti e i filtri di `postprocess` restano attivi;
 - `SPEC.md` è aggiornata se è cambiato un comportamento.
