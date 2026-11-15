@@ -134,14 +134,23 @@ class Anomalie(Quiz):
         return longest_run(self.ok[comp][kind], min_seasons)
 
     def distractors(self, pid: int, comp: str, season: int, owners: set[int], check, line: str | None = None, n: int = 14) -> list[str]:
+        """Famous players of the same age group for whom the record is false. Same role as the right answer (SPEC §4.2,
+        v7.2): a striker is never hidden among three goalkeepers. Only when a role has too few, any role."""
         t = self.t
-        ds = []
-        for q in self.pool(pid, comp, season, line):
-            if q not in owners and check(q, comp):
-                ds.append(t.pname(q))
-            if len(ds) >= n:
-                break
-        return ds
+
+        def pick(role: str | None) -> list[str]:
+            ds = []
+            for q in self.pool(pid, comp, season, role):
+                if q not in owners and check(q, comp):
+                    ds.append(t.pname(q))
+                if len(ds) >= n:
+                    break
+            return ds
+
+        if line is not None:
+            return pick(line)
+        same = pick(self.line.get(pid))
+        return same if len(same) >= 3 else pick(None)
 
     # ------------------------------------------------------------------ goals in a single game
     def multi_goals(self, gen: str, line: str | None, min_goals: int, as_sub: bool, subject: str, what: str, kind: str, v: int) -> None:
@@ -189,6 +198,30 @@ class Anomalie(Quiz):
                       sources=[t.src_game(g), t.src_player(pid)], kind="autogol",
                       script=f"{t.pname(pid)} in {t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): "
                              + (f"gol per la propria squadra al {gmin}' e autogol al {omin}'." if gmin <= omin else f"autogol al {omin}' e gol per la propria squadra al {gmin}'."))
+
+    # ------------------------------------------------------------------ a substitute who scores at once
+    def flash_sub(self, limit: int, v: int) -> None:
+        """A substitute who scored within `limit` minutes of coming on (same minute included)."""
+        t = self.t
+        rows = t.q(f"""select s.gid, s.pin, s.minute, g.minute from sub s
+            join goal g on g.gid = s.gid and g.pid = s.pin and not g.own and g.minute >= s.minute and g.minute - s.minute <= {limit}
+            join gm on gm.gid = s.gid where gm.comp in ({self.cmp})""")
+        events, everyone = {}, defaultdict(set)
+        for gid, pid, sm, gmin in rows:
+            pid, gid = int(pid), int(gid)
+            comp = self.G[gid]["comp"]
+            everyone[comp].add(pid)
+            if t.is_notable(pid):
+                events.setdefault((pid, comp), (gid, int(sm), int(gmin)))
+        clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
+        for (pid, comp), (gid, sm, gmin) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            g = self.G[gid]
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], clean)
+            q = f"Quale di questi giocatori è entrato dalla panchina e ha segnato entro {limit} minuti dal suo ingresso {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
+            when = "nello stesso minuto" if gmin == sm else f"{gmin - sm} minut{'o' if gmin - sm == 1 else 'i'} dopo"
+            self.emit(f"an_gol_lampo_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+                      sources=[t.src_game(g), t.src_player(pid)], kind="panchina",
+                      script=f"{t.pname(pid)} in {t.label(g)} ({t.ctx(g)}, {date_it(g['date'])}): entrato al {sm}', gol al {gmin}' ({when}).")
 
     # ------------------------------------------------------------------ cards
     def sub_sent_off(self, lo: int, limit: int, v: int) -> None:
@@ -330,6 +363,7 @@ class Anomalie(Quiz):
         self.multi_goals("an_panchina_tripletta", None, 3, True, "giocatori", "è entrato dalla panchina e ha segnato almeno tre gol nella stessa partita", "panchina", v)
         self.multi_goals("an_poker", "Attack", 4, False, "attaccanti", "ha segnato almeno quattro gol in una partita", "attaccante", 3)
         self.own_and_goal(3)
+        self.flash_sub(2, 3)
         self.sub_sent_off(0, 5, v)
         self.sub_sent_off(5, 10, 3)
         self.early_red(-1, 5, v)

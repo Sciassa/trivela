@@ -150,14 +150,32 @@ class Nomi(Quiz):
         first = re.split(r"[ (,]", note.strip())[0]
         return lexicon.LANG_CODE.get(first, "?")
 
+    def _real_surnames(self) -> None:
+        """Every one-word surname of a footballer in the dataset (any league, any level), as written: «Volpi», «Orsi»…"""
+        self.real_surname: dict[str, str] = {}
+        for p in self.t.players.values():
+            last = (p["last"] or "").strip()
+            if p["first"] and last and len(re.split(r"[\s\-]+", last)) == 1:
+                self.real_surname.setdefault(last.lower(), last)  # accents kept: «Fariña» is not «Farina»
+
     def decoy_pool(self, cat: str, lang: str, word: str, comp: str) -> list[str]:
-        """Words of the same family (and number, for Italian) that no player of the competition bears."""
-        pool = lexicon.DECOYS.get(cat, {}).get(lang, [])
+        """Wrong options that look exactly like the right one (SPEC §4.1, v7.2): words of the same family and language
+        that are the surname of a real footballer somewhere in the dataset («Volpi», «Orsi», «Lupi»), but of nobody
+        who ever played in this competition. Italian words keep the number of the right one (Gatti with Volpi)."""
+        family = "storia" if cat == "dittatori" else cat
+        words = [w for w, (meaning, note) in lexicon.CATEGORIES[family].items()
+                 if (cat != "dittatori" or note == "dittatore") and (lang == "*" or self.lang_of(family, note) == lang)]
         if lang == "it":
             plural = word.lower().endswith("i")
-            pool = [d for d in pool if d.endswith("i") == plural]
+            words = [w for w in words if w.endswith("i") == plural]
         used = self.bearers[comp]
-        return [d for d in pool if norm(d) not in used and norm(d) != norm(word) and " " not in d]
+        out = []
+        for w in words:
+            k = norm(w)
+            if " " in w or k == norm(word) or k in used or w.lower() not in self.real_surname:
+                continue
+            out.append(self.real_surname[w.lower()])
+        return sorted(set(out))
 
     def candidates(self) -> list[tuple[int, str, str, str]]:
         """(pid, category, surname as written, language) for every notable player whose whole surname is one word of the lexicon."""
@@ -221,10 +239,10 @@ class Nomi(Quiz):
                     trio = pool[3 * k:3 * k + 3]
                     if len(trio) < 3:
                         break
-                    wrong = [self.cap(d) for d in trio]
+                    wrong = list(trio)
                     self.put(f"nomi_{cat}", (pid, comp, k), q, surname, wrong, pid=pid, comp=comp, year=min(seasons),
                              script=f"{surname} è il cognome di {t.pname(pid)}: {n_apps} presenze {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
-                                    f"Nessun giocatore di cognome {', '.join(wrong[:-1])} o {wrong[-1]} ha mai giocato {IN_COMP[comp]} in queste stagioni.")
+                                    f"{', '.join(wrong[:-1])} e {wrong[-1]} sono cognomi di calciatori veri, ma nessun giocatore con quei cognomi ha mai giocato {IN_COMP[comp]} in queste stagioni.")
 
     # ------------------------------------------------------------------ "... who scored at least N goals in Serie A?"
     def scored(self, variants: int = 2) -> None:
@@ -242,7 +260,7 @@ class Nomi(Quiz):
                     continue
                 done.add((norm(surname), comp))
                 span = f"dal {season_label(w[0])} al {season_label(w[1])}"
-                pool = [self.cap(d) for d in self.decoy_pool(cat, lang, surname, comp)]
+                pool = self.decoy_pool(cat, lang, surname, comp)
                 # real surnames of the same family whose bearers scored far fewer: the closest wrong options
                 near = []
                 for p2, cat2, sur2, lang2 in self.candidates():
@@ -265,13 +283,14 @@ class Nomi(Quiz):
                             tot = sum(self.goals_w[(b, comp)] for b in bs)
                             notes.append(f"{x}: {tot} gol" + (f" in tutto ({len(bs)} giocatori)" if len(bs) > 1 else ""))
                         else:
-                            notes.append(f"{x}: nessun giocatore")
+                            notes.append(f"{x}: cognome di calciatori che non hanno mai giocato lì")
                     self.put("nomi_gol", (cat, pid, comp, n, k), q, surname, wrong, pid=pid, comp=comp, year=w[0],
                              script=f"{t.pname(pid)} ha segnato {self.goals_w[(pid, comp)]} gol {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
                                     f"Gli altri cognomi: {'; '.join(notes)}.")
 
     def run(self) -> list[dict]:
         self._bearers()
+        self._real_surnames()
         self.played()
         self.scored()
         return self.out
