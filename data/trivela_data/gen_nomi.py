@@ -1,9 +1,11 @@
-"""Tiro Secco, word games on surnames (SPEC §4.1): what a surname means, crossed with real statistics.
+"""Tiro Secco, word games on surnames (SPEC §4.1).
 
-"Which of these players, who all played in Serie A, has an animal in his surname?", "which of these players with a
-trade for a surname scored the most goals in the Bundesliga?". The meanings come from the hand-written word lists in
-`lexicon` (no football fact comes from there); presences and goals are computed on the verified facts layer, with the
-same completeness rules as every other question. Every option is a real, notable player: nothing is made up.
+The options are four surnames of one family of words: «Quale di questi cognomi (tutti nomi di animali) appartiene a un
+giocatore che ha giocato in Serie A?» Gatti · Cani · Topi · Salmoni. One is the surname of a real, notable player; the
+other three are words of the same family that the dataset proves no player of that competition ever had (every row of
+the competition is checked: presences, appearance rows, line-ups, goals). The same with goals: «… che ha segnato almeno
+20 gol in Serie A?», where a wrong option may also be a real surname whose bearers scored far fewer.
+The meanings come from the hand-written word lists in `lexicon`; no football fact comes from there.
 """
 
 from __future__ import annotations
@@ -35,6 +37,23 @@ TEXT = {
     "calendario": ("porta nel cognome un mese, una stagione o una festa", "portano nel cognome un mese, una stagione o una festa", "un mese, una stagione o una festa"),
 }
 THRESHOLDS = (100, 50, 30, 20, 10, 5)
+
+# "Quale di questi cognomi (tutti nomi di animali in portoghese) ..."
+PHRASE = {
+    "animali": "tutti nomi di animali",
+    "storia": "tutti cognomi di grandi personaggi della storia, della scienza o dell'arte",
+    "dittatori": "tutti cognomi di dittatori",
+    "citta": "tutti nomi di città",
+    "colori": "tutti nomi di colori",
+    "mestieri": "tutti nomi di mestieri",
+    "cibo": "tutti nomi di cose da mangiare",
+    "piante": "tutti nomi di alberi, fiori o piante",
+    "nobili": "tutti titoli nobiliari",
+    "chiesa": "tutte parole di chiesa",
+    "calendario": "tutti mesi, giorni, stagioni o feste",
+}
+# families whose words belong to a language (the wrong options come from the same language)
+BY_LANGUAGE = {"animali", "colori", "mestieri", "cibo", "piante", "nobili", "chiesa", "calendario"}
 
 
 def surname_words(p: dict) -> list[str]:
@@ -95,187 +114,166 @@ class Nomi(Quiz):
         for k in self.owners:
             self.owners[k].sort(key=lambda p: (-t.fame(p), p))
 
-    # ------------------------------------------------------------------ helpers
-    def explain(self, pid: int, cat: str) -> str:
-        w, meaning, note = self.word[(pid, cat)]
-        name = self.t.pname(pid)
-        if cat in ("storia", "dittatori"):
-            return f"{name}: «{w}» come {meaning}"
-        if cat == "citta":
-            return f"{name}: «{w}» come {meaning} ({note})"
-        if meaning.lower() == w.lower():
-            return f"{name}: «{w}», in {note}"
-        return f"{name}: «{w}» significa «{meaning}» in {note}"
-
-    def label(self, pid: int, cat: str) -> str:
-        w = self.word[(pid, cat)][0]
-        return f"{self.t.pname(pid)} («{w}»: {TEXT[cat][2]})"
-
-    def distinct(self, pids: list[int], cat: str | None = None) -> bool:
-        """No two options with the same surname word (two Castros would give the game away)."""
+    # ------------------------------------------------------------------ bearers of a word, in a competition
+    def _bearers(self) -> None:
+        """comp -> normalised word -> every player (notable or not) whose name contains that word and who appears in any
+        row of the competition: presences, appearance rows, line-ups, goals. A wrong option must have no bearer at all."""
         t = self.t
-        seen = set()
-        for p in pids:
-            ws = {norm(self.word[(p, c)][0]) for c in ([cat] if cat else [c for c in TEXT if (p, c) in self.word])} | {norm(t.surname(p))}
-            if ws & seen:
-                return False
-            seen |= ws
-        return True
+        cmp = ",".join(f"'{c}'" for c in COMPS)
+        rows = t.q(f"""select distinct gm.comp, x.pid from (
+                select gid, pid from pres union select gid, pid from apx union select gid, pid from lu union select gid, pid from goal
+            ) x join gm using(gid) where gm.comp in ({cmp}) and x.pid is not null""")
+        self.bearers = defaultdict(lambda: defaultdict(set))
+        for comp, pid in rows:
+            pid = int(pid)
+            p = t.players.get(pid)
+            names = [p["name"] or "", p["last"] or "", p["first"] or ""] if p else [t.lu_names.get(pid, "")]
+            for w in {w for n in names for w in norm(n).split()}:
+                self.bearers[comp][w].add(pid)
+        self.goal_window = {comp: t.window(comp, None, "goal", 1) for comp in COMPS}
+        self.pres_window = {comp: t.window(comp, None, "pres", 1) for comp in COMPS}
+        self.goals_w = defaultdict(int)  # (pid, comp) -> goals inside the complete goal window
+        for pid, lst in self.pgoals.items():
+            for d, comp, season, gid, club, n in lst:
+                w = self.goal_window.get(comp)
+                if w and w[0] <= season <= w[1]:
+                    self.goals_w[(pid, comp)] += n
 
-    def put(self, gen: str, key, question: str, correct: int, wrong: list[int], *, comp: str, year: int, script: str) -> bool:
+    def phrase(self, cat: str, lang: str) -> str:
+        base = PHRASE[cat]
+        extra = lexicon.LANG_NAME.get(lang, "") if cat in BY_LANGUAGE else ""
+        return f"{base} {extra}".strip()
+
+    def lang_of(self, cat: str, note: str) -> str:
+        if cat not in BY_LANGUAGE:
+            return "*"
+        first = re.split(r"[ (,]", note.strip())[0]
+        return lexicon.LANG_CODE.get(first, "?")
+
+    def decoy_pool(self, cat: str, lang: str, word: str, comp: str) -> list[str]:
+        """Words of the same family (and number, for Italian) that no player of the competition bears."""
+        pool = lexicon.DECOYS.get(cat, {}).get(lang, [])
+        if lang == "it":
+            plural = word.lower().endswith("i")
+            pool = [d for d in pool if d.endswith("i") == plural]
+        used = self.bearers[comp]
+        return [d for d in pool if norm(d) not in used and norm(d) != norm(word) and " " not in d]
+
+    def candidates(self) -> list[tuple[int, str, str, str]]:
+        """(pid, category, surname as written, language) for every notable player whose whole surname is one word of the lexicon."""
+        out = []
+        for (pid, cat), (w, meaning, note) in self.word.items():
+            p = self.t.players[pid]
+            last = (p["last"] or "").strip()
+            # a real surname of one word, next to a first name: stage names ("Chory Castro", "Ganso") are not surnames
+            if not p["first"] or not last or len(re.split(r"[\s\-]+", last)) != 1 or norm(last) != norm(w):
+                continue
+            lang = self.lang_of(cat, note)
+            if lang == "?":
+                continue
+            out.append((pid, cat, (p["last"] or p["name"]).strip(), lang))
+        return sorted(out, key=lambda x: (-self.t.fame(x[0]), x))
+
+    def put(self, gen: str, key, question: str, correct: str, wrong: list[str], *, pid: int, comp: str, year: int, script: str) -> bool:
         t = self.t
-        ok = self.add(gen, key, question, t.pname(correct), [t.pname(p) for p in wrong], year=year, fame=t.fame(correct), comp=comp, archetype=6,
-                      entities=[f"comp:{comp}", *(t.pid(p) for p in [correct, *wrong])], sources=[SRC_DATASET, t.src_player(correct)], script=script)
+        ok = self.add(gen, key, question, correct, wrong, year=year, fame=t.fame(pid), comp=comp, archetype=6,
+                      entities=[f"comp:{comp}", t.pid(pid)], sources=[SRC_DATASET, t.src_player(pid)], script=script)
         if ok:
             self.out[-1]["tag"] = "nomi"
         return ok
 
-    def last_year(self, pids: list[int], comp: str) -> int:
-        return min(self.span[(p, comp)][1] for p in pids)
+    @staticmethod
+    def cap(w: str) -> str:
+        return w[:1].upper() + w[1:]
 
-    def first_year(self, pids: list[int], comp: str) -> int:
-        return min(self.span[(p, comp)][0] for p in pids)
+    def meaning(self, pid: int, cat: str) -> str:
+        w, meaning, note = self.word[(pid, cat)]
+        if cat in ("storia", "dittatori"):
+            return f"«{w}» come {meaning}"
+        if cat == "citta":
+            return f"«{w}» come la città di {meaning} ({note})"
+        if meaning.lower() == w.lower():
+            return f"«{w}», proprio come la parola {('in ' + note) if note != lexicon.IT else 'italiana'}"
+        return f"«{w}» significa «{meaning}» in {note}"
 
-    def exact_goals(self, pid: int, comp: str) -> bool:
-        return self.clean_history(pid, comp, END)
-
-    # ------------------------------------------------------------------ A: whose surname is it?
-    def who(self, per_owner: int = 2, cap: int = 16) -> None:
-        """One player of the category among three whose surnames mean something else; and the other way round, the odd one out."""
-        for cat in TEXT:
+    # ------------------------------------------------------------------ "which of these surnames belongs to a player who played in Serie A?"
+    def played(self, variants: int = 2) -> None:
+        t = self.t
+        done = set()
+        for pid, cat, surname, lang in self.candidates():
             for comp in COMPS:
-                own = self.owners.get((cat, comp), [])
-                if not own:
+                if (norm(surname), comp) in done:
+                    continue  # one question per surname and competition (the most famous bearer tells the story)
+                w = self.pres_window.get(comp)
+                seasons = [s for (p, c, s) in self.apps if p == pid and c == comp and w and w[0] <= s <= w[1]]
+                if not w or not seasons:
                     continue
-                # players of other categories who cannot be read as this one
-                others = defaultdict(list)
-                for (c2, cc), pids in self.owners.items():
-                    if cc == comp and c2 != cat and c2 != "dittatori" and not (cat == "dittatori" and c2 != "storia"):
-                        others[c2] += [p for p in pids if cat not in self.cats[p]]
-                r = random.Random(f"nomi-{cat}-{comp}")
-                made = 0
-                for pid in own:
-                    for k in range(per_owner):
-                        if made >= cap:
-                            break
-                        if cat == "dittatori":  # against other great names of history: harder than against a baker
-                            pool = [p for p in others.get("storia", [])]
-                            if len(pool) < 3:
-                                continue
-                            wrong = r.sample(pool[:14], 3)
-                        else:
-                            cs = [c for c in others if others[c]]
-                            if len(cs) < 3:
-                                continue
-                            wrong = [r.choice(others[c][:10]) for c in r.sample(cs, 3)]
-                        if len(set(wrong)) < 3 or not self.distinct([pid, *wrong]):
-                            continue
-                        rest = "; ".join(self.label(p, next(c for c in TEXT if (p, c) in self.word and c != "dittatori" or (p, c) in self.word and cat == "dittatori" and c == "storia")) for p in wrong)
-                        q = f"Quale di questi giocatori, che hanno tutti giocato {IN_COMP[comp]}, {TEXT[cat][0]}?"
-                        made += self.put(f"nomi_{cat}", ("chi", pid, comp, k), q, pid, wrong, comp=comp, year=self.last_year([pid, *wrong], comp),
-                                         script=f"{self.explain(pid, cat)}. Gli altri: {rest}.")
-                # the odd one out
-                intruders = [p for c in others for p in others[c][:8]]
-                made = 0
-                for k in range(min(cap // 2, len(own) * 2)):
-                    if len(own) < 3 or not intruders:
+                pool = self.decoy_pool(cat, lang, surname, comp)
+                if len(pool) < 3:
+                    continue
+                r = random.Random(f"nomi-giocato-{pid}-{comp}")
+                r.shuffle(pool)
+                n_apps = sum(self.apps[(pid, comp, s)] for s in seasons)
+                done.add((norm(surname), comp))
+                span = f"dal {season_label(w[0])} al {season_label(w[1])}"
+                q = f"Quale di questi cognomi ({self.phrase(cat, lang)}) appartiene a un giocatore che ha giocato {IN_COMP[comp]} ({span})?"
+                for k in range(variants):
+                    trio = pool[3 * k:3 * k + 3]
+                    if len(trio) < 3:
                         break
-                    trio = r.sample(own[:12], 3)
-                    x = r.choice(intruders)
-                    if not self.distinct([x, *trio]) or not self.distinct(trio, cat):
-                        continue
-                    xc = next(c for c in TEXT if (x, c) in self.word and c != "dittatori")
-                    q = f"Tre di questi giocatori, che hanno tutti giocato {IN_COMP[comp]}, {TEXT[cat][1]}. Chi è l'intruso?"
-                    made += self.put(f"nomi_{cat}", ("intruso", tuple(sorted(trio)), x, comp), q, x, trio, comp=comp, year=self.last_year([x, *trio], comp),
-                                     script=f"L'intruso è {self.label(x, xc)}. " + "; ".join(self.explain(p, cat) for p in trio) + ".")
+                    wrong = [self.cap(d) for d in trio]
+                    self.put(f"nomi_{cat}", (pid, comp, k), q, surname, wrong, pid=pid, comp=comp, year=min(seasons),
+                             script=f"{surname} è il cognome di {t.pname(pid)}: {n_apps} presenze {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
+                                    f"Nessun giocatore di cognome {', '.join(wrong[:-1])} o {wrong[-1]} ha mai giocato {IN_COMP[comp]} in queste stagioni.")
 
-    # ------------------------------------------------------------------ B, C: goals
-    def by_goals(self, cap: int = 6) -> None:
+    # ------------------------------------------------------------------ "... who scored at least N goals in Serie A?"
+    def scored(self, variants: int = 2) -> None:
         t = self.t
-        for cat in TEXT:
+        done = set()
+        for pid, cat, surname, lang in sorted(self.candidates(), key=lambda x: -max(self.goals_w[(x[0], c)] for c in COMPS)):
             for comp in COMPS:
-                own = [p for p in self.owners.get((cat, comp), []) if self.exact_goals(p, comp)]
-                if len(own) < 4:
+                w = self.goal_window.get(comp)
+                if not w or (norm(surname), comp) in done:
                     continue
-                g = {p: self.goals_in[(p, comp)] for p in own}
-                ranked = sorted(own, key=lambda p: (-g[p], p))
-                r = random.Random(f"nomi-gol-{cat}-{comp}")
-                made = 0
-                for i, top in enumerate(ranked):
-                    below = [p for p in ranked[i + 1:] if g[p] <= g[top] - 2]
-                    if g[top] < 3 or len(below) < 3 or made >= cap:
-                        continue
-                    wrong = below[:3] if made % 2 == 0 else r.sample(below[:8], 3)
-                    if not self.distinct([top, *wrong], cat):
-                        continue
-                    q = f"Quale di questi giocatori, che {TEXT[cat][1].replace('portano', 'portano tutti', 1)}, ha segnato più gol {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
-                    tot = "; ".join(f"{t.pname(p)} {g[p]}" for p in [top, *sorted(wrong, key=lambda p: -g[p])])
-                    made += self.put("nomi_gol", (cat, comp, top, tuple(sorted(wrong))), q, top, wrong, comp=comp, year=self.first_year([top, *wrong], comp),
-                                     script=f"Gol {IN_COMP[comp]} dal 2012/13 al 2025/26: {tot}. " + "; ".join(self.explain(p, cat) for p in [top, *wrong]) + ".")
-                # the threshold, as in "which animal scored at least 20 goals in Serie A?"
-                made = 0
-                for top in ranked:
-                    n = next((x for x in THRESHOLDS if g[top] >= x), None)
-                    if n is None or made >= cap:
-                        continue
-                    low = [p for p in ranked if g[p] <= n // 4 and p != top]
-                    if len(low) < 3:
-                        continue
-                    wrong = r.sample(low[:10], 3)
-                    if not self.distinct([top, *wrong], cat):
-                        continue
-                    q = f"Quale di questi giocatori, che {TEXT[cat][1].replace('portano', 'portano tutti', 1)}, ha segnato almeno {n} gol {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
-                    tot = "; ".join(f"{t.pname(p)} {g[p]}" for p in sorted(wrong, key=lambda p: -g[p]))
-                    made += self.put("nomi_soglia", (cat, comp, top, n), q, top, wrong, comp=comp, year=self.first_year([top, *wrong], comp),
-                                     script=f"{t.pname(top)} ha segnato {g[top]} gol {IN_COMP[comp]} dal 2012/13 al 2025/26. Gli altri: {tot}. "
-                                            + "; ".join(self.explain(p, cat) for p in [top, *wrong]) + ".")
-
-    # ------------------------------------------------------------------ D, E: presences
-    def by_presences(self, cap: int = 6) -> None:
-        t = self.t
-        for cat in TEXT:
-            for comp in COMPS:
-                w = self.windows[comp]
-                if not w:
+                # one player with that surname reached the threshold by himself
+                g = self.goals_w[(pid, comp)]
+                n = next((x for x in THRESHOLDS if g >= x), None)
+                if n is None:
                     continue
-                span = f"tra il {season_label(w[0])} e il {season_label(w[1])}"
-                own = [p for p in self.owners.get((cat, comp), []) if self.span[(p, comp)][2] > 0 and w[0] <= self.span[(p, comp)][0] and self.span[(p, comp)][1] <= w[1]]
-                a = {p: self.span[(p, comp)][2] for p in own}
-                ranked = sorted(own, key=lambda p: (-a[p], p))
-                r = random.Random(f"nomi-pres-{cat}-{comp}")
-                made = 0
-                for i, top in enumerate(ranked):
-                    below = [p for p in ranked[i + 1:] if a[p] <= a[top] - 10]
-                    if a[top] < 30 or len(below) < 3 or made >= cap:
-                        continue
-                    wrong = below[:3] if made % 2 == 0 else r.sample(below[:8], 3)
-                    if not self.distinct([top, *wrong], cat):
-                        continue
-                    q = f"Quale di questi giocatori, che {TEXT[cat][1].replace('portano', 'portano tutti', 1)}, ha più presenze {IN_COMP[comp]} ({span})?"
-                    tot = "; ".join(f"{t.pname(p)} {a[p]}" for p in [top, *sorted(wrong, key=lambda p: -a[p])])
-                    made += self.put("nomi_presenze", (cat, comp, top, tuple(sorted(wrong))), q, top, wrong, comp=comp, year=w[0],
-                                     script=f"Presenze {IN_COMP[comp]} {span}: {tot}. " + "; ".join(self.explain(p, cat) for p in [top, *wrong]) + ".")
-                if comp == "CL":
-                    continue
-                # who played in this league at all? The others, notable elsewhere, never did inside the complete window
-                everywhere = sorted({p for (c, cc), pids in self.owners.items() if c == cat for p in pids}, key=lambda p: (-t.fame(p), p))
-                never = [p for p in everywhere if not any((p, comp, s) in self.apps for s in range(2012, 2027))]
-                made = 0
-                for top in ranked:
-                    if a[top] < 20 or len(never) < 3 or made >= cap:
-                        continue
-                    wrong = r.sample(never[:12], 3)
-                    if not self.distinct([top, *wrong], cat):
-                        continue
-                    q = f"Quale di questi giocatori, che {TEXT[cat][1].replace('portano', 'portano tutti', 1)}, ha giocato {IN_COMP[comp]} ({span})?"
-                    made += self.put("nomi_campionato", (cat, comp, top, tuple(sorted(wrong))), q, top, wrong, comp=comp, year=w[0],
-                                     script=f"{t.pname(top)}: {a[top]} presenze {IN_COMP[comp]} {span}. Gli altri tre non ci hanno mai giocato in quelle stagioni. "
-                                            + "; ".join(self.explain(p, cat) for p in [top, *wrong]) + ".")
+                done.add((norm(surname), comp))
+                span = f"dal {season_label(w[0])} al {season_label(w[1])}"
+                pool = [self.cap(d) for d in self.decoy_pool(cat, lang, surname, comp)]
+                # real surnames of the same family whose bearers scored far fewer: the closest wrong options
+                near = []
+                for p2, cat2, sur2, lang2 in self.candidates():
+                    if cat2 == cat and lang2 == lang and norm(sur2) != norm(surname) and sur2 not in near:
+                        bearers = self.bearers[comp].get(norm(sur2), set())
+                        if bearers and sum(self.goals_w[(b, comp)] for b in bearers) <= n // 4:
+                            near.append(sur2)
+                r = random.Random(f"nomi-gol-{pid}-{comp}")
+                r.shuffle(pool)
+                r.shuffle(near)
+                q = f"Quale di questi cognomi ({self.phrase(cat, lang)}) appartiene a un giocatore che ha segnato almeno {n} gol {IN_COMP[comp]} ({span})?"
+                for k in range(variants):
+                    wrong = (near[k:k + 1] + pool[3 * k:3 * k + 3])[:3]
+                    if len(set(wrong)) < 3:
+                        break
+                    notes = []
+                    for x in wrong:
+                        bs = self.bearers[comp].get(norm(x), set())
+                        if bs:
+                            tot = sum(self.goals_w[(b, comp)] for b in bs)
+                            notes.append(f"{x}: {tot} gol" + (f" in tutto ({len(bs)} giocatori)" if len(bs) > 1 else ""))
+                        else:
+                            notes.append(f"{x}: nessun giocatore")
+                    self.put("nomi_gol", (cat, pid, comp, n, k), q, surname, wrong, pid=pid, comp=comp, year=w[0],
+                             script=f"{t.pname(pid)} ha segnato {self.goals_w[(pid, comp)]} gol {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
+                                    f"Gli altri cognomi: {'; '.join(notes)}.")
 
     def run(self) -> list[dict]:
-        self.who()
-        self.by_goals()
-        self.by_presences()
+        self._bearers()
+        self.played()
+        self.scored()
         return self.out
 
 
