@@ -18,6 +18,11 @@ export interface MatchConfig {
    */
   rounds?: number;
   solo?: boolean;
+  /**
+   * Countdowns (SPEC §3.8). Absent or true: every answer has its time, plus a 10-second grace period to finish typing.
+   * False: no countdown at all; clues are uncovered by hand and a player may pass.
+   */
+  timer?: boolean;
   /** Instance ids that must not be used (tournament / device history). */
   excludeIds?: string[];
   /** Force the 4 drawn games (tests, debug). */
@@ -32,6 +37,8 @@ export interface Timer {
   id: number;
   ms: number;
   kind: string;
+  /** Extra time after the countdown ran out: only to finish typing the answer. */
+  grace?: boolean;
 }
 
 export type EngineEvent =
@@ -44,6 +51,7 @@ export type EngineEvent =
   | { type: "buzz"; player: PlayerIdx }
   | { type: "false_start"; player: PlayerIdx }
   | { type: "timeout" }
+  | { type: "grace" }
   | { type: "reveal" }
   | { type: "game_start"; game: GameId }
   | { type: "game_end"; game: GameId }
@@ -57,6 +65,8 @@ export type Intent =
   | { type: "TIMEOUT"; timerId: number }
   | { type: "BUZZ"; player: PlayerIdx }
   | { type: "REVEAL_CLUE" }
+  /** Without countdowns: the player on turn gives up the answer (it counts as the time running out). */
+  | { type: "SKIP"; player?: PlayerIdx }
   | { type: "CHOOSE"; player?: PlayerIdx; value: number }
   | { type: "ANSWER"; player?: PlayerIdx; payload: AnswerPayload }
   | { type: "VERDICT"; payload: VerdictPayload }
@@ -121,6 +131,8 @@ export interface Env {
   judging: Judging;
   /** Allenamento: a single player, the opponent never plays. */
   solo: boolean;
+  /** False when the match is played without countdowns. */
+  timed: boolean;
   starter: PlayerIdx;
   addPoints(player: PlayerIdx, points: number): void;
   emit(e: EngineEvent): void;

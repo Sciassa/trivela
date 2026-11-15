@@ -10,7 +10,7 @@ const { chromium } = require("playwright");
 const PORT = 8798;
 const OUT = "test-results/shots";
 mkdirSync(OUT, { recursive: true });
-const ALL = ["tiro_secco", "maglia", "anomalia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo"];
+const ALL = ["tiro_secco", "maglia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo"];
 const games = (process.argv[2] ?? ALL.join(",")).split(",");
 const VIEWPORTS = { pc: { width: 1366, height: 768 }, phone: { width: 844, height: 390 }, tablet: { width: 1024, height: 768 } };
 
@@ -33,7 +33,7 @@ try {
       await p.getByText("PREMI START").click();
       await p.waitForTimeout(900);
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-menu.png` });
-      await p.getByText("PARTITA COMPLETA").click();
+      await p.getByText("PARTITA CLASSICA").click();
       await p.getByPlaceholder("Nome").first().fill(process.env.LONG ? "Massimiliano Bellavista-Castelnuovo" : "Annalisa");
       await p.getByPlaceholder("Nome").nth(1).fill(process.env.LONG ? "Bartolomeo Castelnuovo di Sotto" : "Bruno");
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-setup.png` });

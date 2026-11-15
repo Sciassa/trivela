@@ -54,6 +54,9 @@ class Lists:
         self.left = table(f"select gm.comp, e.club, e.pid, gm.season, count(*) from goal e join gm using(gid) where e.lf and not e.own and gm.comp in ({comps}) group by 1,2,3,4")
         self.subapps = table(f"select gm.comp, p.club, p.pid, gm.season, count(distinct p.gid) from pres p join gm using(gid) where p.starter = false and gm.comp in ({comps}) group by 1,2,3,4")
         self.reds = table(f"select gm.comp, r.club, r.pid, gm.season, count(*) from red r join gm using(gid) where gm.comp in ({comps}) group by 1,2,3,4")
+        # expulsions confirmed by the appearance row of the player (a second record of the same card)
+        self.reds_ok = table(f"""select gm.comp, r.club, r.pid, gm.season, count(*) from red r join gm using(gid)
+            join apx a on a.gid = r.gid and a.pid = r.pid where (a.rc > 0 or a.yc >= 2) and gm.comp in ({comps}) group by 1,2,3,4""")
         # goals against an opponent: (comp, opponent) -> pid -> season -> goals
         self.vs = table(f"""select gm.comp, case when pg.club = gm.home then gm.away else gm.home end, pg.pid, gm.season, sum(pg.goals)
             from pg join gm using(gid) where gm.comp in ({comps}) group by 1,2,3,4""")
@@ -81,8 +84,8 @@ class Lists:
         t = self.t
         rows = [(t.pid(p), t.pname(p), v, (labels or {}).get(p)) for p, v in values.items()]
         rk = ranking(rows, reverse=reverse, max_ties=max_ties)
-        if not rk:
-            return
+        if not rk or any(not t.known(int(r["id"].split(":")[-1])) for r in rk):
+            return  # a name the dataset does not know cannot be an answer
         tenth = [r for r in rk if r["rank"] == 10]
         if reverse and (not tenth or tenth[0]["value"] < min10):
             return
@@ -242,6 +245,8 @@ class Lists:
             self.fixtures(comp, clubs)
         self.cross_league()
         self.league_level()
+        self.league_extras()
+        self.tournaments()
 
     def in_season(self, comp: str, s: int) -> str:
         return f"{'nella ' + COMP_IT[comp]} {season_label(s)}"
@@ -425,6 +430,124 @@ class Lists:
                                 tot[pid] += sum(n for s, n in ss.items() if we[0] <= s <= we[1])
                     self.add_rank(gen, comp, f"I 10 giocatori con più {what} {inc} ({scope(we)})", f"{lg}, {scope(we)}", "gol",
                                   {p: v for p, v in tot.items() if v}, w=we, comp=comp, ents=ents, min10=3)
+
+
+    # ------------------------------------------------------------------ more league-wide rankings (SPEC §4.5)
+    def league_total(self, table, comp: str, w: tuple[int, int]) -> dict[int, int]:
+        tot = defaultdict(int)
+        for (c, _club), by in table.items():
+            if c == comp:
+                for pid, ss in by.items():
+                    tot[pid] += sum(n for s, n in ss.items() if w[0] <= s <= w[1])
+        return {p: v for p, v in tot.items() if v}
+
+    def league_extras(self) -> None:
+        """Most sent off, most games off the bench, most different shirts, oldest and youngest scorers of every season."""
+        t = self.t
+        for comp in (*L5, "CL"):
+            lg, inc = COMP_IT[comp], IN_COMP[comp]
+            ents = [f"comp:{comp}"]
+            wp, wl, we = t.window(comp, None, "pres", 1), t.window(comp, None, "lu", 1), t.window(comp, None, "ev", 1)
+            # sent off: two records of the same cards (match events and appearance rows). The ranking is published only
+            # where they tell the same story for everybody who could be in the top ten.
+            if we:
+                ev = self.league_total(self.reds, comp, we)
+                ap = self.league_total(self.reds_ok, comp, we)
+                tenth = sorted(ev.values(), reverse=True)[9] if len(ev) >= 12 else None
+                if tenth and all(ap.get(p, 0) == v for p, v in ev.items() if v >= tenth):
+                    self.add_rank("dis_league_reds", comp, f"I 10 giocatori più espulsi {inc} ({scope(we)})",
+                                  f"{lg}, {scope(we)} · rossi diretti e doppie ammonizioni, concordi tra eventi di gara e tabellini", "espulsioni",
+                                  ev, w=we, comp=comp, ents=ents, min10=2, max_ties=12)
+            if wl:
+                self.add_rank("dis_league_subapps", comp, f"I 10 giocatori con più ingressi dalla panchina {inc} ({scope(wl)})",
+                              f"{lg}, {scope(wl)} · presenze da subentrato", "ingressi", self.league_total(self.subapps, comp, wl),
+                              w=wl, comp=comp, ents=ents, min10=20)
+                if comp != "CL":
+                    for s, ok in t.valid_seasons(comp, None, "lu").items():
+                        if ok:
+                            self.add_rank("dis_season_subapps", (comp, s), f"I 10 giocatori con più ingressi dalla panchina {self.in_season(comp, s)}",
+                                          f"{lg} {season_label(s)} · presenze da subentrato", "ingressi", self.league_total(self.subapps, comp, (s, s)),
+                                          w=(s, s), comp=comp, ents=ents, min10=10, max_ties=6)
+            if wp and comp != "CL":
+                shirts = defaultdict(set)
+                for (c, club), by in self.apps.items():
+                    if c == comp:
+                        for pid, ss in by.items():
+                            if any(wp[0] <= s <= wp[1] and n for s, n in ss.items()):
+                                shirts[pid].add(club)
+                counts = {p: len(cs) for p, cs in shirts.items() if len(cs) >= 3}
+                labels = {p: f"{len(cs)} squadre" for p, cs in shirts.items()}
+                self.add_rank("dis_league_shirts", comp, f"I 10 giocatori che hanno vestito più maglie diverse {inc} ({scope(wp)})",
+                              f"{lg}, {scope(wp)} · squadre con almeno una presenza in campionato", "squadre", counts, labels=labels,
+                              w=wp, comp=comp, ents=ents, min10=3, max_ties=20)
+                for n in (8, 7, 6, 5):
+                    many = [p for p, cs in shirts.items() if len(cs) >= n]
+                    if ASTA_RANGE[0] <= len(many) <= ASTA_RANGE[1]:
+                        self.add_set("set_shirts", (comp, n), f"Giocatori che hanno vestito almeno {n} maglie diverse {inc} ({scope(wp)})",
+                                     "Squadre con almeno una presenza in campionato.", self.pm(many), w=wp, comp=comp, ents=ents)
+            # oldest and youngest scorers, season by season
+            for s, ok in t.valid_seasons(comp, None, "goal").items():
+                if not ok:
+                    continue
+                young, old, ly, lo, okd = {}, {}, {}, {}, True
+                for (c, _club), by in self.goal_dates.items():
+                    if c != comp:
+                        continue
+                    for pid, lst in by.items():
+                        ds = [(d1, d2) for ss, d1, d2 in lst if ss == s]
+                        if not ds:
+                            continue
+                        dob = t.players.get(pid, {}).get("dob")
+                        if not dob:
+                            okd = False
+                            continue
+                        a1, l1 = age_label(dob, min(d[0] for d in ds))
+                        a2, l2 = age_label(dob, max(d[1] for d in ds))
+                        if pid not in young or a1 < young[pid]:
+                            young[pid], ly[pid] = a1, l1
+                        if pid not in old or a2 > old[pid]:
+                            old[pid], lo[pid] = a2, l2
+                if okd:
+                    of = f"{OF_COMP[comp]} {season_label(s)}"
+                    self.add_rank("dis_season_old", (comp, s), f"I 10 marcatori più anziani {of}", f"{lg} {season_label(s)} · età all'ultimo gol della stagione", "",
+                                  old, labels=lo, w=(s, s), comp=comp, ents=ents, min10=0)
+                    self.add_rank("dis_season_young", (comp, s), f"I 10 marcatori più giovani {of}", f"{lg} {season_label(s)} · età al primo gol della stagione", "",
+                                  young, labels=ly, reverse=False, w=(s, s), comp=comp, ents=ents)
+
+    def tournaments(self) -> None:
+        """World Cups and Euros (finished editions only): top, oldest and youngest scorers."""
+        t = self.t
+        for comp, name, of in (("FIWC", "Mondiali", "dei Mondiali"), ("EURO", "Europei", "degli Europei")):
+            seasons = [int(r[0]) for r in t.q("select season from gm where comp = ? group by 1 having max(round ilike 'Final') order by 1", comp)]
+            vg = t.valid_seasons(comp, None, "goal")
+            seasons = [s for s in seasons if vg.get(s)]
+            if len(seasons) < 3:
+                continue
+            years = [s + 1 for s in seasons]
+            span = f"{years[0]}–{years[-1]}"
+            goals, dates = defaultdict(int), defaultdict(list)
+            marks = ",".join(str(s) for s in seasons)
+            for pid, n, d1, d2 in t.q(f"""select pg.pid, sum(pg.goals), min(gm.date), max(gm.date) from pg join gm using(gid)
+                                           where gm.comp = '{comp}' and gm.season in ({marks}) group by 1"""):
+                goals[int(pid)] = int(n)
+                dates[int(pid)] = (d1, d2)
+            ents = [f"comp:{comp}"]
+            w = (years[0], years[-1])
+            dfn = f"{name} {span}, fasi finali · autogol esclusi"
+            self.add_rank("dis_tournament_scorers", comp, f"I 10 migliori marcatori {of} ({span})", dfn, "gol", dict(goals), w=w, comp=comp, ents=ents, min10=3, max_ties=8)
+            for y, s in zip(years, seasons):
+                one = {int(pid): int(n) for pid, n in t.q(f"select pg.pid, sum(pg.goals) from pg join gm using(gid) where gm.comp = '{comp}' and gm.season = {s} group by 1")}
+                self.add_rank("dis_tournament_edition", (comp, y), f"I 10 migliori marcatori {of} {y}", f"{name} {y} · autogol esclusi", "gol", one,
+                              w=(y, y), comp=comp, ents=ents, min10=2, max_ties=12)
+            if all(t.players.get(p, {}).get("dob") for p in goals):
+                young, old, ly, lo = {}, {}, {}, {}
+                for p, (d1, d2) in dates.items():
+                    young[p], ly[p] = age_label(t.players[p]["dob"], d1)
+                    old[p], lo[p] = age_label(t.players[p]["dob"], d2)
+                self.add_rank("dis_tournament_old", comp, f"I 10 marcatori più anziani {of} ({span})", dfn + " · età all'ultimo gol", "", old, labels=lo,
+                              w=w, comp=comp, ents=ents, min10=0)
+                self.add_rank("dis_tournament_young", comp, f"I 10 marcatori più giovani {of} ({span})", dfn + " · età al primo gol", "", young, labels=ly,
+                              reverse=False, w=w, comp=comp, ents=ents)
 
 
 def generate(t: TM) -> dict[str, list[dict]]:

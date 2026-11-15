@@ -33,7 +33,6 @@ export function makePacks(): Packs {
   for (let k = 0; k < 20; k++) {
     items.tiro_secco.push({ ...meta({ yearMin: 2005 + k, yearMax: 2005 + k }), question: `Q${k}`, options: ["a", "b", "c", "d"], correct: 1, archetype: 1 });
     items.maglia.push({ ...meta({ yearMin: 2010 + k }), player: P(k).name, team: "Juventus", season: "Serie A 2015/16", question: "Che numero?", answer: { kind: "number", value: 10 + k, display: String(10 + k) } });
-    items.anomalia.push({ ...meta(), question: `Anomalia ${k}?`, options: ["a", "b", "c", "d"], correct: 3, kind: "difensore" });
   }
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });

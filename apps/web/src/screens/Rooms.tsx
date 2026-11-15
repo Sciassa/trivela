@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
-import { usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import { GAME_IDS, type AnomaliaItem, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
+import { isTimed, usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
+import { GAME_IDS, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
@@ -11,6 +11,7 @@ import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } fro
 import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
+import { savedYear } from "../runtime/settings";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
 
 const ROLE_LABEL: Record<ClientRole, string> = { host: "REGIA", p1: "GIOCATORE 1", p2: "GIOCATORE 2" };
@@ -38,7 +39,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   const [mode, setMode] = useState<Mode>("pads");
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState(() => String(savedYear() ?? ""));
   const [leagues, setLeagues] = useState(savedLeagues);
   const [quickGame, setQuickGame] = useState<GameId | null>(null); // null: classic five-game match
   const [formatKind, setFormatKind] = useState<"classic" | "quick">("classic");
@@ -142,7 +143,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
             SFIDA RAPIDA
           </button>
         </div>
-        <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 9." : "Un solo gioco a scelta, 3 round a testa."}</span>
+        <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 8." : "Un solo gioco a scelta, 3 round a testa."}</span>
         {formatKind === "quick" && (
           <div className="game-pick">
             {GAME_IDS.map((g) => (
@@ -259,9 +260,8 @@ function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: Clien
 
 function solutionOf(g: GameStateAny): string[] {
   switch (g.game) {
-    case "tiro_secco":
-    case "anomalia": {
-      const it = g.items[g.i] as TiroSeccoItem | AnomaliaItem;
+    case "tiro_secco": {
+      const it = g.items[g.i] as TiroSeccoItem;
       return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "mercato":
@@ -366,8 +366,7 @@ export function HostRoom({ code }: { code: string }) {
     if (["reveal", "final"].includes(g.stage)) controls = <Btn label="AVANTI ▶" onClick={() => d({ type: "NEXT" })} />;
     else
       switch (g.game) {
-        case "tiro_secco":
-        case "anomalia": {
+        case "tiro_secco": {
           const it = g.items[g.i] as TiroSeccoItem;
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
@@ -379,7 +378,7 @@ export function HostRoom({ code }: { code: string }) {
               okKo
             ) : (
               <>
-                <Btn label="SCOPRI INDIZIO" onClick={() => d({ type: "REVEAL_CLUE" })} />
+                <Btn label={!isTimed(s.config) && g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : "SCOPRI INDIZIO"} onClick={() => d({ type: "REVEAL_CLUE" })} />
                 <div className="grid2">
                   {([0, 1] as const).map((p) => (
                     <Btn key={p} label={g.out[p] ? `${s.config.players[p]} FUORI` : `PRENOTA ${s.config.players[p]}`} cls={p === 0 ? "p1" : "p2"} onClick={() => d({ type: "BUZZ", player: p })} />
@@ -578,9 +577,14 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
         room={room}
         actions={
           <>
-            {g.free && !g.out[me] && g.stage === "clues" && (
+            {(g.free || !isTimed(s.config)) && !g.out[me] && g.stage === "clues" && s.config.judging !== "host" && (
               <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
-                SCOPRI UN ALTRO INDIZIO
+                {g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : isTimed(s.config) ? "SCOPRI UN ALTRO INDIZIO" : "PROSSIMO INDIZIO ▶"}
+              </button>
+            )}
+            {!isTimed(s.config) && g.stage === "answering" && g.buzzer === me && s.config.judging !== "host" && (
+              <button className="btn big ghost" onClick={() => room.dispatch({ type: "SKIP" })}>
+                NON LO SO
               </button>
             )}
             {g.stage === "reveal" && next}
@@ -593,7 +597,11 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
               RISPONDI A VOCE!
             </div>
           ) : (
-            <AnswerBox index={index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+            <TimerClockCtx.Provider value={room.timer}>
+              {/* the countdown (and the grace period, in red) is on the phone that is typing too */}
+              <StateTimer state={s} start={room.timerStart} />
+              <AnswerBox index={index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+            </TimerClockCtx.Provider>
           )
         ) : g.stage === "reveal" ? (
           <div className="panel waiting">GUARDA LO SCHERMO</div>
@@ -615,7 +623,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
     );
   }
   const closed = g.stage === "reveal" || g.stage === "final";
-  if (turn && s.config.judging !== "host" && (g.game === "tiro_secco" || g.game === "anomalia")) {
+  if (turn && s.config.judging !== "host" && g.game === "tiro_secco") {
     // four options: the question scrolls, the answers stay under the thumb
     const it = g.items[g.i] as TiroSeccoItem;
     return (

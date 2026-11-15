@@ -1,5 +1,4 @@
 import type {
-  AnomaliaItem,
   DischettoItem,
   FormazioneItem,
   GameId,
@@ -16,8 +15,9 @@ import { other, type Env, type GameModule, type GameStateAny, type Intent } from
 
 /** Default timers (ms). */
 export const TIMERS = {
-  tiro_secco: 20_000,
-  anomalia: 25_000,
+  tiro_secco: 25_000,
+  /** Extra time to finish typing once a countdown has run out. */
+  grace: 10_000,
   ready: 2_000,
   clue: 8_000,
   freeClue: 20_000,
@@ -161,7 +161,7 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
 const answerOf = (intent: Intent | null) => (intent && intent.type === "ANSWER" ? intent.payload : undefined);
 const verdictOf = (intent: Intent | null) => (intent && intent.type === "VERDICT" ? intent.payload : undefined);
 
-/** Four options, one correct: used by Tiro Secco and L'Anomalia Statistica. */
+/** Four options, one correct. */
 const pickOne = (points: number) => (item: { correct: number; options: readonly string[] }, intent: Intent | null) => {
   if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
   const a = answerOf(intent);
@@ -174,13 +174,6 @@ export const tiroSecco = turnQuiz<TiroSeccoItem>({
   id: "tiro_secco",
   count: 4,
   phases: [{ ms: TIMERS.tiro_secco, judge: pickOne(2) }],
-  mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
-});
-
-export const anomalia = turnQuiz<AnomaliaItem>({
-  id: "anomalia",
-  count: 4,
-  phases: [{ ms: TIMERS.anomalia, judge: pickOne(3) }],
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
 });
 
@@ -277,8 +270,12 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
             env.emit({ type: "buzz", player: p });
             env.setTimer(TIMERS.answer, "answer");
           } else if (intent.type === "REVEAL_CLUE") {
-            if (env.judging === "auto" && !s.free) return;
-            if (s.revealed >= item.clues.length) return;
+            // by hand only for the host, after a wrong answer, or when the match has no countdowns
+            if (env.judging === "auto" && !s.free && env.timed) return;
+            if (s.revealed >= item.clues.length) {
+              if (!env.timed) finish(s, env); // nobody knows it: with no countdown somebody has to close the profile
+              return;
+            }
             showClue(s, env);
           } else if (intent.type === "TIMEOUT") {
             if (s.revealed < item.clues.length) showClue(s, env);
@@ -760,7 +757,6 @@ export const asta: GameModule = {
 
 export const MODULES: Record<GameId, GameModule> = {
   tiro_secco: tiroSecco,
-  anomalia,
   mercato,
   decina,
   dischetto,

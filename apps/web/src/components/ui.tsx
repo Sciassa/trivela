@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import { createPortal, flushSync } from "react-dom";
+import { createPortal } from "react-dom";
 import { suggest, type MatchIndex } from "@trivela/matcher";
 import type { PlayerIdx, SourceRef } from "@trivela/protocol";
 import type { MatchState } from "@trivela/engine";
@@ -43,33 +43,39 @@ const BASE_H = 900;
  * The stage always fills the viewport: a virtual canvas of at least 1600×900
  * (smaller on phones, so that text and buttons stay big) scaled to the device.
  */
-function stageMetrics() {
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
+function stageMetrics(vw = window.innerWidth, vh = window.innerHeight) {
   const scale = Math.max(Math.min(vw / BASE_W, vh / BASE_H), Math.min(0.6, vh / 620, vw / 1100));
   return { scale, w: Math.ceil(vw / scale), h: Math.ceil(vh / scale) };
 }
 
 export function Stage({ children, variant = "dusk" }: { children: ReactNode; variant?: "dusk" | "sunset" }) {
-  const [m, setM] = useState(stageMetrics);
+  const wrap = useRef<HTMLDivElement>(null);
+  const [m, setM] = useState(() => stageMetrics());
   useLayoutEffect(() => {
+    const el = wrap.current!;
+    // the stage follows its own box: the window, minus the on-screen keyboard when it is docked below (SPEC §10.4).
+    // While the phone is held upright the "rotate" notice covers everything and the stage keeps its size: nothing is
+    // remounted, so scores, timers and typed text are still there when the phone is turned back.
     const fit = () => {
-      // keep the layout still while the on-screen keyboard is open
-      if (document.documentElement.dataset.typing) return;
-      setM(stageMetrics());
+      if (el.clientWidth < 1 || el.clientHeight < 1) return;
+      if (matchMedia("(orientation: portrait) and (max-width: 700px)").matches) return;
+      setM(stageMetrics(el.clientWidth, el.clientHeight));
     };
-    window.addEventListener("resize", fit);
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
     window.addEventListener("orientationchange", fit);
     return () => {
-      window.removeEventListener("resize", fit);
+      ro.disconnect();
       window.removeEventListener("orientationchange", fit);
     };
   }, []);
   return (
     <StageCtx.Provider value={true}>
-      <div className="stage-wrap need-landscape">
+      <div ref={wrap} className="stage-wrap need-landscape">
         <RotateOverlay />
-        <div className={`stage ${m.h < 760 ? "short" : ""}`} style={{ width: m.w, height: m.h, transform: `scale(${m.scale})` }}>
+        {/* --inv turns the safe-area insets of the device into units of the scaled canvas */}
+        <div className={`stage ${m.h < 760 ? "short" : ""}`} style={{ width: m.w, height: m.h, transform: `scale(${m.scale})`, "--inv": 1 / m.scale } as CSSProperties}>
           <Backdrop variant={variant} />
           <div className="stage-body">{children}</div>
           <div className="scanlines" />
@@ -85,10 +91,11 @@ export function RotateOverlay() {
       <div>
         <div className="phone" />
         <p className="px" style={{ fontSize: 14, lineHeight: 1.8 }}>
-          Ruota il dispositivo
+          Per favore, ruota il dispositivo
           <br />
           in orizzontale
         </p>
+        <p className="rotate-note">La partita ti aspetta: punteggi, tempo e risposta scritta restano dove li hai lasciati.</p>
       </div>
     </div>
   );
@@ -249,7 +256,7 @@ export function useTimeLeft(ms: number, start: number, pausedLeft: number | null
   return pausedLeft ?? Math.max(0, ms - (now - start));
 }
 
-export function TimerBar({ ms, start, id, nominal }: { ms: number; start: number; id: number; nominal?: number }) {
+export function TimerBar({ ms, start, id, nominal, grace = false }: { ms: number; start: number; id: number; nominal?: number; grace?: boolean }) {
   const { pausedLeft } = useContext(TimerClockCtx);
   const lastTick = useRef(-1);
   const left = useTimeLeft(ms, start, pausedLeft);
@@ -262,7 +269,12 @@ export function TimerBar({ ms, start, id, nominal }: { ms: number; start: number
   }, [sec, pausedLeft, id]);
   const total = Math.max(nominal ?? ms, 1);
   return (
-    <div className={`timer ${left < 5000 ? "hurry" : ""} ${pausedLeft !== null ? "paused" : ""}`}>
+    <div className={`timer ${left < 5000 ? "hurry" : ""} ${pausedLeft !== null ? "paused" : ""} ${grace ? "grace" : ""}`} data-grace={grace || undefined}>
+      {grace && (
+        <span className="timer-grace">
+          <b>TEMPO SCADUTO · </b>FINISCI DI SCRIVERE!
+        </span>
+      )}
       <div className="timer-track">
         <div className="timer-fill" style={{ transform: `scaleX(${Math.min(1, left / total)})` }} />
       </div>
@@ -275,7 +287,7 @@ export function TimerBar({ ms, start, id, nominal }: { ms: number; start: number
 export function StateTimer({ state, start }: { state: MatchState; start: number }) {
   const clock = useContext(TimerClockCtx);
   if (!state.timer || state.timer.kind === "feedback" || state.timer.kind === "ready") return <div className="timer idle" />;
-  return <TimerBar key={state.timer.id} ms={clock.ms ?? state.timer.ms} nominal={state.timer.ms} start={start} id={state.timer.id} />;
+  return <TimerBar key={state.timer.id} ms={clock.ms ?? state.timer.ms} nominal={state.timer.ms} start={start} id={state.timer.id} grace={state.timer.grace === true} />;
 }
 
 /* ------------------------------------------------------------ Copione */
@@ -338,11 +350,143 @@ export function setSpeller(on: boolean): void {
   }
 }
 
+const KEY_ROWS = ["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM'-"];
+
+/** What a key adds: the first letter of every word is a capital, like in a name. */
+function typed(value: string, key: string): string {
+  const ch = /[a-z]/i.test(key) ? (value === "" || /[\s'\-]$/.test(value) ? key.toUpperCase() : key.toLowerCase()) : key;
+  return (value + ch).replace(/^\s+/, "").replace(/\s{2,}/g, " ").slice(0, 40);
+}
+
 /**
- * Text field. With `index` it shows the zero-information spelling helper,
- * which only sees the typed text and the global index (never the question).
- * Inside the stage, on touch devices, typing happens in a bar pinned to the
- * top of the viewport so the on-screen keyboard never covers it.
+ * The game's own 8-bit keyboard (SPEC §10.4). On touch devices the answer fields never open the keyboard of the
+ * system, which used to cover the spelling suggestions: this one sits at the bottom of the screen, inside the safe
+ * areas, and the suggestions stay in sight just above the field.
+ *  - `over`: on short screens (a phone held sideways) it comes with its own strip showing the prompt, the countdown,
+ *    what is being typed and the suggestions, because the board behind would not fit above the keys;
+ *  - otherwise it is docked: the page (or the stage) shrinks and stays visible above it.
+ */
+function PixelKeyboard({
+  value,
+  onChange,
+  onEnter,
+  onClose,
+  over,
+  inStage,
+  prompt,
+  timer,
+  actions,
+  placeholder,
+  chips,
+  numeric,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onEnter?: () => void;
+  onClose: () => void;
+  over: boolean;
+  inStage: boolean;
+  prompt?: string;
+  timer?: ReactNode;
+  actions?: ReactNode;
+  placeholder: string;
+  chips: ReactNode;
+  numeric: boolean;
+}) {
+  const keys = useRef<HTMLDivElement>(null);
+  const live = useRef({ value, onChange, onEnter, onClose });
+  live.current = { value, onChange, onEnter, onClose };
+  const press = (k: string) => {
+    const { value: v, onChange: set, onEnter: enter, onClose: close } = live.current;
+    navigator.vibrate?.(8);
+    if (k === "HIDE") close();
+    else if (k === "DEL") set(v.slice(0, -1));
+    else if (k === "OK") enter?.();
+    else if (numeric ? /\d/.test(k) : true) set(numeric ? (v + k).slice(0, 4) : typed(v, k));
+  };
+  // a keyboard plugged into the tablet keeps working
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === "Backspace") press("DEL");
+      else if (e.key === "Enter") press("OK");
+      else if (e.key.length === 1 && /[\p{L}\d '\-]/u.test(e.key)) press(e.key);
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, []);
+  // docked: tell the layout how much room the keys take
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    if (over) return;
+    const el = keys.current!;
+    const set = () => root.style.setProperty("--vk-h", `${el.offsetHeight}px`);
+    set();
+    const ro = new ResizeObserver(set);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--vk-h");
+    };
+  }, [over]);
+  const key = (k: string, label: ReactNode = k, cls = "") => (
+    <button
+      key={k}
+      type="button"
+      className={`vk-key ${cls}`}
+      data-key={k}
+      aria-label={k === "DEL" ? "Cancella" : k === "OK" ? "Invia" : k === " " ? "Spazio" : k}
+      onPointerDown={(e) => {
+        e.preventDefault();
+        press(k);
+      }}
+    >
+      {label}
+    </button>
+  );
+  return (
+    <div className={`vk-layer ${over ? "over" : "dock"} ${inStage ? "of-stage" : ""}`}>
+      {over && (
+        <div className="vk-top">
+          <div className="vk-ctx">
+            <span className="vk-prompt">{prompt}</span>
+            {timer}
+          </div>
+          <div className="vk-line">
+            <div className={`vk-mirror ${value ? "" : "empty"}`}>
+              {value || placeholder}
+              <i className="vk-caret" />
+            </div>
+            {actions}
+            <button type="button" className="vk-hide" onPointerDown={(e) => (e.preventDefault(), onClose())}>
+              ▲ TABELLONE
+            </button>
+          </div>
+          {chips}
+        </div>
+      )}
+      <div ref={keys} className="vk" role="group" aria-label="Tastiera">
+        {(numeric ? ["12345", "67890"] : KEY_ROWS).map((row, r, all) => (
+          <div key={r} className="vk-row">
+            {r === all.length - 1 && !over && key("HIDE", "▼", "wide hide")}
+            {row.split("").map((k) => key(k))}
+            {r === 1 && key("DEL", "CANC", "wide del")}
+          </div>
+        ))}
+        <div className="vk-row">
+          {!numeric && key(" ", "SPAZIO", "space")}
+          {key("OK", "INVIA ▶", "ok")}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Text field. With `index` it shows the zero-information spelling helper, which only sees the typed text and the
+ * global index (never the question). On touch devices it is written with the game's own keyboard.
  */
 export function TextEntry({
   value,
@@ -353,6 +497,9 @@ export function TextEntry({
   autoFocus = false,
   numeric = false,
   color,
+  prompt,
+  timer,
+  actions,
 }: {
   value: string;
   onChange: (v: string) => void;
@@ -362,20 +509,26 @@ export function TextEntry({
   autoFocus?: boolean;
   numeric?: boolean;
   color?: string;
+  /** What is being asked, shown above the keyboard when it covers the board. */
+  prompt?: string;
+  /** The running countdown, shown next to the prompt. */
+  timer?: ReactNode;
+  /** Buttons that must stay in reach while the keyboard covers the board (e.g. "passo"). */
+  actions?: ReactNode;
 }) {
   const inStage = useContext(StageCtx);
-  const overlay = useMemo(() => inStage && isCoarse(), [inStage]);
-  const [open, setOpen] = useState(false);
+  const touch = useMemo(isCoarse, []);
+  const [open, setOpen] = useState(autoFocus);
   const helper = useMemo(spellerOn, []);
-  const bar = useRef<HTMLInputElement>(null);
   const sugg = useMemo(() => (index && helper ? suggest(value, index) : []), [value, index, helper]);
-
-  const close = () => {
-    setOpen(false);
-    delete document.documentElement.dataset.typing;
-    window.dispatchEvent(new Event("resize"));
-  };
-  useEffect(() => () => void (open && close()), [open]);
+  // a phone held sideways has no room for the board above the keys: the keyboard brings its own strip
+  const [over, setOver] = useState(() => inStage && window.innerHeight < 560);
+  useEffect(() => {
+    if (!touch) return;
+    const h = () => setOver(inStage && window.innerHeight < 560);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, [touch, inStage]);
 
   const chips = index && sugg.length > 0 && (
     <div className="suggest" aria-label="Correttore ortografico">
@@ -393,64 +546,45 @@ export function TextEntry({
     autoCorrect: "off",
     autoCapitalize: "off",
     spellCheck: false,
-    inputMode: numeric ? ("numeric" as const) : ("text" as const),
     enterKeyHint: "done" as const,
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => onChange(numeric ? e.target.value.replace(/\D/g, "") : e.target.value),
   };
-  if (!overlay) {
+  if (!touch) {
     return (
       <div className="entry">
-        <input className="input" style={{ borderColor: color }} autoFocus={autoFocus} onKeyDown={(e) => e.key === "Enter" && onEnter?.()} {...common} />
+        <input
+          className="input"
+          style={{ borderColor: color }}
+          autoFocus={autoFocus}
+          inputMode={numeric ? "numeric" : "text"}
+          onKeyDown={(e) => e.key === "Enter" && onEnter?.()}
+          onChange={(e) => onChange(numeric ? e.target.value.replace(/\D/g, "") : e.target.value)}
+          {...common}
+        />
         {chips}
       </div>
     );
   }
   return (
-    <div className="entry">
-      <button
-        type="button"
-        className={`input fake ${value ? "" : "empty"}`}
-        style={{ borderColor: color }}
-        onClick={() => {
-          document.documentElement.dataset.typing = "1";
-          flushSync(() => setOpen(true));
-          bar.current?.focus();
-        }}
-      >
-        {value || placeholder}
-        <span className="fake-hint">✎ tocca per scrivere</span>
-      </button>
-      {chips}
+    <div className={`entry ${open ? "typing" : ""}`}>
+      {/* read-only and inputmode="none": the keyboard of the system never opens, the game's one does */}
+      <input className={`input vk-field ${open ? "on" : ""}`} style={{ borderColor: color }} readOnly inputMode="none" onPointerDown={() => setOpen(true)} onFocus={() => setOpen(true)} {...common} />
+      {!(open && over) && chips}
       {open &&
         createPortal(
-          <div className="typebar" onPointerDown={(e) => e.target === e.currentTarget && close()}>
-            <div className="typebar-row">
-              <input
-                ref={bar}
-                className="typebar-input"
-                onBlur={close}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    close();
-                    onEnter?.();
-                  }
-                }}
-                {...common}
-              />
-              <button
-                type="button"
-                className="typebar-ok"
-                onPointerDown={(e) => e.preventDefault()}
-                onClick={() => {
-                  close();
-                  onEnter?.();
-                }}
-              >
-                OK
-              </button>
-            </div>
-            {chips}
-          </div>,
+          <PixelKeyboard
+            value={value}
+            onChange={onChange}
+            onEnter={onEnter}
+            onClose={() => setOpen(false)}
+            over={over}
+            inStage={inStage}
+            prompt={prompt}
+            timer={timer}
+            actions={actions}
+            placeholder={placeholder}
+            chips={chips}
+            numeric={numeric}
+          />,
           document.body,
         )}
     </div>
@@ -464,12 +598,18 @@ export function AnswerBox({
   placeholder,
   submitLabel = "INVIA",
   autoFocus = true,
+  prompt,
+  timer,
+  actions,
 }: {
   index: MatchIndex;
   onSubmit: (text: string) => void;
   placeholder?: string;
   submitLabel?: string;
   autoFocus?: boolean;
+  prompt?: string;
+  timer?: ReactNode;
+  actions?: ReactNode;
 }) {
   const [text, setText] = useState("");
   const submit = () => {
@@ -479,7 +619,7 @@ export function AnswerBox({
   };
   return (
     <div className="answer">
-      <TextEntry value={text} onChange={setText} onEnter={submit} index={index} placeholder={placeholder} autoFocus={autoFocus} />
+      <TextEntry value={text} onChange={setText} onEnter={submit} index={index} placeholder={placeholder} autoFocus={autoFocus} prompt={prompt} timer={timer} actions={actions} />
       <button className="btn" onClick={submit}>
         {submitLabel}
       </button>

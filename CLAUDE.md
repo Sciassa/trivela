@@ -6,13 +6,13 @@ TRIVELA è un quiz calcistico arcade 1v1 multi-dispositivo. **`SPEC.md` è la fo
 
 - Codice, identificatori, nomi di file, commenti tecnici: **inglese**.
 - Testi dell'interfaccia, contenuti, documentazione (`SPEC.md`, `README.md`, questo file): **italiano**.
-- Gli `id` dei giochi sono quelli di SPEC §4 (`tiro_secco`, `anomalia`, `mercato`, `decina`, `dischetto`, `formazione`, `giramondo`, `asta`, `maglia`). I nomi visualizzati stanno in un unico file (`apps/web/src/rules.ts`), perché alcuni sono ancora provvisori.
+- Gli `id` dei giochi sono quelli di SPEC §4 (`tiro_secco`, `mercato`, `decina`, `dischetto`, `formazione`, `giramondo`, `asta`, `maglia`). I nomi visualizzati stanno in un unico file (`apps/web/src/rules.ts`), perché alcuni sono ancora provvisori.
 
 ## Invarianti non negoziabili
 
 Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 
-1. **Nessun fatto non verificato, una sola fonte.** Tutti i dati vengono dal dataset Transfermarkt `dcaribou/transfermarkt-datasets` (SPEC §0.5): stagioni 2012/13–2025/26, Mondiali dal 2006, Europei dal 2008, trasferimenti. Unica eccezione registrata (SPEC §0.6): le date di nascita degli allenatori, da Wikidata. Non aggiungere altre fonti senza una decisione dell'utente registrata nella SPEC. Si scartano i record con campi mancanti o incoerenti (es. partite in cui gli eventi-gol non tornano con il risultato). Classifiche e insiemi si calcolano solo su finestre interamente coperte e dichiarano sempre competizione e stagioni.
+1. **Nessun fatto non verificato, una sola fonte.** Nessun giocatore inventato, nemmeno come risposta sbagliata. Il lessico dei cognomi (`lexicon.py`, SPEC §0.6) dice solo che cosa significa una parola: non è una fonte di fatti calcistici. Tutti i dati vengono dal dataset Transfermarkt `dcaribou/transfermarkt-datasets` (SPEC §0.5): stagioni 2012/13–2025/26, Mondiali dal 2006, Europei dal 2008, trasferimenti. Unica eccezione registrata (SPEC §0.6): le date di nascita degli allenatori, da Wikidata. Non aggiungere altre fonti senza una decisione dell'utente registrata nella SPEC. Si scartano i record con campi mancanti o incoerenti (es. partite in cui gli eventi-gol non tornano con il risultato). Classifiche e insiemi si calcolano solo su finestre interamente coperte e dichiarano sempre competizione e stagioni.
 2. **Nessun LLM** (vincolo "tutto gratis", SPEC §0.1): né in gioco né nella pipeline. Testi e Copioni nascono da template sui fatti dell'istanza.
 3. **Niente contestazioni.** Non aggiungere pulsanti "contesta", "segnala errore", override tra giocatori o alias appresi dagli utenti. Gli alias arrivano solo da fonti.
 4. **Aiuto ortografico a zero informazione** (SPEC §10.3): correttore e non completatore, funzione pura di (testo digitato, indice globale). Niente suggerimenti per prefisso («laut»), niente ordinamento per fama: se serve cambiare questa regola chiedi all'utente. Non passargli mai la domanda, il gioco, il contesto o il filtro anno. Il test di proprietà in CI non va mai indebolito né saltato.
@@ -25,15 +25,15 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 10. **Motore deterministico**: `packages/engine` è TypeScript puro, senza accesso a orologio, rete, DOM o `Math.random` (usa l'RNG con seme). Lo stesso motore gira nello schermo singolo e nello Schermo che ospita una stanza.
 11. **Domande inedite e su giocatori noti** (SPEC §0.4): mai riproporre i casi degli episodi usati come ispirazione (`postprocess.SHOW_FINGERPRINTS`); un giocatore è protagonista solo se supera il filtro notorietà. Non indebolire questi filtri.
 12. **Caricamento a richiesta**: i telefoni (Regia, pulsantiere) non scaricano mai i pacchetti dei giochi (domande e soluzioni); lo Schermo scarica solo i giochi sorteggiati. Le pulsantiere scaricano solo l'indice dei nomi, perché il correttore ortografico deve funzionare su ogni dispositivo che scrive (SPEC §10.3); la Regia non scarica nulla.
-13. **Almeno 1000 domande per gioco** e **round brevi** (SPEC §0.6): al massimo 2 domande a testa per gioco, una sola lista per Decina e Dischetto. Fanno eccezione i formati a gioco singolo (SPEC §3.5): Sfida Rapida (3 round a testa) e Allenamento (solo). `data/tests/test_packs.py` verifica i conteggi.
+13. **Almeno 1000 domande per gioco** (8 giochi) e **round brevi** (SPEC §0.6): al massimo 2 domande a testa per gioco, una sola lista per Decina e Dischetto. Fanno eccezione i formati a gioco singolo (SPEC §3.5): Sfida Rapida (3 round a testa) e Allenamento (solo). `data/tests/test_packs.py` verifica i conteggi.
 14. **Nessun server nostro per le stanze** (SPEC §12): lo Schermo è l'autorità, i messaggi passano cifrati da relay pubblici. Non reintrodurre un backend senza una decisione dell'utente.
 15. **Niente tagliato a schermo**: il contenuto di gioco sta dentro il palco adattivo e il componente `Fit`; ogni nuova schermata va controllata con `tools/shots.mjs` su PC, tablet e telefono orizzontale.
 
 ## Struttura
 
-- `apps/web`: PWA React. `src/components` (palco adattivo `Stage`, `Fit`, tabellone, sprite, scenografia `scenery`, campi di testo), `src/games/GameView.tsx` (i 9 giochi), `src/screens` (nuova sfida, partita, sala d'attesa e telefoni, torneo), `src/runtime` (`packs` caricamento a richiesta, `roomCore` autorità della stanza, `transport` + `mqtt` relay cifrato, `room` hook React).
-- `packages/protocol` (tipi condivisi), `packages/engine` (9 giochi, sorteggio, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica ed effetti sintetizzati).
-- `data/trivela_data`: `tm_core` (strato dei fatti verificati e grammatica italiana), `gen_lists` (classifiche e insiemi), `gen_matches` (formazione), `gen_anomalie` (record bizzarri), `gen_players` (mercato, giramondo, maglia), `gen_quiz` (curiosità del Tiro Secco), `managers` (date di nascita degli allenatori da Wikidata), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
+- `apps/web`: PWA React. `src/components` (palco adattivo `Stage`, `Fit`, tabellone, sprite, scenografia `scenery`, campi di testo), `src/games/GameView.tsx` (gli 8 giochi), `src/screens` (nuova sfida, partita, sala d'attesa e telefoni, torneo), `src/runtime` (`settings` timer e filtro anno della Home, `packs` caricamento a richiesta, `roomCore` autorità della stanza, `transport` + `mqtt` relay cifrato, `room` hook React).
+- `packages/protocol` (tipi condivisi), `packages/engine` (8 giochi, sorteggio, torneo), `packages/matcher` (normalizzazione, accettazione, correttore), `packages/audio` (musica ed effetti sintetizzati).
+- `data/trivela_data`: `tm_core` (strato dei fatti verificati e grammatica italiana), `gen_lists` (classifiche e insiemi), `gen_matches` (formazione: solo partite iconiche), `gen_anomalie` (record rarissimi del Tiro Secco), `gen_nomi` + `lexicon` (giochi di nomi del Tiro Secco), `gen_players` (mercato, giramondo, maglia), `gen_quiz` (curiosità del Tiro Secco), `managers` (date di nascita degli allenatori da Wikidata), `postprocess` (domande inedite, notorietà), `generate` (scrive `apps/web/public/data/`), `sync` (riscarica il dataset se è cambiato e rigenera).
 - `tools/e2e.mjs` (test end-to-end, stanze comprese, con un relay MQTT locale), `tools/shots.mjs` (screenshot di tutti i giochi a più formati).
 
 ## Comandi
@@ -56,7 +56,11 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 - Effetti (SPEC §14.1): scossa, punti volanti, wipe a scacchiera e scanline vanno sempre disattivati con `prefers-reduced-motion`.
 - Telefoni: pagina `phone-shell` con azioni principali in basso, senza scorrimento (SPEC §12.5); dimensioni con `clamp()` e container query.
 - Animazioni: solo `transform` e `opacity` (niente `clip-path`, `left/top`, `box-shadow` o `mix-blend-mode` animati o a schermo intero); curve morbide per i movimenti, `steps()` solo per lampeggi e simili. Chiavi React mai da `Date.now()`: usa un contatore.
-- Anomalia (SPEC §4.2): ogni nuovo generatore deve descrivere un evento che capita poche volte l'anno; si calcola solo sui dati Transfermarkt (mai su SofaScore) e il test `test_anomalia_only_genuinely_rare_records` va aggiornato insieme.
+- Record del Tiro Secco (SPEC §4.2): ogni nuovo generatore deve descrivere un evento che capita poche volte l'anno; si calcola solo sui dati Transfermarkt (mai su SofaScore) e il test `test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare` va aggiornato insieme.
+- Giochi di nomi (SPEC §4.1): una voce nuova del lessico va scritta in minuscolo con gli accenti, solo se è una parola di dizionario in quella lingua; se può essere letta anche in un'altra famiglia va aggiunta a `lexicon.ALSO`.
+- Timer (SPEC §3.8): un gioco nuovo con risposta scritta va aggiunto a `GRACE_KINDS` in `match.ts`; ogni attesa deve restare giocabile con `MatchConfig.timer === false` (un pulsante al posto del conto alla rovescia).
+- Risposte scritte: usa sempre `AnswerBox`/`TextEntry` (tastiera di gioco sui touch, SPEC §10.4), passando `prompt` e `timer`; mai un `<input>` nudo dentro una partita.
+- Aree sicure (SPEC §12.6): usa `var(--sal)`, `var(--sar)`, `var(--sat)`, `var(--sab)`, moltiplicate per `var(--inv)` dentro il palco; mai `env()` diretto.
 - Audio: solo lo Schermo riproduce suoni; nessun autoplay prima del gesto "PREMI START". La musica resta ambient: solo onde sine/triangle, tempo lento, volume basso (SPEC §13).
 - Ogni risposta sbagliata va scritta in rosso sullo Schermo (`WrongSaid`, SPEC §3.6): un gioco nuovo deve registrare `said` in `last` (o `wrong` mentre la risposta è ancora in corso).
 
@@ -65,7 +69,7 @@ Ogni modifica deve rispettarle. Se una richiesta le viola, fermati e chiedi.
 Una modifica è finita quando:
 - lint, typecheck e test passano (`pnpm test`, `uv run pytest` dove pertinente);
 - le regole di gioco toccate hanno test aggiornati;
-- per le stanze, `pnpm e2e` copre Schermo + pulsantiere e Schermo + Regia e verifica che Schermo e pulsantiere non ricevano soluzioni;
+- per le stanze, `pnpm e2e` copre Schermo + pulsantiere e Schermo + Regia e verifica che Schermo e pulsantiere non ricevano soluzioni; copre anche telefono touch in orizzontale (tastiera, tempo extra, rotazione, aree sicure) e timer spento;
 - per l'interfaccia, gli screenshot di `tools/shots.mjs` non mostrano testi o riquadri tagliati;
 - per i dati, nessuna istanza usa campi mancanti o incoerenti e i filtri di `postprocess` restano attivi;
 - `SPEC.md` è aggiornata se è cambiato un comportamento.

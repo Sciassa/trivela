@@ -69,6 +69,9 @@ export function playEvents(events: EngineEvent[]): void {
       case "timeout":
         audio.play("siren");
         break;
+      case "grace":
+        audio.play("tick");
+        break;
       case "reveal":
         audio.play("reveal");
         break;

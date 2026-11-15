@@ -1,5 +1,6 @@
 import { emptyPackItems, LEAGUES, type GameId, type Packs } from "@trivela/protocol";
 import { buildIndex, type MatchIndex } from "@trivela/matcher";
+import { timerOn } from "./settings";
 import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, POOL, Rng, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
 
 /**
@@ -144,7 +145,9 @@ export function rememberSeen(ids: string[]): void {
 }
 
 /** Create a match avoiding questions already seen on this device, when possible. */
-export async function prepareFreshMatch(config: MatchConfig): Promise<PrepareResult> {
+export async function prepareFreshMatch(base: MatchConfig): Promise<PrepareResult> {
+  // the timer switch of the home screen applies to every match started on this device (SPEC §3.8)
+  const config: MatchConfig = base.timer === undefined && !timerOn() ? { ...base, timer: false } : base;
   const r = await prepareMatch({ ...config, excludeIds: [...seenIds(), ...(config.excludeIds ?? [])] });
   return r.ok ? r : prepareMatch(config);
 }

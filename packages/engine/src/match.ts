@@ -1,5 +1,5 @@
 import { GAME_IDS, leaguesOf, type GameId, type InstanceMeta, type Packs, type PlayerIdx, type Role } from "@trivela/protocol";
-import { MODULES } from "./games";
+import { MODULES, TIMERS } from "./games";
 import { Rng } from "./rng";
 import { other, type EngineCtx, type EngineEvent, type Env, type Intent, type MatchConfig, type MatchState } from "./types";
 
@@ -11,7 +11,7 @@ export const GAMES_PER_MATCH = 5;
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "anomalia", "mercato", "formazione", "maglia"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia"];
 const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
@@ -69,7 +69,10 @@ const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== u
 
 const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
 const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
-const OPENERS: GameId[] = ["tiro_secco", "anomalia", "maglia"];
+const OPENERS: GameId[] = ["tiro_secco", "maglia"];
+/** Decina and Asta are played on the same kind of set: never both in one match. */
+const SET_GAMES: GameId[] = ["decina", "asta"];
+const MAX_LIST_GAMES = 2;
 
 export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): GameId[] {
   const avail = new Set(available);
@@ -78,7 +81,8 @@ export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): G
   const ok = (g: GameId) => {
     if (out.includes(g)) return false;
     if (BUZZER_GROUP.includes(g) && out.some((x) => BUZZER_GROUP.includes(x))) return false;
-    if (LIST_GROUP.includes(g) && out.some((x) => LIST_GROUP.includes(x))) return false;
+    if (LIST_GROUP.includes(g) && out.filter((x) => LIST_GROUP.includes(x)).length >= MAX_LIST_GAMES) return false;
+    if (SET_GAMES.includes(g) && out.some((x) => SET_GAMES.includes(x))) return false;
     return true;
   };
   if (openers.length) out.push(rng.pick(openers));
@@ -187,6 +191,7 @@ function makeEnv(s: MatchState, ctx: EngineCtx, events: EngineEvent[]): Env {
     ctx,
     judging: s.config.judging,
     solo: s.config.solo === true,
+    timed: isTimed(s.config),
     starter: s.starters[s.gameIdx] ?? s.coin,
     addPoints(player, points) {
       s.scores[player] += points;
@@ -196,6 +201,11 @@ function makeEnv(s: MatchState, ctx: EngineCtx, events: EngineEvent[]): Env {
       events.push(e);
     },
     setTimer(ms, kind) {
+      // without countdowns only the short pauses of the show survive ("PRONTI…", the feedback after an answer)
+      if (!isTimed(s.config) && !PAUSE_KINDS.includes(kind)) {
+        s.timer = null;
+        return;
+      }
       s.timerSeq += 1;
       s.timer = { id: s.timerSeq, ms, kind };
     },
@@ -207,12 +217,51 @@ function makeEnv(s: MatchState, ctx: EngineCtx, events: EngineEvent[]): Env {
   };
 }
 
-export function reduce(prev: MatchState, intent: Intent, ctx: EngineCtx): MatchState {
+/** Countdowns are on unless the match was set up without them (SPEC §3.8). */
+export const isTimed = (c: Pick<MatchConfig, "timer">): boolean => c.timer !== false;
+
+const PAUSE_KINDS = ["ready", "feedback"];
+
+/**
+ * Countdowns that end with a typed answer: when one runs out the player gets a grace period to finish typing
+ * (SPEC §3.8). Multiple choice, the number pad and the wait for a buzz have nothing to finish typing.
+ */
+const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
+  decina: ["ask"],
+  dischetto: ["ask"],
+  mercato: ["answer"],
+  giramondo: ["answer"],
+  formazione: ["play"],
+  asta: ["prove"],
+};
+export const GRACE_MS = TIMERS.grace;
+
+/** Stages in which the player on turn owes an answer and may give it up when there is no countdown. */
+const SKIP_STAGES = ["ask", "answering"];
+
+export function reduce(prev: MatchState, intent0: Intent, ctx: EngineCtx): MatchState {
+  let intent = intent0;
   if (intent.type === "TIMEOUT" && prev.timer?.id !== intent.timerId) return prev;
+  if (intent.type === "SKIP") {
+    const g = prev.game;
+    if (prev.phase !== "playing" || !g || isTimed(prev.config) || prev.timer || !SKIP_STAGES.includes(g.stage)) return prev;
+    if (intent.player !== undefined && intent.player !== g.turn) return prev;
+    intent = { type: "TIMEOUT", timerId: -1 }; // the game modules treat it as the time running out
+  }
   const s = structuredClone(prev);
   const events: EngineEvent[] = [];
   s.events = events;
-  if (intent.type === "TIMEOUT") s.timer = null;
+  if (intent.type === "TIMEOUT" && intent0.type === "TIMEOUT") {
+    const t = prev.timer!;
+    const game = prev.order[prev.gameIdx];
+    if (prev.phase === "playing" && game && !t.grace && prev.config.judging === "auto" && GRACE_KINDS[game]?.includes(t.kind)) {
+      s.timerSeq += 1;
+      s.timer = { id: s.timerSeq, ms: GRACE_MS, kind: t.kind, grace: true };
+      events.push({ type: "grace" });
+      return s;
+    }
+    s.timer = null;
+  }
 
   switch (s.phase) {
     case "draw":

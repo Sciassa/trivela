@@ -10,7 +10,7 @@ function setupRoom(withHost: boolean) {
   if (withHost) room.onMessage("h", { t: "hello", role: "host", rev: 0 });
   room.onMessage("a", { t: "hello", role: "p1", rev: 0 });
   room.onMessage("b", { t: "hello", role: "p2", rev: 0 });
-  const r = createMatch({ judging: room.judging(), players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["tiro_secco", "maglia", "anomalia", "mercato", "decina"] }, packs);
+  const r = createMatch({ judging: room.judging(), players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["tiro_secco", "maglia", "formazione", "mercato", "decina"] }, packs);
   if (!r.ok) throw new Error(r.reason);
   room.start(r.state);
   const last = (ch: "pub" | "host") => [...sent].reverse().find((x) => x.ch === ch && x.msg.t === "view")!.msg as Extract<DownMsg, { t: "view" }>;
@@ -181,6 +181,83 @@ describe("room authority", () => {
       r.room.onMessage("h", { t: "intent", intent: { type: "ANSWER", payload: { choice: 0 } } });
       expect(r.room.pausedLeft).toBeNull();
       r.room.dispose();
+      vi.useRealTimers();
+    });
+  });
+
+  describe("grace period and timer off", () => {
+    const withGames = (games: ("tiro_secco" | "decina" | "mercato")[], timer?: boolean) => {
+      const packs = makePacks();
+      const sent: { ch: Channel; msg: DownMsg }[] = [];
+      const room = new RoomCore(makeCtx(packs), (ch, msg) => sent.push({ ch, msg }));
+      room.onMessage("a", { t: "hello", role: "p1", rev: 0 });
+      room.onMessage("b", { t: "hello", role: "p2", rev: 0 });
+      const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: games, rounds: 3, ...(timer === false ? { timer: false } : {}) }, packs);
+      if (!r.ok) throw new Error(r.reason);
+      room.start(r.state);
+      room.onMessage("a", { t: "intent", intent: { type: "START" } });
+      room.onMessage("a", { t: "intent", intent: { type: "BEGIN_GAME" } });
+      const last = () => [...sent].reverse().find((x) => x.ch === "pub" && x.msg.t === "view")!.msg as Extract<DownMsg, { t: "view" }>;
+      return { room, last };
+    };
+
+    it("when a typed answer runs out of time the Screen starts a ten-second grace countdown and tells the phones", () => {
+      vi.useFakeTimers();
+      const { room, last } = withGames(["decina"]);
+      const ms = room.state!.timer!.ms;
+      const turn = room.state!.game!.turn as 0 | 1;
+      vi.advanceTimersByTime(ms + 1);
+      expect(room.state!.timer).toMatchObject({ grace: true, ms: 10_000 });
+      expect(room.state!.game!.stage).toBe("ask");
+      expect(last().state!.timer).toMatchObject({ grace: true });
+      expect(last().timerMs).toBe(10_000);
+      // the answer typed during the grace period still counts
+      room.onMessage(turn === 0 ? "a" : "b", { t: "intent", intent: { type: "ANSWER", payload: { text: "Mario Abete" } } });
+      expect(room.state!.scores[turn]).toBe(2);
+      room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("the grace period ends by itself after ten seconds", () => {
+      vi.useFakeTimers();
+      const { room } = withGames(["decina"]);
+      const turn = room.state!.game!.turn as 0 | 1;
+      vi.advanceTimersByTime(room.state!.timer!.ms + 9_990);
+      expect(room.state!.game!.errors[turn]).toBe(0);
+      vi.advanceTimersByTime(20);
+      expect(room.state!.game!.errors[turn]).toBe(1);
+      room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("timer off: no countdown is armed, the controllers ask for the clues and may pass", () => {
+      vi.useFakeTimers();
+      const { room } = withGames(["mercato"], false);
+      vi.advanceTimersByTime(2_100); // "PRONTI…"
+      expect(room.state!.game!.revealed).toBe(1);
+      vi.advanceTimersByTime(120_000);
+      expect(room.state!.game!.revealed).toBe(1); // nothing happens by itself
+      expect(room.state!.timer).toBeNull();
+      room.onMessage("b", { t: "intent", intent: { type: "REVEAL_CLUE" } });
+      expect(room.state!.game!.revealed).toBe(2);
+      room.onMessage("a", { t: "buzz", at: Date.now() });
+      vi.advanceTimersByTime(300);
+      expect(room.state!.game!.buzzer).toBe(0);
+      room.onMessage("b", { t: "intent", intent: { type: "SKIP" } }); // not his answer to give up
+      expect(room.state!.game!.buzzer).toBe(0);
+      room.onMessage("a", { t: "intent", intent: { type: "SKIP" } });
+      expect(room.state!.game!.out[0]).toBe(true);
+      room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("timer on: a controller cannot uncover clues by hand", () => {
+      vi.useFakeTimers();
+      const { room } = withGames(["mercato"]);
+      vi.advanceTimersByTime(2_100);
+      room.onMessage("b", { t: "intent", intent: { type: "REVEAL_CLUE" } });
+      expect(room.state!.game!.revealed).toBe(1);
+      room.dispose();
       vi.useRealTimers();
     });
   });
