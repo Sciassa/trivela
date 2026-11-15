@@ -53,6 +53,7 @@ describe("room authority", () => {
     room.onMessage("stranger", { t: "intent", intent: { type: "START" } });
     expect(room.state!.phase).toBe("draw");
     room.onMessage("a", { t: "intent", intent: { type: "START" } });
+    room.onMessage("b", { t: "intent", intent: { type: "START" } });
     expect(room.state!.phase).toBe("intro");
     room.onMessage("a", { t: "intent", intent: { type: "TIMEOUT", timerId: 1 } });
     expect(room.state!.phase).toBe("intro");
@@ -97,8 +98,7 @@ describe("room authority", () => {
       vi.useFakeTimers();
       const r = setupRoom(withHost);
       r.room.start(r.room.state!); // re-arm the timers under fake time
-      r.room.onMessage(withHost ? "h" : "a", { t: "intent", intent: { type: "START" } });
-      r.room.onMessage(withHost ? "h" : "a", { t: "intent", intent: { type: "BEGIN_GAME" } });
+      for (const type of ["START", "BEGIN_GAME"] as const) for (const id of withHost ? ["h"] : ["a", "b"]) r.room.onMessage(id, { t: "intent", intent: { type } });
       return r;
     };
     const id = (r: ReturnType<typeof setupRoom>) => r.room.state!.timer?.id ?? -1; // -1: the countdown ended (answer revealed)
@@ -195,8 +195,7 @@ describe("room authority", () => {
       const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: games, rounds: 3, ...(timer === false ? { timer: false } : {}) }, packs);
       if (!r.ok) throw new Error(r.reason);
       room.start(r.state);
-      room.onMessage("a", { t: "intent", intent: { type: "START" } });
-      room.onMessage("a", { t: "intent", intent: { type: "BEGIN_GAME" } });
+      for (const type of ["START", "BEGIN_GAME"] as const) for (const id of ["a", "b"]) room.onMessage(id, { t: "intent", intent: { type } });
       const last = () => [...sent].reverse().find((x) => x.ch === "pub" && x.msg.t === "view")!.msg as Extract<DownMsg, { t: "view" }>;
       return { room, last };
     };
@@ -239,6 +238,8 @@ describe("room authority", () => {
       expect(room.state!.game!.revealed).toBe(1); // nothing happens by itself
       expect(room.state!.timer).toBeNull();
       room.onMessage("b", { t: "intent", intent: { type: "REVEAL_CLUE" } });
+      expect(room.state!.game!.revealed).toBe(1); // one phone is not enough (SPEC §12.8)
+      room.onMessage("a", { t: "intent", intent: { type: "REVEAL_CLUE" } });
       expect(room.state!.game!.revealed).toBe(2);
       room.onMessage("a", { t: "buzz", at: Date.now() });
       vi.advanceTimersByTime(300);
@@ -259,6 +260,91 @@ describe("room authority", () => {
       expect(room.state!.game!.revealed).toBe(1);
       room.dispose();
       vi.useRealTimers();
+    });
+  });
+
+  describe("consensus of the two controllers (SPEC §12.8)", () => {
+    const pads = (timer?: boolean) => {
+      const packs = makePacks();
+      const sent: { ch: Channel; msg: DownMsg }[] = [];
+      const room = new RoomCore(makeCtx(packs), (ch, msg) => sent.push({ ch, msg }));
+      room.onMessage("a", { t: "hello", role: "p1", rev: 0 });
+      room.onMessage("b", { t: "hello", role: "p2", rev: 0 });
+      const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["mercato"], rounds: 3, ...(timer === false ? { timer: false } : {}) }, packs);
+      if (!r.ok) throw new Error(r.reason);
+      room.start(r.state);
+      const last = () => [...sent].reverse().find((x) => x.ch === "pub" && x.msg.t === "view")!.msg as Extract<DownMsg, { t: "view" }>;
+      return { room, last };
+    };
+    const say = (room: RoomCore, id: string, type: "START" | "BEGIN_GAME" | "NEXT" | "REVEAL_CLUE") => room.onMessage(id, { t: "intent", intent: { type } });
+
+    it("SI PARTE, VIA and AVANTI need both phones: the first press only shows 1/2", () => {
+      const { room, last } = pads();
+      say(room, "a", "START");
+      expect(room.state!.phase).toBe("draw");
+      expect(last().votes).toMatchObject({ action: "next", who: [true, false], need: [true, true] });
+      say(room, "a", "START"); // pressing twice does not count twice
+      expect(room.state!.phase).toBe("draw");
+      say(room, "b", "START");
+      expect(room.state!.phase).toBe("intro");
+      expect(last().votes).toBeNull();
+      room.dispose();
+    });
+
+    it("timer off: PROSSIMO INDIZIO comes out only when both players asked for it", () => {
+      vi.useFakeTimers();
+      const { room, last } = pads(false);
+      for (const type of ["START", "BEGIN_GAME"] as const) for (const id of ["a", "b"]) say(room, id, type);
+      vi.advanceTimersByTime(2_100); // "PRONTI…"
+      expect(room.state!.game!.revealed).toBe(1);
+      say(room, "a", "REVEAL_CLUE");
+      expect(room.state!.game!.revealed).toBe(1);
+      expect(last().votes).toMatchObject({ action: "clue", who: [true, false] });
+      expect(last().state!.game!.revealed).toBe(1);
+      say(room, "b", "REVEAL_CLUE");
+      expect(room.state!.game!.revealed).toBe(2);
+      expect(last().votes).toBeNull();
+      room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("a vote is dropped when the game moves on by itself (a buzz), and a player who is out has no say", () => {
+      vi.useFakeTimers();
+      const { room, last } = pads(false);
+      for (const type of ["START", "BEGIN_GAME"] as const) for (const id of ["a", "b"]) say(room, id, type);
+      vi.advanceTimersByTime(2_100);
+      say(room, "a", "REVEAL_CLUE");
+      room.onMessage("b", { t: "buzz", at: Date.now() });
+      vi.advanceTimersByTime(300);
+      expect(room.state!.game!.buzzer).toBe(1);
+      expect(room.votes).toBeNull(); // the half-cast vote does not survive the buzz
+      room.onMessage("b", { t: "intent", intent: { type: "ANSWER", payload: { text: "Mario Fantasma" } } });
+      expect(room.state!.game!.out[1]).toBe(true);
+      // player 2 is out of this profile: player 1 alone decides the next clue
+      say(room, "a", "REVEAL_CLUE");
+      expect(room.state!.game!.revealed).toBe(2);
+      expect(last().votes).toBeNull();
+      room.dispose();
+      vi.useRealTimers();
+    });
+
+    it("a phone that leaves does not block the other one", () => {
+      const { room } = pads();
+      say(room, "a", "START");
+      room.onMessage("b", { t: "bye" });
+      expect(room.state!.phase).toBe("intro");
+      room.dispose();
+    });
+
+    it("with both phones connected the Screen cannot skip on its own; without phones it can", () => {
+      const { room } = pads();
+      room.intent("screen", { type: "START" });
+      expect(room.state!.phase).toBe("draw");
+      room.onMessage("a", { t: "bye" });
+      room.onMessage("b", { t: "bye" });
+      room.intent("screen", { type: "START" });
+      expect(room.state!.phase).toBe("intro");
+      room.dispose();
     });
   });
 

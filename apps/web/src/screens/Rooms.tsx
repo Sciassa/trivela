@@ -8,10 +8,12 @@ import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
-import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
+import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock, VotesCtx } from "../components/ui";
 import { GameView } from "../games/GameView";
+import { Buzz3D, VoxelBall } from "../components/Voxel3D";
 import { GAME_NAMES } from "../rules";
 import { savedYear } from "../runtime/settings";
+import { HAPTIC, vibrate } from "../runtime/haptics";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
 
 const ROLE_LABEL: Record<ClientRole, string> = { host: "REGIA", p1: "GIOCATORE 1", p2: "GIOCATORE 2" };
@@ -54,20 +56,24 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   }, [roster.host]);
 
   if (room.state) {
+    // two phones and no Regia: they move the game on together (SPEC §12.8), the Screen only shows who has pressed
+    const consensus = !roster.host && roster.p1 && roster.p2;
     return (
-      <MatchShell
-        state={room.state}
-        dispatch={room.dispatch}
-        ctx={matchCtx}
-        start={room.timerStart}
-        clock={room.timer}
-        mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host, pad: false }}
-        onExit={(s) => {
-          rememberSeen(usedIds(s));
-          room.start(null);
-        }}
-        onAbort={() => room.start(null)}
-      />
+      <VotesCtx.Provider value={consensus ? { votes: room.votes, players: room.state.config.players } : null}>
+        <MatchShell
+          state={room.state}
+          dispatch={room.dispatch}
+          ctx={matchCtx}
+          start={room.timerStart}
+          clock={room.timer}
+          mode={{ readonly: roster.host || roster.p1 || roster.p2, flow: !roster.host && !consensus, pad: false }}
+          onExit={(s) => {
+            rememberSeen(usedIds(s));
+            room.start(null);
+          }}
+          onAbort={() => room.start(null)}
+        />
+      </VotesCtx.Provider>
     );
   }
 
@@ -105,6 +111,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
         <span className="label">STANZA</span>
         <span className="code">{room.code}</span>
         <span className="grow" />
+        {!room.connected && <VoxelBall size={40} className="inline" />}
         <span className={`status-dot ${room.connected ? "on" : ""}`}>{room.connected ? "IN LINEA" : "MI COLLEGO…"}</span>
       </div>
       <div className="mode-pick">
@@ -228,6 +235,7 @@ function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: Clien
       <div className="phone-scroll">
         {!room.live && !s ? (
           <div className="panel waiting">
+            <VoxelBall size={92} />
             <span className="blink">CERCO LA STANZA {room.code}…</span>
             <span className="note">Controlla che lo schermo principale sia acceso sulla pagina della stanza e che il codice sia giusto.</span>
             <button className="btn ghost" onClick={() => (location.hash = "")}>
@@ -339,6 +347,7 @@ export function HostRoom({ code }: { code: string }) {
     return (
       <PhoneFrame role="host" room={room}>
         <div className="panel waiting">
+          <VoxelBall size={92} />
           <span>SEI LA REGIA</span>
           <span className="note">Quando lo schermo principale avvia la partita, qui compaiono soluzioni, copione e pulsanti per convalidare le risposte.</span>
         </div>
@@ -544,19 +553,43 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   useEffect(() => {
     if (turn) navigator.vibrate?.(80);
   }, [turn]);
+  // the opponent got to the buzzer first (SPEC §12.9)
+  const beatenBy = g && (g.game === "mercato" || g.game === "giramondo") && g.stage === "answering" && g.buzzer !== null && g.buzzer !== me ? `${g.i}-${g.revealed}` : null;
+  useEffect(() => {
+    if (beatenBy) vibrate(HAPTIC.beaten);
+  }, [beatenBy]);
+  // the countdown ran out while it was my answer: ten more seconds to finish typing
+  const graceId = s?.timer?.grace && g && (g.turn === me || g.buzzer === me) ? s.timer.id : null;
+  useEffect(() => {
+    if (graceId !== null) vibrate(HAPTIC.grace);
+  }, [graceId]);
   const color = me === 0 ? "var(--p1)" : "var(--p2)";
   const flow = !room.roster.host;
-  const next = s && flow && s.phase !== "match_over" && (
-    <button className="btn big next" onClick={() => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" })}>
-      {s.phase === "draw" ? "SI PARTE ▶" : s.phase === "intro" ? "VIA! ▶" : "AVANTI ▶"}
-    </button>
-  );
+  // two phones and no Regia: these buttons are votes, the game moves on when both players pressed (SPEC §12.8)
+  const voteOf = (action: "clue" | "next") => {
+    const v = room.votes?.action === action ? room.votes : null;
+    return { mine: !!v?.who[me], other: !!v && v.who.some((w, p) => w && p !== me), done: v ? v.who.filter(Boolean).length : 0, need: v ? v.need.filter(Boolean).length : 2 };
+  };
+  const voteButton = (action: "clue" | "next", label: string, onClick: () => void, cls: string) => {
+    const v = voteOf(action);
+    return (
+      <button className={`btn big ${cls} ${v.mine ? "voted" : ""}`} disabled={v.mine} data-vote={action} onClick={() => (navigator.vibrate?.(20), onClick())}>
+        {v.mine ? `${v.done}/${v.need} · IN ATTESA DELL'AVVERSARIO…` : v.other ? `${label} · ${v.done}/${v.need}` : label}
+      </button>
+    );
+  };
+  const next =
+    s &&
+    flow &&
+    s.phase !== "match_over" &&
+    voteButton("next", s.phase === "draw" ? "SI PARTE ▶" : s.phase === "intro" ? "VIA! ▶" : "AVANTI ▶", () => room.dispatch(s.phase === "draw" ? { type: "START" } : s.phase === "intro" ? { type: "BEGIN_GAME" } : { type: "NEXT" }), "next");
   if (!s || s.phase !== "playing" || !g) {
     return (
       <PhoneFrame role={role} room={room} actions={next}>
         <div className="panel waiting" style={{ color }}>
           {!s ? (
             <>
+              <VoxelBall size={92} />
               <span>SEI IL {ROLE_LABEL[role]}</span>
               <span className="note">In attesa che lo schermo principale avvii la partita…</span>
             </>
@@ -577,11 +610,16 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
         room={room}
         actions={
           <>
-            {(g.free || !isTimed(s.config)) && !g.out[me] && g.stage === "clues" && s.config.judging !== "host" && (
-              <button className="btn big ghost" onClick={() => room.dispatch({ type: "REVEAL_CLUE" })}>
-                {g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : isTimed(s.config) ? "SCOPRI UN ALTRO INDIZIO" : "PROSSIMO INDIZIO ▶"}
-              </button>
-            )}
+            {(g.free || !isTimed(s.config)) &&
+              !g.out[me] &&
+              g.stage === "clues" &&
+              s.config.judging !== "host" &&
+              voteButton(
+                "clue",
+                g.revealed >= (g.points as number[]).length ? "NESSUNO LO SA ▶" : isTimed(s.config) ? "SCOPRI UN ALTRO INDIZIO" : "PROSSIMO INDIZIO ▶",
+                () => room.dispatch({ type: "REVEAL_CLUE" }),
+                "ghost",
+              )}
             {!isTimed(s.config) && g.stage === "answering" && g.buzzer === me && s.config.judging !== "host" && (
               <button className="btn big ghost" onClick={() => room.dispatch({ type: "SKIP" })}>
                 NON LO SO
@@ -606,18 +644,16 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
         ) : g.stage === "reveal" ? (
           <div className="panel waiting">GUARDA LO SCHERMO</div>
         ) : (
-          <button
-            className="big-buzz"
+          <Buzz3D
+            color={color}
             disabled={!can}
-            style={{ background: color }}
-            onPointerDown={(e) => {
-              e.preventDefault();
-              navigator.vibrate?.(40);
+            onPress={() => {
+              vibrate(HAPTIC.buzz);
               room.buzz();
             }}
           >
             {g.out[me] ? "FUORI" : "PRENOTA!"}
-          </button>
+          </Buzz3D>
         )}
       </PhoneFrame>
     );

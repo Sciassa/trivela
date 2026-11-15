@@ -7,6 +7,7 @@ import { audio } from "@trivela/audio";
 import { GAME_NAMES } from "../rules";
 import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
 import { Backdrop } from "./scenery";
+import type { Votes } from "../runtime/roomCore";
 
 /* ------------------------------------------------------------ contexts */
 
@@ -32,6 +33,37 @@ export interface PlayMode {
   pad: boolean;
 }
 export const PlayCtx = createContext<PlayMode>({ readonly: false, flow: true, pad: false });
+
+/**
+ * Screen of a room with two controllers and no Regia (SPEC §12.8): the game moves on when both phones agree, and the
+ * Screen shows who has already pressed. null everywhere else.
+ */
+export const VotesCtx = createContext<{ votes: Votes | null; players: [string, string] } | null>(null);
+
+/** «AVANTI» or «PROSSIMO INDIZIO» on the Screen: a green check for each player who has pressed it on the phone. */
+export function VoteBadge({ action }: { action: Votes["action"] }) {
+  const ctx = useContext(VotesCtx);
+  if (!ctx) return null;
+  const v = ctx.votes?.action === action ? ctx.votes : null;
+  const done = v ? v.who.filter(Boolean).length : 0;
+  const need = v ? v.need.filter(Boolean).length : 2;
+  return (
+    <span className={`vote-badge ${v ? "live" : ""}`} data-votes={done} role="status">
+      <span className="vote-what">{action === "clue" ? "PROSSIMO INDIZIO" : "AVANTI"} DAI TELEFONI</span>
+      {([0, 1] as const)
+        .filter((p) => !v || v.need[p])
+        .map((p) => (
+          <span key={p} className={`vote-who ${p === 0 ? "c-p1" : "c-p2"} ${v?.who[p] ? "on" : ""}`}>
+            <i aria-hidden>{v?.who[p] ? "✓" : "·"}</i>
+            {ctx.players[p]}
+          </span>
+        ))}
+      <span className="vote-count">
+        {done}/{need}
+      </span>
+    </span>
+  );
+}
 export const usePlay = () => useContext(PlayCtx);
 
 /* ------------------------------------------------------------ Stage */
@@ -674,15 +706,17 @@ export function NumberPad({ onSubmit }: { onSubmit: (n: string) => void }) {
 
 /* ------------------------------------------------------------ Flow */
 
-export function NextButton({ onClick, label = "AVANTI ▶" }: { onClick: () => void; label?: string }) {
-  const { flow } = usePlay();
+export function NextButton({ onClick, label = "AVANTI ▶", always = false }: { onClick: () => void; label?: string; /** Leaving the screen is never a vote. */ always?: boolean }) {
+  const play = usePlay();
+  const votes = useContext(VotesCtx);
+  const flow = play.flow || always;
   useEffect(() => {
     if (!flow) return;
     const h = (e: KeyboardEvent) => e.key === "Enter" && !(e.target instanceof HTMLInputElement) && onClick();
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [onClick, flow]);
-  if (!flow) return <span className="px dim wait-host">LA REGIA PROSEGUE…</span>;
+  if (!flow) return votes ? <VoteBadge action="next" /> : <span className="px dim wait-host">LA REGIA PROSEGUE…</span>;
   return (
     <button className="btn next" onClick={onClick}>
       {label}
