@@ -3,6 +3,7 @@ import type { MatchState, EngineCtx } from "@trivela/engine";
 import type { Packs } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { loadCore } from "./runtime/packs";
+import { savedYear, saveYear, setTimerOn, timerOn, YEAR_CHOICES } from "./runtime/settings";
 import { isRoomCode } from "./runtime/roomCore";
 import { Fit, Page, setSpeller, spellerOn, Stage } from "./components/ui";
 import { Sprite } from "./components/sprites";
@@ -31,9 +32,9 @@ function hashRoute(): { role: "host" | "p1" | "p2"; code: string } | null {
   return m && isRoomCode(m[1]!) ? { code: m[1]!, role: m[2] as "host" | "p1" | "p2" } : null;
 }
 
-function MenuCard({ icon, title, text, color, onClick, primary, badge, i }: { icon: ReactNode; title: string; text: string; color: string; onClick: () => void; primary?: boolean; badge?: string; i: number }) {
+function MenuCard({ icon, title, text, color, onClick, primary, compact, badge, i }: { icon: ReactNode; title: string; text: string; color: string; onClick: () => void; primary?: boolean; compact?: boolean; badge?: string; i: number }) {
   return (
-    <button className={`menu-card ${primary ? "primary" : ""}`} style={{ "--c": color, "--i": i } as CSSProperties} onClick={onClick}>
+    <button className={`menu-card ${primary ? "primary" : ""} ${compact ? "compact" : ""}`} style={{ "--c": color, "--i": i } as CSSProperties} onClick={onClick}>
       {badge && <span className="badge">{badge}</span>}
       <span className="ico">{icon}</span>
       <span>
@@ -41,6 +42,65 @@ function MenuCard({ icon, title, text, color, onClick, primary, badge, i }: { ic
         <small>{text}</small>
       </span>
     </button>
+  );
+}
+
+/**
+ * The settings every match starts from, in sight on the home screen (SPEC §3.8): countdowns on or off and the
+ * "from year" filter. They are remembered on the device; the set-up pages can still change the year for one match.
+ */
+function HomeSettings({ onOptions, onCredits, total }: { onOptions: () => void; onCredits: () => void; total: number }) {
+  const [timer, setTimer] = useState(timerOn);
+  const [year, setYear] = useState(savedYear);
+  const idx = Math.max(0, YEAR_CHOICES.indexOf(year as (typeof YEAR_CHOICES)[number]));
+  const step = (d: number) => {
+    const next = YEAR_CHOICES[(idx + d + YEAR_CHOICES.length) % YEAR_CHOICES.length]!;
+    audio.play("blip");
+    saveYear(next);
+    setYear(next);
+  };
+  const flip = (on: boolean) => {
+    audio.play("blip");
+    setTimerOn(on);
+    setTimer(on);
+  };
+  return (
+    <section className="menu-settings" aria-label="Impostazioni">
+      <div className="set">
+        <span className="set-label">TIMER</span>
+        <div className="set-seg" role="group" aria-label="Timer">
+          <button className={timer ? "on" : ""} aria-pressed={timer} onClick={() => flip(true)}>
+            ON
+          </button>
+          <button className={timer ? "" : "on"} aria-pressed={!timer} onClick={() => flip(false)}>
+            OFF
+          </button>
+        </div>
+        <span className="set-note">{timer ? "Tempo per rispondere, più 10 secondi per finire di scrivere" : "Nessun conto alla rovescia: gli indizi si scoprono a mano"}</span>
+      </div>
+      <div className="set">
+        <span className="set-label">FILTRO ANNO</span>
+        <div className="set-step" role="group" aria-label="Filtro anno">
+          <button aria-label="Anno precedente" onClick={() => step(-1)}>
+            ◂
+          </button>
+          <span className="set-value">{year === null ? "TUTTE LE STAGIONI" : `DAL ${year} IN POI`}</span>
+          <button aria-label="Anno successivo" onClick={() => step(1)}>
+            ▸
+          </button>
+        </div>
+        <span className="set-note">{year === null ? "Domande dal 2012/13 a oggi" : "Elenchi e classifiche usano sempre tutte le stagioni"}</span>
+      </div>
+      <div className="set tools">
+        <button className="btn ghost small" onClick={onOptions}>
+          ♪ IMPOSTAZIONI
+        </button>
+        <button className="btn ghost small" onClick={onCredits}>
+          FONTI DEI DATI
+        </button>
+        <span className="set-note">{total.toLocaleString("it-IT")} domande · 8 giochi</span>
+      </div>
+    </section>
   );
 }
 
@@ -82,7 +142,8 @@ export function App() {
         <Stage variant="sunset">
           <div
             className="home"
-            onPointerDown={async () => {
+            // a click, not a pointerdown: on touch screens the same tap would also press the menu card that appears under the finger
+            onClick={async () => {
               await audio.unlock();
               audio.startMusic();
               audio.play("coin");
@@ -105,32 +166,26 @@ export function App() {
             <Fit center>
               <div className="home-menu">
                 <div className="menu-hero">
-                  <Logo size={84} />
+                  <Logo size={78} />
                   <div className="tagline">IL QUIZ PER MANIACI DEL CALCIO</div>
                 </div>
                 <div className="menu-cols">
                   <section className="menu-group">
                     <h2>GIOCA SU QUESTO SCHERMO</h2>
-                    <MenuCard primary badge="CONSIGLIATO" color="#ffd23f" icon={<Sprite name="screen" size={72} />} title="PARTITA COMPLETA" text="5 giochi sorteggiati su 9, due giocatori" onClick={() => go({ name: "setup" })} i={0} />
-                    <MenuCard color="#5ee06a" icon={<Sprite name="clock" size={64} />} title="SFIDA RAPIDA" text="Un solo gioco a scelta, 3 round a testa" onClick={() => go({ name: "pick", purpose: "quick" })} i={1} />
-                    <MenuCard color="#7fd8ff" icon={<Sprite name="face" size={64} />} title="ALLENAMENTO" text="Da solo, un gioco, nessun avversario" onClick={() => go({ name: "pick", purpose: "training" })} i={2} />
+                    <MenuCard primary badge="CONSIGLIATO" color="#ffd23f" icon={<Sprite name="screen" size={72} />} title="PARTITA CLASSICA" text="5 giochi sorteggiati su 8, due giocatori" onClick={() => go({ name: "setup" })} i={0} />
+                    <div className="menu-pair">
+                      <MenuCard color="#5ee06a" icon={<Sprite name="clock" size={56} />} title="SFIDA RAPIDA" text="Un gioco a scelta, 3 round a testa" onClick={() => go({ name: "pick", purpose: "quick" })} i={1} />
+                      <MenuCard color="#7fd8ff" icon={<Sprite name="face" size={56} />} title="ALLENAMENTO" text="Da solo, senza avversari" onClick={() => go({ name: "pick", purpose: "training" })} i={2} />
+                    </div>
                   </section>
                   <section className="menu-group">
                     <h2>CON GLI AMICI</h2>
-                    <MenuCard color="#4adfff" icon={<Sprite name="phone" size={64} />} title="SCHERMO + TELEFONI" text="Con conduttore o 2 pulsantiere" onClick={() => go({ name: "room-screen" })} i={3} />
-                    <MenuCard color="#ff7ad9" icon={<Sprite name="trophy" size={64} />} title="TORNEO TRA AMICI" text="Da 4 a 12 giocatori: classifica e finale" onClick={() => go({ name: "tournament" })} i={4} />
-                    <MenuCard color="#c9a8ff" icon={<Sprite name="maglia" size={64} />} title="ENTRA CON CODICE" text="Questo telefono è Regia o pulsantiera" onClick={() => go({ name: "join" })} i={5} />
+                    <MenuCard compact color="#4adfff" icon={<Sprite name="phone" size={48} />} title="SCHERMO + TELEFONI" text="Con conduttore o 2 pulsantiere" onClick={() => go({ name: "room-screen" })} i={3} />
+                    <MenuCard compact color="#ff7ad9" icon={<Sprite name="trophy" size={48} />} title="TORNEO TRA AMICI" text="Da 4 a 12 giocatori" onClick={() => go({ name: "tournament" })} i={4} />
+                    <MenuCard compact color="#c9a8ff" icon={<Sprite name="maglia" size={48} />} title="ENTRA CON CODICE" text="Questo telefono è Regia o pulsantiera" onClick={() => go({ name: "join" })} i={5} />
                   </section>
                 </div>
-                <div className="menu-foot">
-                  <button className="btn ghost small" onClick={() => go({ name: "audio" })}>
-                    ♪ OPZIONI
-                  </button>
-                  <button className="btn ghost small" onClick={() => go({ name: "credits" })}>
-                    FONTI DEI DATI
-                  </button>
-                  <span className="stat">{total.toLocaleString("it-IT")} domande · 9 giochi</span>
-                </div>
+                <HomeSettings onOptions={() => go({ name: "audio" })} onCredits={() => go({ name: "credits" })} total={total} />
               </div>
             </Fit>
           </div>
@@ -194,7 +249,7 @@ function AudioSettings({ onBack }: { onBack: () => void }) {
     audio.play("blip");
   };
   return (
-    <Page title="OPZIONI" onBack={onBack}>
+    <Page title="IMPOSTAZIONI" onBack={onBack}>
       <div className="field">
         <label>MUSICA</label>
         <input type="range" min={0} max={1} step={0.1} value={p.music} onChange={(e) => upd({ music: Number(e.target.value) })} />

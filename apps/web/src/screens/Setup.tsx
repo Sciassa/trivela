@@ -6,6 +6,7 @@ import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { ALL_LEAGUES, forcedGamesFromUrl, leaguesForMatch, newSeed, prepareFreshMatch, saveLeagues, savedLeagues } from "../runtime/packs";
 import { Page } from "../components/ui";
+import { savedYear, timerOn } from "../runtime/settings";
 
 export interface SetupResult {
   state: MatchState;
@@ -101,7 +102,7 @@ export function Setup({
 }) {
   const [p1, setP1] = useState(presetPlayers?.[0] ?? "");
   const [p2, setP2] = useState(presetPlayers?.[1] ?? "");
-  const [year, setYear] = useState(presetYear ? String(presetYear) : "");
+  const [year, setYear] = useState(() => (presetYear !== undefined ? (presetYear ? String(presetYear) : "") : String(savedYear() ?? "")));
   const [leagues, setLeagues] = useState<string[]>(() => (presetLeagues === undefined ? savedLeagues() : presetLeagues ?? ALL_LEAGUES));
   const [tableMode, setTableMode] = useState(false);
   const [error, setError] = useState("");
@@ -173,6 +174,9 @@ export function Setup({
           : format.kind === "quick"
             ? `${GAME_NAMES[format.game]}: solo questo gioco, 3 round a testa · vince chi fa più punti.`
             : `${GAME_NAMES[format.game]}: da solo, senza turni né avversari. Nessuna classifica: serve per allenarsi.`}
+      </div>
+      <div className="note timer-note">
+        TIMER {timerOn() ? "ACCESO: allo scadere del tempo restano 10 secondi per finire di scrivere." : "SPENTO: nessun conto alla rovescia, gli indizi si scoprono a mano."} Si cambia dalla schermata iniziale.
       </div>
       {error && <div className="err">{error}</div>}
       <button className="btn big" onClick={() => void start()} disabled={loading}>

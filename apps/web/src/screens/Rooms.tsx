@@ -11,6 +11,7 @@ import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } fro
 import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { GAME_NAMES } from "../rules";
+import { savedYear } from "../runtime/settings";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
 
 const ROLE_LABEL: Record<ClientRole, string> = { host: "REGIA", p1: "GIOCATORE 1", p2: "GIOCATORE 2" };
@@ -38,7 +39,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   const [mode, setMode] = useState<Mode>("pads");
   const [p1, setP1] = useState("");
   const [p2, setP2] = useState("");
-  const [year, setYear] = useState("");
+  const [year, setYear] = useState(() => String(savedYear() ?? ""));
   const [leagues, setLeagues] = useState(savedLeagues);
   const [quickGame, setQuickGame] = useState<GameId | null>(null); // null: classic five-game match
   const [formatKind, setFormatKind] = useState<"classic" | "quick">("classic");
@@ -596,7 +597,11 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
               RISPONDI A VOCE!
             </div>
           ) : (
-            <AnswerBox index={index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+            <TimerClockCtx.Provider value={room.timer}>
+              {/* the countdown (and the grace period, in red) is on the phone that is typing too */}
+              <StateTimer state={s} start={room.timerStart} />
+              <AnswerBox index={index} placeholder="Chi è?" onSubmit={(text) => room.dispatch({ type: "ANSWER", payload: { text } })} />
+            </TimerClockCtx.Provider>
           )
         ) : g.stage === "reveal" ? (
           <div className="panel waiting">GUARDA LO SCHERMO</div>

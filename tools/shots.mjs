@@ -33,7 +33,7 @@ try {
       await p.getByText("PREMI START").click();
       await p.waitForTimeout(900);
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-menu.png` });
-      await p.getByText("PARTITA COMPLETA").click();
+      await p.getByText("PARTITA CLASSICA").click();
       await p.getByPlaceholder("Nome").first().fill(process.env.LONG ? "Massimiliano Bellavista-Castelnuovo" : "Annalisa");
       await p.getByPlaceholder("Nome").nth(1).fill(process.env.LONG ? "Bartolomeo Castelnuovo di Sotto" : "Bruno");
       if (k === 0) await p.screenshot({ path: `${OUT}/${vp}-setup.png` });

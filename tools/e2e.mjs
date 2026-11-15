@@ -52,6 +52,11 @@ const check = (cond, msg) => {
     console.error("FAIL:", msg);
   } else console.log("ok:", msg);
 };
+/** Type on the game's own keyboard (touch devices never open the keyboard of the system). */
+const typeVK = async (page, text) => {
+  for (const ch of text.toUpperCase()) await page.locator(`.vk-key[data-key="${ch}"]`).tap();
+};
+const boxOf = async (loc) => (await loc.boundingBox()) ?? { x: 0, y: 0, width: 0, height: 0 };
 const lobby = async () => {
   const screen = await open();
   await screen.goto(ROOM);
@@ -73,7 +78,7 @@ try {
   const p = await open();
   await p.goto(`${BASE}/?games=${GAMES}`);
   await p.getByText("PREMI START").click();
-  await p.getByText("PARTITA COMPLETA").click();
+  await p.getByText("PARTITA CLASSICA").click();
   await p.getByPlaceholder("Nome").first().fill("Anna");
   await p.getByPlaceholder("Nome").nth(1).fill("Bruno");
   check((await p.getByText(/argomento/i).count()) === 0, "no free-topic field in the setup");
@@ -140,7 +145,7 @@ try {
     await q.goto(BASE);
     await q.getByText("PREMI START").click();
     await q.locator(".menu-card", { hasText: "SFIDA RAPIDA" }).click();
-    await q.locator(".game-pick button", { hasText: "ANOMALIA" }).click();
+    await q.locator(".game-pick button", { hasText: "TIRO SECCO" }).click();
     await q.getByPlaceholder("Nome").first().fill("Anna");
     await q.getByPlaceholder("Nome").nth(1).fill("Bruno");
     await q.getByText("GIOCA ▶").click();
@@ -168,6 +173,120 @@ try {
     await t.screenshot({ path: "test-results/training.png" });
     check(errors.length === 0, `no page errors in sfida rapida / allenamento (${errors.join(" | ")})`);
     await t.context().close();
+  }
+
+  // ---------------- a phone held sideways (touch): in-game keyboard, grace period, rotation, safe areas
+  {
+    const m = await open({ viewport: { width: 844, height: 390 }, hasTouch: true, isMobile: true });
+    await m.goto(`${BASE}/?games=decina,mercato,tiro_secco,maglia,formazione`);
+    // a notch on the left, the camera on the right, the home bar below
+    await m.evaluate(() => ["--sal:47px", "--sar:47px", "--sab:21px"].forEach((x) => document.documentElement.style.setProperty(...x.split(":"))));
+    await m.getByText("PREMI START").tap();
+    await m.locator(".menu-settings").waitFor();
+    await m.waitForTimeout(600);
+    check(await m.locator(".menu-settings").isVisible(), "the tap on PREMI START does not press the menu card under the finger");
+    check((await m.locator('.set-seg button[aria-pressed="true"]').innerText()) === "ON", "the timer is on by default, in sight on the home screen");
+    const cards = await m.locator(".menu-card").evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).every((b) => b.left >= 0 && b.right <= innerWidth && b.top >= 0 && b.bottom <= innerHeight));
+    check(cards, "every card of the home fits a phone held sideways");
+    await m.screenshot({ path: "test-results/home-phone.png" });
+    await m.getByText("PARTITA CLASSICA").tap();
+    await m.getByText("GIOCA ▶").tap();
+    await m.getByText("SI PARTE ▶").tap({ timeout: 15000 });
+    await m.getByText("VIA! ▶").tap();
+    const t0 = Date.now();
+    await m.locator(".vk-layer.over .vk-key").first().waitFor();
+    check(true, "on a phone held sideways the keyboard opens by itself with its own strip");
+    const hud = await boxOf(m.locator(".hud-player.p1"));
+    const q = await boxOf(m.locator('.vk-key[data-key="Q"]'));
+    const okKey = await boxOf(m.locator('.vk-key[data-key="OK"]'));
+    const exit = await boxOf(m.locator(".exit-btn"));
+    check(hud.x >= 47 && q.x >= 47 && okKey.x + okKey.width <= 844 - 47 + 1 && okKey.y + okKey.height <= 390 - 21 + 1 && exit.x + exit.width <= 844 - 47 + 1,
+      `scoreboard and keyboard stay clear of notch, camera and home bar (hud ${Math.round(hud.x)}, exit right ${Math.round(exit.x + exit.width)}, Q ${Math.round(q.x)}, INVIA right ${Math.round(okKey.x + okKey.width)}, bottom ${Math.round(okKey.y + okKey.height)})`);
+    await typeVK(m, "Lewandowsky");
+    check((await m.locator(".vk-mirror").innerText()).trim() === "Lewandowsky", "what is typed is written above the keys");
+    const kb = await boxOf(m.locator(".vk"));
+    const sg = await boxOf(m.locator(".vk-top .suggest button").first());
+    check(sg.height > 0 && sg.y + sg.height <= kb.y + 1, "the suggestions are above the keys, never under them");
+    check((await m.locator(".vk-prompt").innerText()).length > 10 && (await m.locator(".vk-ctx .timer-num").count()) === 1, "the strip shows the question and the countdown");
+    await m.screenshot({ path: "test-results/phone-keyboard.png" });
+    for (let k = 0; k < 11; k++) await m.locator('.vk-key[data-key="DEL"]').tap();
+    await typeVK(m, "Mar");
+    // grace period: the countdown runs out, ten more seconds to finish typing
+    await m.locator('.vk-ctx .timer[data-grace="true"]').waitFor({ timeout: 40000 });
+    const graceAt = Date.now() - t0;
+    check(graceAt > 27000, `the grace period starts when the 30 seconds are over (${(graceAt / 1000).toFixed(1)} s)`);
+    check((await m.locator(".lives").allInnerTexts()).every((x) => !x.includes("♡")), "no error is counted when the countdown runs out");
+    await m.screenshot({ path: "test-results/phone-grace.png" });
+    // the phone is turned upright by mistake, then back
+    await m.setViewportSize({ width: 390, height: 844 });
+    await m.locator(".rotate-overlay").waitFor();
+    check((await m.locator(".rotate-overlay").innerText()).includes("ruota il dispositivo") && !(await m.locator(".vk-layer").isVisible()), "held upright, the phone shows the rotate notice over everything");
+    await m.screenshot({ path: "test-results/phone-rotated.png" });
+    await m.setViewportSize({ width: 844, height: 390 });
+    await m.locator(".vk-layer.over").waitFor();
+    check((await m.locator(".vk-mirror").innerText()).trim() === "Mar", "turned back, the typed text is still there");
+    check((await m.locator('.vk-ctx .timer[data-grace="true"]').count()) === 1 && (await m.locator(".hud-score").first().innerText()) === "0", "turned back, countdown and scores are where they were");
+    await typeVK(m, "io");
+    check((await m.locator(".vk-mirror").innerText()).trim() === "Mario", "typing goes on during the grace period");
+    await m.waitForFunction(() => [...document.querySelectorAll(".lives")].some((e) => e.textContent.includes("♡")), null, { timeout: 15000 });
+    const lostAt = Date.now() - t0;
+    check(lostAt - graceAt > 8000 && lostAt - graceAt < 12500, `the answer is lost only when the ten extra seconds are over too (${((lostAt - graceAt) / 1000).toFixed(1)} s)`);
+    await m.context().close();
+
+    // a tablet has room: the keyboard is docked and the board stays in sight above it
+    const tb = await open({ viewport: { width: 1024, height: 768 }, hasTouch: true, isMobile: true });
+    await tb.goto(`${BASE}/?games=decina,mercato,tiro_secco,maglia,formazione`);
+    await tb.getByText("PREMI START").tap();
+    await tb.getByText("PARTITA CLASSICA").tap();
+    await tb.getByText("GIOCA ▶").tap();
+    await tb.getByText("SI PARTE ▶").tap({ timeout: 15000 });
+    await tb.getByText("VIA! ▶").tap();
+    await tb.locator(".vk-layer.dock .vk-key").first().waitFor();
+    await typeVK(tb, "Lewandowsky");
+    await tb.locator(".arena .suggest button").first().waitFor();
+    const tkb = await boxOf(tb.locator(".vk"));
+    const wrap = await boxOf(tb.locator(".stage-wrap"));
+    const fieldBox = await boxOf(tb.locator(".arena input.vk-field"));
+    const tsg = await boxOf(tb.locator(".arena .suggest button").first());
+    check(Math.abs(wrap.y + wrap.height - tkb.y) <= 2, "on a tablet the stage shrinks to end where the keyboard begins");
+    check(fieldBox.y + fieldBox.height <= tkb.y + 1 && tsg.y + tsg.height <= tkb.y + 1 && (await tb.locator(".slots").isVisible()), "field, suggestions and board are all visible above the docked keyboard");
+    await tb.screenshot({ path: "test-results/tablet-keyboard.png" });
+    await tb.context().close();
+    check(errors.length === 0, `no page errors with the in-game keyboard (${errors.join(" | ")})`);
+  }
+
+  // ---------------- timer off: no countdown, clues by hand, "non lo so"
+  {
+    const o = await open();
+    await o.goto(`${BASE}/?games=mercato,decina,tiro_secco,maglia,formazione`);
+    await o.getByText("PREMI START").click();
+    await o.locator(".set-seg button", { hasText: "OFF" }).click();
+    await o.locator(".set-step button").last().click();
+    check((await o.locator(".set-value").innerText()) === "DAL 2014 IN POI", "the year filter is set on the home screen");
+    await o.reload();
+    await o.getByText("PREMI START").click();
+    check((await o.locator('.set-seg button[aria-pressed="true"]').innerText()) === "OFF" && (await o.locator(".set-value").innerText()) === "DAL 2014 IN POI", "timer and year filter are remembered");
+    await o.locator(".set-step button").first().click();
+    await o.getByText("PARTITA CLASSICA").click();
+    check((await o.getByText(/TIMER SPENTO/).count()) === 1, "the set-up page says that the timer is off");
+    await o.getByText("GIOCA ▶").click();
+    await o.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await o.getByText("VIA! ▶").click();
+    await o.getByText("PROSSIMO INDIZIO ▶").waitFor({ timeout: 8000 });
+    await o.waitForTimeout(9500);
+    check((await o.locator(".clue.shown").count()) === 1 && (await o.locator(".timer:not(.idle)").count()) === 0, "timer off: no countdown, and no clue comes out by itself");
+    await o.getByText("PROSSIMO INDIZIO ▶").click();
+    check((await o.locator(".clue.shown").count()) === 2, "PROSSIMO INDIZIO uncovers one clue (and the points go down)");
+    await o.keyboard.press("a");
+    await o.getByText("NON LO SO").waitFor();
+    await o.waitForTimeout(11000);
+    check((await o.locator(".arena input.input").count()) === 1, "timer off: the answer has no time limit");
+    await o.getByText("NON LO SO").click();
+    await o.locator(".buzz-btn.p1", { hasText: "FUORI" }).waitFor();
+    check(true, "timer off: the player can give up the answer");
+    await o.screenshot({ path: "test-results/timer-off.png" });
+    check(errors.length === 0, `no page errors with the timer off (${errors.join(" | ")})`);
+    await o.context().close();
   }
 
   // ---------------- room without a host: Screen + two controllers
@@ -229,10 +348,23 @@ try {
     await p2.locator(".big-buzz").dispatchEvent("pointerdown");
     await screen.getByText("RISPONDE!").waitFor();
     await p2.locator("input.input").waitFor();
+    // the controller writes with the game's keyboard: the system one never opens, so nothing covers the suggestions
+    const field = p2.locator("input.input.vk-field");
+    check((await field.getAttribute("inputmode")) === "none" && (await field.getAttribute("readonly")) !== null, "on a phone the answer field never opens the system keyboard");
+    await p2.locator(".vk-layer.dock .vk-key").first().waitFor();
+    await typeVK(p2, "Lewandowsky");
+    check((await field.inputValue()) === "Lewandowsky", `the keys of the in-game keyboard write in the field (${await field.inputValue()})`);
     // the spelling helper works on the phones too, without revealing anything
-    await p2.locator("input.input").fill("Lewandowsky");
     await p2.locator(".suggest button").first().waitFor({ timeout: 15000 });
     check((await p2.locator(".suggest button").allInnerTexts()).some((t) => /Lewandowski/.test(t)), "the controller shows spelling suggestions");
+    const kb = await boxOf(p2.locator(".vk"));
+    const sg = await boxOf(p2.locator(".suggest button").first());
+    check(sg.y + sg.height <= kb.y + 1 && sg.y >= 0, `the suggestions sit above the keyboard, in sight (${Math.round(sg.y + sg.height)} <= ${Math.round(kb.y)})`);
+    const shell = await boxOf(p2.locator(".phone-shell"));
+    check(Math.abs(shell.y + shell.height - kb.y) <= 2, "the controller page ends where the keyboard begins");
+    check(kb.y + kb.height <= 780 + 1 && (await boxOf(p2.locator('.vk-key[data-key="Q"]'))).height >= 38, "the keyboard fits the phone and its keys are big enough");
+    await p2.locator(".suggest button", { hasText: "Robert Lewandowski" }).tap();
+    check((await field.inputValue()) === "Robert Lewandowski", "a suggestion can be tapped while the keyboard is open");
     await screen.screenshot({ path: "test-results/room-buzz.png" });
     await p2.screenshot({ path: "test-results/pad-answer.png" });
     check(true, "the buzzer pressed on a phone reaches the Screen");

@@ -204,7 +204,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           {g.stage === "answering" && (
             <div className="col" style={{ gap: 10 }}>
               <TurnBar state={state} p={g.buzzer} text="RISPONDE" />
-              {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} placeholder="Chi è?" onSubmit={(text) => dispatch({ type: "ANSWER", player: g.buzzer, payload: { text } })} />}
+              {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} placeholder="Chi è?" prompt={`${state.config.players[g.buzzer as PlayerIdx]}, chi è? · ${item.clues[g.revealed - 1] ?? ""}`} timer={<StateTimer state={state} start={start} />} actions={<PassButton state={state} dispatch={dispatch} player={g.buzzer} label="NON LO SO" />} onSubmit={(text) => dispatch({ type: "ANSWER", player: g.buzzer, payload: { text } })} />}
               {!readonly && <PassButton state={state} dispatch={dispatch} player={g.buzzer} label="NON LO SO" />}
             </div>
           )}
@@ -262,7 +262,7 @@ function Decina({ state, g, dispatch, ctx, start }: GameProps) {
           </div>
         ))}
       </div>
-      {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={`${g.turn}-${said.length}-${g.errors.join()}`} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
+      {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={`${g.turn}-${said.length}-${g.errors.join()}`} index={ctx.index} prompt={item.title} timer={<StateTimer state={state} start={start} />} actions={<PassButton state={state} dispatch={dispatch} player={g.turn} />} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
       {g.stage === "ask" && !readonly && <PassButton state={state} dispatch={dispatch} player={g.turn} />}
       {g.stage === "feedback" && <Result last={g.last} players={namesOf(state)} />}
       {final && (
@@ -338,7 +338,7 @@ function Asta({ state, g, dispatch, ctx, start }: GameProps) {
             ))}
           </div>
           <WrongSaid text={g.wrong?.text} who={namesOf(state)[g.wrong?.player as PlayerIdx]} />
-          {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />}
+          {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} prompt={`${g.said.length}/${g.bid.amount} · ${item.title}`} timer={<StateTimer state={state} start={start} />} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />}
         </>
       )}
       {g.stage === "reveal" && (
@@ -404,7 +404,7 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
         ))}
       </div>
       {spare.length > 0 && <div className="sub">A pari merito, valevano anche: {spare.map((r) => r.name).join(", ")}.</div>}
-      {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={g.shots.join()} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} submitLabel="TIRA!" />)}
+      {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={g.shots.join()} index={ctx.index} prompt={item.title} timer={<StateTimer state={state} start={start} />} actions={<PassButton state={state} dispatch={dispatch} player={g.turn} label="NON TIRO" />} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} submitLabel="TIRA!" />)}
       {g.stage === "ask" && !readonly && <PassButton state={state} dispatch={dispatch} player={g.turn} label="NON TIRO" />}
       {g.stage === "feedback" && (
         <>
@@ -500,7 +500,7 @@ function Formazione({ state, g, dispatch, ctx, start }: GameProps) {
           ) : (
             <>
               <WrongSaid text={g.wrong?.text} who={namesOf(state)[g.wrong?.player as PlayerIdx]} />
-              <AnswerBox index={ctx.index} placeholder="Un titolare oscurato" onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />
+              <AnswerBox index={ctx.index} placeholder="Un titolare oscurato" prompt={`${team.name} (${team.formation}) · trovati ${g.found.length}/5 · ${item.title}`} timer={<StateTimer state={state} start={start} />} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />
               <button className="btn ghost small" onClick={() => dispatch({ type: "FINISH" })}>
                 HO FINITO
               </button>
