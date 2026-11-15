@@ -57,7 +57,7 @@ def test_league_tags():
 
 RARE_ANOMALIES = {"an_portiere_gol", "an_difensore_tripletta", "an_difensore_doppietta", "an_panchina_tripletta", "an_poker", "an_autogol_e_gol",
                   "an_subentrato_espulso_5", "an_subentrato_espulso_10", "an_espulso_presto_5", "an_espulso_presto_10", "an_tre_espulsi",
-                  "an_andata_ritorno", "an_portiere_assist"}
+                  "an_andata_ritorno", "an_portiere_assist", "an_gol_lampo_2"}
 
 
 def test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare():
@@ -83,6 +83,9 @@ def test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare():
             assert 5 < int(re.search(r"espulso al (\d+)'", it["script"]).group(1)) <= 10, it["script"]
         if g == "an_tre_espulsi":
             assert int(re.search(r"con (\d+) giocatori espulsi", it["script"]).group(1)) >= 3, it["script"]
+        if g == "an_gol_lampo_2":
+            m = re.search(r"entrato al (\d+)', gol al (\d+)'", it["script"])
+            assert m and 0 <= int(m.group(2)) - int(m.group(1)) <= 2, it["script"]
         if g == "an_autogol_e_gol":
             assert "autogol" in it["script"] and "gol per la propria squadra" in it["script"]
 
@@ -93,7 +96,7 @@ def test_name_games_offer_four_surnames_of_one_family():
     from trivela_data import lexicon
 
     items = [it for it in load("tiro_secco") if it.get("tag") == "nomi"]
-    assert len(items) >= 300
+    assert len(items) >= 200
     gens = {it["generator"].split("@")[0] for it in items}
     cats = {g[5:] for g in gens if g[5:] in {*lexicon.CATEGORIES, "dittatori"}}
     assert len(cats) >= 6, cats
@@ -107,7 +110,15 @@ def test_name_games_offer_four_surnames_of_one_family():
         assert sum(1 for e in it["entities"] if e.startswith("tm:p:")) == 1  # one real player: the owner of the right surname
         assert "«" in it["script"]  # the script says what the word means
     played = [it for it in items if it["generator"].split("@")[0] != "nomi_gol"]
-    assert all("ha giocato" in it["question"] and "Nessun giocatore di cognome" in it["script"] for it in played)
+    assert all("ha giocato" in it["question"] and "sono cognomi di calciatori veri" in it["script"] for it in played)
+    # credible wrong options: words of the same family, never made-up plurals like «Salmoni» or «Topi»
+    family = {f"nomi_{c}": {lexicon_word for lexicon_word in words} for c, words in lexicon.CATEGORIES.items()}
+    family["nomi_dittatori"] = set(lexicon.CATEGORIES["storia"])
+    for it in played:
+        g = it["generator"].split("@")[0]
+        lower = {o.lower() for o in it["options"]}
+        assert lower <= family[g], (it["options"], g)
+    assert not any(o in {"Salmoni", "Topi", "Cani", "Maiali"} for it in items for o in it["options"])
     goals = [it for it in items if it["generator"].split("@")[0] == "nomi_gol"]
     assert all(re.search(r"almeno \d+ gol", it["question"]) for it in goals)
 

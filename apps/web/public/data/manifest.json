@@ -1,6 +1,6 @@
 {
   "version": "2026-11-15",
-  "generatedAt": "2026-11-15T16:08:26+00:00",
+  "generatedAt": "2026-11-15T23:01:34+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 3600,
@@ -38,8 +38,8 @@
   ],
   "filters": {
     "tiro_secco": {
-      "kept": 7761,
-      "excluded_show": 218,
+      "kept": 9392,
+      "excluded_show": 224,
       "excluded_not_notable": 0
     },
     "mercato": {

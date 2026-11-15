@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v8.1** (novembre 2026): nel Tiro Secco le opzioni sbagliate dei giochi di nomi sono **cognomi veri di calciatori** della stessa famiglia (Gallo · Gatto · Cavallo · Leone), non più parole finte; i record usano distrattori **dello stesso ruolo**; nuovo record «subentrato in gol entro 2 minuti» (§4.1, §4.2). Richiesta di usare le API interne di SofaScore aggirando Cloudflare: **non accolta**, resta valida la decisione di §0.5 (servirebbe una licenza).
+>
 > **v8** (novembre 2026): TRIVELA si **installa come app** a tutto schermo (§12.7); con due telefoni senza Regia «Avanti» e «Prossimo indizio» si decidono **in due** (§12.8); vibrazioni e aree di tocco da 48 px (§12.9); tocchi **3D voxel**: il pulsantone dei telefoni, il pallone delle attese, la coppa del vincitore (§14.2).
 >
 > **v7** (novembre 2026), decisioni del committente:
@@ -395,14 +397,17 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   Undici famiglie: animali, personaggi storici, **dittatori**, città, colori, mestieri, cibo, piante, titoli nobiliari, parole di chiesa, calendario. Per le famiglie legate a una lingua la domanda dice la lingua («in portoghese») e le opzioni sbagliate sono nella stessa lingua (in italiano anche nello stesso numero: Gatti con Cani, Gallo con Cane).
 - **Regole dei giochi di nomi**:
   - la risposta giusta è il **cognome di una sola parola** di un giocatore vero e noto (nome e cognome distinti: niente nomi d'arte come «Ganso» o «Chory Castro»), che combacia con una voce del lessico, accenti compresi;
-  - le opzioni sbagliate sono parole di `lexicon.DECOYS` che il dataset dimostra **non essere il nome di nessun giocatore** della competizione: si controllano tutte le righe (presenze, righe di presenza, formazioni, gol), di tutte le stagioni, e ogni parola del nome. Sono parole, non giocatori: nessuno viene inventato;
+  - le opzioni sbagliate (v8.1) sono **cognomi veri di calciatori** presenti nel dataset (di qualunque campionato o livello), scritti come li porta il giocatore e della stessa famiglia e lingua della risposta: per «Gatti» in Serie A, «Volpi», «Orsi», «Lupi»; per «Gallo», «Gatto», «Cavallo», «Leone». Il dataset dimostra che **nessun giocatore con quel cognome ha giocato nella competizione**: si controllano tutte le righe (presenze, righe di presenza, formazioni, gol), di tutte le stagioni, e ogni parola del nome. Le parole inventate come «Salmoni» o «Topi» (v7.1) sono state tolte perché svelavano la risposta. Servono tre cognomi così: se mancano, la domanda non viene fatta (oggi circa 270);
   - per i gol una sola persona deve aver raggiunto la soglia (100, 50, 30, 20, 10 o 5), contando solo le stagioni con i gol completi; un'opzione sbagliata può essere anche un cognome vero della stessa famiglia, se tutti quelli che lo portano insieme non arrivano a un quarto della soglia;
   - una domanda per cognome e competizione; lo script dice di chi è il cognome, che cosa significa e perché le altre tre sono sbagliate;
   - i tipi «chi è?», «l'intruso», «più gol», «più presenze» e «chi ha giocato» con nomi completi della v7 sono stati **tolti**: non si capiva che cosa c'entrasse il cognome.
-- Stato: 3600 domande (circa 1770 curiosità, 1270 record, 565 giochi di nomi) su 85 generatori. Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
+- Stato: 3600 domande (circa 1800 curiosità, 1525 record, 270 giochi di nomi). Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
 
 ### 4.2 I record rarissimi del Tiro Secco (ex *L'Anomalia Statistica*)
 - Fino alla v6 erano un gioco a sé (`anomalia`, +3 a domanda); dalla v7 sono domande del Tiro Secco (+2), generate da `data/trivela_data/gen_anomalie.py`.
+- **Distrattori dello stesso ruolo** (v8.1): le tre opzioni sbagliate sono giocatori famosi, della stessa età circa e dello **stesso ruolo** della risposta (un attaccante non è mai nascosto tra tre portieri); solo se il ruolo ne ha meno di tre si allarga a tutti i ruoli.
+- **Nuovo record (v8.1)**: un **subentrato che segna entro 2 minuti dal suo ingresso** (`an_gol_lampo_2`, stesso minuto compreso), dai minuti di sostituzione e gol del dataset; lo script dice al minuto quando è entrato e quando ha segnato.
+- **Non fattibili con la fonte attuale**: voti in pagella (SofaScore Rating) e rigori sbagliati in partita. Il dataset non li contiene e la fonte che li ha (SofaScore) non si può usare senza licenza (§0.5, invariante 9).
 - **Regola di rarità (v6.1)**: entrano solo eventi che nelle prime cinque leghe europee e in Champions League succedono poche volte l'anno. Sono stati **tolti** i record comuni: un subentrato che segna (anche una doppietta), un difensore con almeno 6 gol in stagione, un attaccante a secco in 25 partite, 15 gol senza rigori, 100 presenze senza espulsioni, 30 partite senza ammonizioni, un gol con due squadre diverse nella stessa stagione, una tripletta di un centrocampista.
 - Una sola opzione ha davvero fatto quella cosa; le altre tre sono **giocatori noti** (o partite) per cui il record è falso sugli stessi dati. Tutte e quattro passano il filtro notorietà.
 - Tipi di record (13 generatori, `data/trivela_data/gen_anomalie.py`):
