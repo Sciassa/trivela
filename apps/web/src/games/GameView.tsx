@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { AnomaliaItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
-import type { EngineCtx, GameStateAny, Intent, MatchState } from "@trivela/engine";
+import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TiroSeccoItem } from "@trivela/protocol";
+import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
 
@@ -50,7 +50,17 @@ function RevealFooter({ g, state, dispatch, sources, solution }: { g: GameStateA
   );
 }
 
-/* ------------------------------------------------------------ Four-option quizzes: Tiro Secco, L'Anomalia */
+/** Without countdowns the player on turn can give up an answer (it counts as the time running out). */
+function PassButton({ state, dispatch, player, label = "PASSO" }: { state: MatchState; dispatch: (i: Intent) => void; player: PlayerIdx | null; label?: string }) {
+  if (isTimed(state.config) || player === null) return null;
+  return (
+    <button className="btn small ghost pass-btn" onClick={() => dispatch({ type: "SKIP", player })}>
+      {label}
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------ Tiro Secco */
 
 /** The four options with the keyboard shortcuts, the reveal colours and the answers disabled on a read-only Screen. */
 function FourOptions({ item, g, dispatch }: { item: { options: string[]; correct: number }; g: GameStateAny; dispatch: (i: Intent) => void }) {
@@ -85,14 +95,13 @@ function FourOptions({ item, g, dispatch }: { item: { options: string[]; correct
 }
 
 function TiroSecco({ state, g, dispatch, start }: GameProps) {
-  const item = g.items[g.i] as TiroSeccoItem | AnomaliaItem;
-  const anomaly = g.game === "anomalia";
+  const item = g.items[g.i] as TiroSeccoItem;
   return (
     <>
       <TurnBar state={state} p={g.turn} info={`DOMANDA ${g.i + 1}/${g.items.length}`} />
       <StateTimer state={state} start={start} />
       <div className="q-card" key={g.i}>
-        {anomaly && <div className="anomaly-tag">⚠ RECORD BIZZARRO · {String((item as AnomaliaItem).kind).toUpperCase()}</div>}
+        {item.tag && <div className={`q-tag ${item.tag}`}>{item.tag === "record" ? "⚠ RECORD RARISSIMO" : "✎ GIOCO DI NOMI"}</div>}
         <div className="q">{item.question}</div>
       </div>
       <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
@@ -159,6 +168,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
     );
   };
   const solo = state.config.solo === true;
+  const timed = isTimed(state.config);
   return (
     <div className={`buzz-layout ${tableMode ? "table-mode" : ""} ${solo ? "solo" : ""}`}>
       {side(0)}
@@ -172,9 +182,9 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
             </span>
             <span className="grow" />
             {g.stage === "ready" && <span className="px blink c-accent">PRONTI…</span>}
-            {g.free && g.stage === "clues" && !readonly && (
-              <button className="btn small ghost" onClick={() => dispatch({ type: "REVEAL_CLUE" })} disabled={g.revealed >= total}>
-                SCOPRI INDIZIO
+            {g.stage === "clues" && !readonly && (g.free || !timed) && (
+              <button className={`btn small ${timed ? "ghost" : "next-clue"}`} onClick={() => dispatch({ type: "REVEAL_CLUE" })} disabled={timed && g.revealed >= total}>
+                {g.revealed >= total ? "NESSUNO LO SA ▶" : timed ? "SCOPRI INDIZIO" : "PROSSIMO INDIZIO ▶"}
               </button>
             )}
           </div>
@@ -195,6 +205,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
             <div className="col" style={{ gap: 10 }}>
               <TurnBar state={state} p={g.buzzer} text="RISPONDE" />
               {readonly ? <PhoneHint /> : <AnswerBox index={ctx.index} placeholder="Chi è?" onSubmit={(text) => dispatch({ type: "ANSWER", player: g.buzzer, payload: { text } })} />}
+              {!readonly && <PassButton state={state} dispatch={dispatch} player={g.buzzer} label="NON LO SO" />}
             </div>
           )}
           {g.stage === "reveal" && (
@@ -252,6 +263,7 @@ function Decina({ state, g, dispatch, ctx, start }: GameProps) {
         ))}
       </div>
       {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={`${g.turn}-${said.length}-${g.errors.join()}`} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
+      {g.stage === "ask" && !readonly && <PassButton state={state} dispatch={dispatch} player={g.turn} />}
       {g.stage === "feedback" && <Result last={g.last} players={namesOf(state)} />}
       {final && (
         <>
@@ -393,6 +405,7 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
       </div>
       {spare.length > 0 && <div className="sub">A pari merito, valevano anche: {spare.map((r) => r.name).join(", ")}.</div>}
       {g.stage === "ask" && (readonly ? <PhoneHint /> : <AnswerBox key={g.shots.join()} index={ctx.index} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} submitLabel="TIRA!" />)}
+      {g.stage === "ask" && !readonly && <PassButton state={state} dispatch={dispatch} player={g.turn} label="NON TIRO" />}
       {g.stage === "feedback" && (
         <>
           <div className={`shout ${g.last?.ok ? "c-ok" : "c-ko"}`}>{g.last?.ok ? "GOOOL!" : "PARATA!"}</div>
@@ -539,8 +552,6 @@ function Maglia({ state, g, dispatch, start }: GameProps) {
 export function GameView(props: GameProps) {
   switch (props.g.game) {
     case "tiro_secco":
-      return <TiroSecco {...props} />;
-    case "anomalia":
       return <TiroSecco {...props} />;
     case "decina":
       return <Decina {...props} />;

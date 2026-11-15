@@ -1,4 +1,6 @@
-"""L'Anomalia Statistica: multiple-choice questions on genuinely rare, counter-intuitive records (SPEC §4.2).
+"""Tiro Secco, rare records (SPEC §4.1): multiple-choice questions on genuinely rare, counter-intuitive facts.
+
+They used to be a game of their own (L'Anomalia Statistica) and are now one family of Tiro Secco questions, tagged "record".
 
 Every question has one option for which the record is true and three options for which it is false on the same data.
 Only events that happen a handful of times per season in the whole of Europe's top flights qualify: a goalkeeper
@@ -98,7 +100,7 @@ class Anomalie(Quiz):
             return False
         g = gen if comp in ("IT1", "CL") else f"{gen}@estero"
         it = base(g, key, year=year, fame=fame, entities=[f"comp:{comp}", *entities], sources=sources, script=script)
-        it.update({"question": question, "options": o[0], "correct": o[1], "kind": kind})
+        it.update({"question": question, "options": o[0], "correct": o[1], "archetype": 5, "tag": "record"})
         self.out.append(it)
         return True
 
@@ -339,4 +341,4 @@ class Anomalie(Quiz):
 
 
 def generate(t) -> dict[str, list[dict]]:
-    return {"anomalia": Anomalie(t).run()}
+    return {"tiro_secco": Anomalie(t).run()}

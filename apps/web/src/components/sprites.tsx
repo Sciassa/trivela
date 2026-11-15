@@ -18,7 +18,6 @@ const MAPS = {
   ball: ["....wwww....", "..wwkwwkww..", ".wwkkwwkkww.", ".wkwwwwwwkw.", "wwwwwkkwwwww", "wkwwkkkkwwkw", "wkwwkkkkwwkw", "wwwwwkkwwwww", ".wkwwwwwwkw.", ".wwkkwwkkww.", "..wwkwwkww..", "....wwww...."],
   trophy: [".yyyyyyyyyy.", "yyyyyyyyyyyy", "y.yyyyyyyy.y", "y.yywyyyyy.y", ".yyywyyyyyy.", "..yyyyyyyy..", "...yyyyyy...", "....yyyy....", ".....yy.....", ".....yy.....", "...yyyyyy...", "..yyyyyyyy.."],
   tiro_secco: ["....rrrr....", "..rrwwwwrr..", ".rwwwwwwwwr.", ".rwwrrrrwwr.", "rwwrrwwrrwwr", "rwwrwrrwrwwr", "rwwrwrrwrwwr", "rwwrrwwrrwwr", ".rwwrrrrwwr.", ".rwwwwwwwwr.", "..rrwwwwrr..", "....rrrr...."],
-  anomalia: [".....yy.....", ".....yy.....", "....yyyy....", "....ykky....", "...yykkyy...", "...yykkyy...", "..yyykkyyy..", "..yyyyyyyy..", ".yyyykkyyyy.", ".yyyykkyyyy.", "yyyyyyyyyyyy", "yyyyyyyyyyyy"],
   mercato: ["....yyyy....", "..yyyyyyyy..", ".yyyyookyyy.", ".yyyookkyyy.", "yyyooyyyyyyy", "yyoooooyyyyy", "yyyooyyyyyyy", "yyoooooyyyyy", ".yyyookkyyy.", ".yyyyookyyy.", "..yyyyyyyy..", "....yyyy...."],
   decina: ["............", ".yy..yyyyy..", "yyy.yy...yy.", ".yy.yy...yy.", ".yy.yy...yy.", ".yy.yy...yy.", ".yy.yy...yy.", ".yy.yy...yy.", ".yy.yy...yy.", "yyyy.yyyyy..", "............", "............"],
   dischetto: ["wwwwwwwwwwww", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "w..........w", "w....ww....w", "gggwkwwkwggg", "gggwwkkwwggg", "ggggwwwwgggg", "gggggggggggg"],
@@ -59,7 +58,6 @@ export const GameIcon = ({ game, size, className }: { game: GameId; size?: numbe
 /** Accent colour of each game (HUD badge, intro card). */
 export const GAME_COLORS: Record<GameId, string> = {
   tiro_secco: "#ff5a5a",
-  anomalia: "#ff6b35",
   mercato: "#ffe600",
   decina: "#ff9f1c",
   dischetto: "#39ff14",

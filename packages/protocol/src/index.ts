@@ -5,7 +5,6 @@
 
 export const GAME_IDS = [
   "tiro_secco",
-  "anomalia",
   "mercato",
   "decina",
   "dischetto",
@@ -98,15 +97,8 @@ export interface TiroSeccoItem extends InstanceMeta {
   options: [string, string, string, string];
   correct: 0 | 1 | 2 | 3;
   archetype: 1 | 2 | 3 | 4 | 5 | 6;
-}
-
-/** Statistical anomaly: a bizarre record, one option true and three famous players for whom it is false. */
-export interface AnomaliaItem extends InstanceMeta {
-  question: string;
-  options: [string, string, string, string];
-  correct: 0 | 1 | 2 | 3;
-  /** Kind of record (portiere, difensore, panchina, disciplina…), shown as a label. */
-  kind: string;
+  /** Family of the question, shown as a small label: "record" (rare records) or "nomi" (word games on names). */
+  tag?: "record" | "nomi";
 }
 
 export interface MercatoItem extends InstanceMeta {
@@ -171,7 +163,6 @@ export interface MagliaItem extends InstanceMeta {
 
 export interface PackItems {
   tiro_secco: TiroSeccoItem[];
-  anomalia: AnomaliaItem[];
   mercato: MercatoItem[];
   decina: SetItem[];
   dischetto: DischettoItem[];
@@ -196,5 +187,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], anomalia: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [] };
 }

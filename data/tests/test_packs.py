@@ -10,7 +10,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "anomalia", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -55,28 +55,19 @@ def test_league_tags():
         assert len(enough) >= 5, (lg, enough)
 
 
-def test_anomalia_has_four_famous_options_and_variety():
-    items = load("anomalia")
-    for it in items:
-        assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4 and it["kind"]
-        # the perimeter is stated in the question, or (for "which game") in every option
-        assert re.search(r"\d{4}/\d{2}|\d{4}", it["question"]) or "stagioni" in it["question"] or all(re.search(r"\d{4}/\d{2}", o) for o in it["options"])
-    assert len({it["generator"].split("@")[0] for it in items}) >= 8
-    assert any("tripletta" in it["question"] and "difensori" in it["question"] for it in items)  # the flagship anomaly
-    assert any("portieri" in it["question"] and "assist" in it["question"] for it in items)
-    assert any("panchina" in it["question"] for it in items)
-
-
 RARE_ANOMALIES = {"an_portiere_gol", "an_difensore_tripletta", "an_difensore_doppietta", "an_panchina_tripletta", "an_poker", "an_autogol_e_gol",
                   "an_subentrato_espulso_5", "an_subentrato_espulso_10", "an_espulso_presto_5", "an_espulso_presto_10", "an_tre_espulsi",
                   "an_andata_ritorno", "an_portiere_assist"}
 
 
-def test_anomalia_only_genuinely_rare_records():
-    """Everyday events (a substitute scoring, a forward without a goal, 100 games without a red card) are not anomalies."""
-    items = load("anomalia")
+def test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare():
+    """The old Anomalia game is one family of Tiro Secco questions. Everyday events (a substitute scoring, a forward without a goal) are not records."""
+    assert not (DATA / "games" / "anomalia.json").exists()
+    items = [it for it in load("tiro_secco") if it.get("tag") == "record"]
+    assert len(items) >= 400
     gens = {it["generator"].split("@")[0] for it in items}
     assert gens <= RARE_ANOMALIES, gens - RARE_ANOMALIES
+    assert all(it["generator"].startswith("an_") for it in items)
     # the headline records the game promises are all there
     for must in ("an_portiere_gol", "an_autogol_e_gol", "an_subentrato_espulso_5", "an_difensore_tripletta", "an_tre_espulsi", "an_andata_ritorno"):
         assert must in gens, must
@@ -94,6 +85,63 @@ def test_anomalia_only_genuinely_rare_records():
             assert int(re.search(r"con (\d+) giocatori espulsi", it["script"]).group(1)) >= 3, it["script"]
         if g == "an_autogol_e_gol":
             assert "autogol" in it["script"] and "gol per la propria squadra" in it["script"]
+
+
+def test_name_games_cross_surnames_with_real_players():
+    """Word games on surnames: every option is a real person of the index, and at least six families of meanings are there."""
+    from trivela_data import lexicon
+
+    items = [it for it in load("tiro_secco") if it.get("tag") == "nomi"]
+    assert len(items) >= 300
+    gens = {it["generator"].split("@")[0] for it in items}
+    cats = {g[5:] for g in gens if g[5:] in {*lexicon.CATEGORIES, "dittatori"}}
+    assert len(cats) >= 6, cats
+    assert {"animali", "dittatori", "citta"} <= cats
+    assert {"nomi_gol", "nomi_soglia", "nomi_presenze", "nomi_campionato"} <= gens  # crossed with statistics
+    people = {e["name"] for e in json.loads((DATA / "entities.json").read_text(encoding="utf-8"))}
+    for it in items:
+        assert all(o in people for o in it["options"]), it["options"]  # nobody is made up
+        assert sum(1 for e in it["entities"] if e.startswith("tm:p:")) == 4
+        assert "«" in it["script"]  # the script says which word is meant
+    animals = [it for it in items if it["generator"].split("@")[0] == "nomi_soglia" and "animale" in it["question"]]
+    assert animals and all(re.search(r"almeno \d+ gol", it["question"]) for it in animals)
+
+
+def test_lexicon_words_are_lower_case_and_unambiguous():
+    from trivela_data import lexicon
+
+    for cat, words in lexicon.CATEGORIES.items():
+        for w, (meaning, note) in words.items():
+            assert w == w.strip().lower() and meaning and note, (cat, w)
+    assert all(c in {*lexicon.CATEGORIES, "dittatori"} for cs in lexicon.ALSO.values() for c in cs)
+
+
+def test_formazione_only_iconic_matches():
+    """Cups from the quarter-finals on; league games only as derbies, first against second, or freak scores."""
+    items = load("formazione")
+    kinds = {it["generator"] for it in items}
+    assert kinds <= {"formazione_coppa", "formazione_derby", "formazione_vetta", "formazione_punteggio"}, kinds
+    assert len(kinds) == 4
+    for it in items:
+        comp = it["competition"]
+        if it["generator"] == "formazione_coppa":
+            assert re.search(r"quarti|semifinale|finale", comp), comp
+            assert not re.search(r"girone|ottavi|giornata|spareggi", comp), comp
+        elif it["generator"] == "formazione_punteggio":
+            a, b = map(int, re.search(r" (\d+)-(\d+)$", it["title"]).groups())
+            assert a + b >= 8 or abs(a - b) >= 6, it["title"]
+        else:
+            assert "giornata" in comp, comp
+
+
+def test_dischetto_has_the_new_rankings():
+    gens = {it["generator"].split("@")[0] for it in load("dischetto")}
+    for g in ("dis_league_reds", "dis_league_subapps", "dis_season_subapps", "dis_league_shirts", "dis_season_old", "dis_tournament_scorers"):
+        assert g in gens, g
+    shirts = [it for it in load("dischetto") if it["generator"].split("@")[0] == "dis_league_shirts"]
+    assert any("Serie A" in it["title"] for it in shirts)
+    for it in load("dischetto"):
+        assert not any(r["name"].startswith("#") for r in it["ranking"]), it["title"]
 
 
 def test_maglia_asks_for_a_number_and_skips_banal_ones():

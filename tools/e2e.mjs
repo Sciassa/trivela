@@ -21,7 +21,7 @@ const http = createServer();
 new WebSocketServer({ server: http }).on("connection", (ws) => broker.handle(createWebSocketStream(ws)));
 await new Promise((res) => http.listen(0, res));
 const RELAY = `ws://localhost:${http.address().port}`;
-const GAMES = "tiro_secco,maglia,mercato,decina,anomalia";
+const GAMES = "tiro_secco,maglia,mercato,decina,formazione";
 const ROOM = `${BASE}/?relay=${encodeURIComponent(RELAY)}&games=${GAMES}`;
 
 const server = spawn("pnpm", ["--filter", "@trivela/web", "exec", "vite", "preview", "--port", String(PORT), "--strictPort"], { stdio: "pipe", detached: true });

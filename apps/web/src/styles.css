@@ -524,8 +524,10 @@ table.table tr.top td { color: var(--accent); }
 .timerpad-keys { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
 .timerpad-keys .btn { font-size: 13px; min-height: 54px; padding: 10px 6px; }
 
-/* L'Anomalia Statistica */
-.anomaly-tag { font-family: var(--pixel); font-size: 15px; color: var(--bg); background: var(--warn); display: inline-block; padding: 8px 12px; margin-bottom: 12px; animation: blink 1.4s steps(2) infinite; }
+/* Tiro Secco: label of the family of the question */
+.q-tag { font-family: var(--pixel); font-size: 15px; color: var(--bg); background: var(--warn); display: inline-block; padding: 8px 12px; margin-bottom: 12px; }
+.q-tag.nomi { background: #c9a8ff; }
+.page .q-tag, .phone-shell .q-tag { font-size: 10px; padding: 6px 8px; margin-bottom: 8px; }
 
 /* discreet exit controls and the confirmation dialog */
 .exit-btn { position: absolute; top: 6px; right: 6px; z-index: 40; width: 52px; height: 52px; display: grid; place-items: center; background: transparent; border: 0; color: #fff; opacity: .38; transition: opacity .15s, filter .15s; padding: 0; }

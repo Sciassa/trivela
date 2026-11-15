@@ -147,7 +147,10 @@ export class RoomCore {
       case "FINISH":
         return g && g.turn === me ? intent : null;
       case "REVEAL_CLUE":
-        return g && g.free && !g.out?.[me] ? intent : null;
+        // after a wrong answer of the opponent; with no countdowns, whoever is still in may ask for the next clue
+        return g && (g.free || this.state.config.timer === false) && !g.out?.[me] ? intent : null;
+      case "SKIP":
+        return g && g.turn === me ? { ...intent, player: me } : null;
       default:
         return null;
     }
