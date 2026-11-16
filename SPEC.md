@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v10 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v11 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v11** (novembre 2026): *Il Mercato* pesca i trasferimenti di **tutti e cinque i campionati**, rispettando i campionati scelti (cedente o acquirente in quel campionato al momento del trasferimento), e circa **4 su 5 valgono almeno 20 milioni**; quelli più economici sono più rari e solo di giocatori noti (§4.3).
+
 > **v10** (novembre 2026): il **Tiro Secco** cambia il modo di scegliere le opzioni sbagliate, che si scartavano a colpo d'occhio: ora sono **famose quanto la risposta**, sono **«quasi riusciti»** dove i dati lo permettono, e **ogni fatto raro diventa una sola domanda** (§4.1, §4.2). *La Maglia*: una domanda per maglia e al massimo due per giocatore; il motore non chiede due volte della stessa persona nella stessa partita e la fa riposare per 6 partite su quel dispositivo (§4.10, §5.3). La **tastiera di gioco** dice se il nome appena inviato è giusto o sbagliato (§10.4), con una vibrazione (§12.9). Valutata la fonte *GOAL API* (`goal-api.com`, alternativa con licenza a SofaScore): **non adottata per ora**, decisione rimandata. Non ha i voti dei giocatori e la Serie A è coperta molto meno che dal dataset.
 
 > **v8.1** (novembre 2026): nel Tiro Secco le opzioni sbagliate dei giochi di nomi sono **cognomi veri di calciatori** della stessa famiglia (Gallo · Gatto · Cavallo · Leone), non più parole finte; i record usano distrattori **dello stesso ruolo**; nuovo record «subentrato in gol entro 2 minuti» (§4.1, §4.2). Richiesta di usare le API interne di SofaScore aggirando Cloudflare: **non accolta**, resta valida la decisione di §0.5 (servirebbe una licenza).
@@ -210,7 +212,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 - **Il Giramondo** mostra la carriera in **ordine cronologico**, non più dal club meno noto al più noto. Ogni squadra compare **una volta sola, al primo arrivo**, con l'anno (es. «2019 Real Madrid», «2019 Maiorca», «2020 Villarreal»): i ritorni alla squadra già elencata (fine prestito, secondo periodo) sono omessi, perché nel dataset non c'è l'indicazione del prestito e la sequenza completa («Real Madrid → Maiorca → Real Madrid → Villarreal…») risultava illeggibile. Sullo schermo ogni passaggio è un riquadro con l'anno.
 - **Campionati a scelta** (§3.4): all'inizio di sfida, sala d'attesa e torneo si scelgono i campionati da cui pescare le domande.
 - **Dal Dischetto**: se più giocatori sono a pari merito all'ultimo posto utile, valgono finché restano posti nella Top 10 (es. 7 nomi a pari merito dal 6° posto: ne valgono 5).
-- Nel sorteggio delle domande i **tipi di domanda si alternano** (campionamento uniforme per generatore), così una partita non è dominata dal tipo con più istanze.
+- Nel sorteggio delle domande i **tipi di domanda si alternano** (campionamento uniforme per generatore), così una partita non è dominata dal tipo con più istanze. Eccezione (v11): i generatori del Mercato si pescano con un peso (§4.3).
 
 **Dati**
 
@@ -444,7 +446,11 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - Test: `test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare` (solo generatori ammessi, soglie verificate dagli script).
 
 ### 4.3 `mercato` — Il Mercato
-- **2 trasferimenti** legati alla Serie A, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
+- **2 trasferimenti**, da indovinare con 6 indizi progressivi: cifra (20), sessione e anno (15), ruolo (10), nazionalità (5), squadra cedente (3), squadra acquirente (2).
+- **Quali trasferimenti (v11)**:
+  - **campionati**: tutti e cinque, non più solo la Serie A. Un trasferimento entra se la squadra cedente o quella acquirente giocava in uno dei cinque campionati **in quel momento**: la cedente nella stagione che il giocatore lasciava (nella stessa stagione per il mercato di gennaio), l'acquirente in quella in cui arrivava. I tag `comp:` sono quei campionati. Con la sola Serie A selezionata (§3.4) escono solo giocatori ceduti da o a squadre di Serie A. Prima del 2012/13 le partite non sono nel dataset e vale il campionato attuale della squadra;
+  - **quanto valgono**: circa **4 trasferimenti su 5 sono da 20 milioni in su** (generatore `mercato`). Quelli più economici (`mercato_minore`, da 1 a 20 milioni) sono più rari e solo di **giocatori noti** (fama almeno 80: Boateng, Thauvin, Muriel, Estupiñán…). La proporzione la tiene il motore, che pesca i due generatori con peso 0,78 e 0,22 (`GENERATOR_WEIGHTS`) qualunque siano i campionati scelti; il confine dei 20 milioni è la cifra mostrata nell'indizio;
+  - pacchetto: 1857 trasferimenti (957 da almeno 20 milioni, 900 sotto). Per campionato, da almeno 20 milioni: Premier League 534, Serie A 220, Liga 211, Bundesliga 183, Ligue 1 177.
 - Prenotazione col pulsante. **Un solo tentativo per giocatore per profilo.** Chi sbaglia è fuori per quel profilo (nessuna penalità); l'avversario può farsi scoprire gli altri indizi prima di rispondere, prendendo i punti dell'ultimo indizio scoperto.
 - Con conduttore: gli indizi li scopre la Regia. Senza: un indizio ogni 8 s; dopo un errore l'avversario li scopre a comando. Tempo di risposta dopo la prenotazione: 10 s (più il tempo extra, §3.8). Con il timer spento gli indizi si scoprono con «PROSSIMO INDIZIO ▶».
 

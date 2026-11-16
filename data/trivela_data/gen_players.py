@@ -11,27 +11,59 @@ ICONIC = {7, 9, 10, 11, 45, 77, 80, 88, 99}
 SKIP_CLUB = re.compile(r"\b(U\d\d|Youth|Primavera|Retired|Without Club|Career break|Unknown|Ban|Juvenil|Sub-\d\d|Jgd|Yth)\b|\b(II|B)$", re.I)
 
 
-def mercato(t: TM, limit: int = 2500) -> list[dict]:
+# Il Mercato (SPEC §4.3, v11): about four transfers in five above 20 million (generator "mercato"); the cheaper ones
+# ("mercato_minore") are rarer, drawn with the weights of the engine, and only for players who are well known.
+BIG_FEE = 20_000_000
+MINOR_FAME = 80
+
+
+def mercato(t: TM, big_limit: int = 1500, minor_limit: int = 900) -> list[dict]:
+    """A transfer worth at least 1 million in which the selling or the buying club played in a top-five league at the time.
+
+    The `comp:` tags are those leagues, as they were in the season of the transfer (the seller in the season it was
+    leaving, the buyer in the season the player joined): with only Serie A selected, every transfer comes from or goes to
+    a Serie A club. Before 2012/13 the games are not in the dataset, so the club's league of today is used.
+    """
+    league: dict[tuple[int, int], str] = {}
+    for g in t.games(f"comp in ({','.join(repr(c) for c in L5)})"):
+        league[(g["home"], g["season"])] = g["comp"]
+        league[(g["away"], g["season"])] = g["comp"]
+    first = min(s for _, s in league)
+
+    def league_of(club, season: int) -> str | None:
+        if club is None:
+            return None
+        if season < first:
+            lg = t.club_league.get(int(club))
+            return lg if lg in L5 else None
+        return league.get((int(club), season))
+
     rows = t.q("""select tr.player_id, tr.transfer_date, tr.from_club_id, tr.to_club_id, tr.from_club_name, tr.to_club_name, tr.transfer_fee
-        from transfers tr left join clubs cf on cf.club_id = tr.from_club_id left join clubs ct on ct.club_id = tr.to_club_id
-        where tr.transfer_fee >= 1000000 and tr.transfer_date >= date '1993-07-01' and tr.transfer_date <= date '2026-07-06'
-          and (cf.domestic_competition_id = 'IT1' or ct.domestic_competition_id = 'IT1')""")
-    out = []
+        from transfers tr where tr.transfer_fee >= 1000000 and tr.transfer_date >= date '1993-07-01' and tr.transfer_date <= date '2026-07-06'""")
+    big, minor = [], []
     for pid, d, fc, tc, fn, tn, fee in rows:
         p = t.players.get(int(pid))
         if not p or not t.is_notable(pid) or not p["nat"] or not p["pos"] or not fn or not tn:
             continue
+        season = d.year if d.month >= 6 else d.year - 1  # the season the player joined
+        leagues = {league_of(tc, season), league_of(fc, season - 1 if d.month in (6, 7, 8, 9) else season)} - {None}
+        if not leagues:
+            continue  # neither club played in a top-five league then
+        fee = round(float(fee) / 100_000) * 100_000  # as shown in the clue (one decimal): 19,96 million reads «20 mln €»
+        if fee < BIG_FEE and t.fame(pid) < MINOR_FAME:
+            continue  # a cheap transfer is asked only about a well-known player
         frm, to = t.club(fc, fn) if fc else clean_club(fn), t.club(tc, tn) if tc else clean_club(tn)
-        clues = [fee_label(float(fee)), window_label(d), POS_IT.get(p["pos"], p["pos"]), nat_it(p["nat"]),
+        clues = [fee_label(fee), window_label(d), POS_IT.get(p["pos"], p["pos"]), nat_it(p["nat"]),
                  f"Squadra cedente: {frm}", f"Squadra acquirente: {to}"]
-        leagues = {t.club_league.get(int(c)) for c in (fc, tc) if c} & set(L5)
-        it = base("mercato", (pid, str(d)), year=d.year, fame=t.fame(pid), entities=["comp:IT1", *(f"comp:{lg}" for lg in leagues), t.pid(pid)],
+        gen = "mercato" if fee >= BIG_FEE else "mercato_minore"
+        it = base(gen, (pid, str(d)), year=d.year, fame=t.fame(pid), entities=[*(f"comp:{lg}" for lg in sorted(leagues)), t.pid(pid)],
                   sources=[t.src_player(pid)],
-                  script=f"{t.pname(pid)} passò {articled('da', frm, False)} {articled('a', to, False)} ({window_label(d).lower()}) per {fee_label(float(fee))}, secondo Transfermarkt.")
+                  script=f"{t.pname(pid)} passò {articled('da', frm, False)} {articled('a', to, False)} ({window_label(d).lower()}) per {fee_label(fee)}, secondo Transfermarkt.")
         it.update({"clues": clues, "flag": p["nat"], "answer": t.answer(pid)})
-        out.append((float(fee) * (1 + t.fame(pid)), it))
-    out.sort(key=lambda x: -x[0])
-    return [it for _, it in out[:limit]]
+        (big if gen == "mercato" else minor).append((fee * (1 + t.fame(pid)) if gen == "mercato" else t.fame(pid) * 1e9 + fee, it))
+    big.sort(key=lambda x: (-x[0], x[1]["id"]))
+    minor.sort(key=lambda x: (-x[0], x[1]["id"]))
+    return [it for _, it in big[:big_limit]] + [it for _, it in minor[:minor_limit]]
 
 
 def giramondo(t: TM, limit: int = 2000) -> list[dict]:

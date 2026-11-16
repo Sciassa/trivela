@@ -191,6 +191,21 @@ def test_dischetto_has_the_new_rankings():
         assert not any(r["name"].startswith("#") for r in it["ranking"]), it["title"]
 
 
+def test_mercato_mostly_big_transfers_in_every_league():
+    """SPEC §4.3 (v11): transfers of all five leagues, tagged with the leagues of the two clubs at the time; about four in
+    five worth 20 million or more (the engine draws the generators 0.78/0.22), the cheaper ones only for known players."""
+    items = load("mercato")
+    big = [it for it in items if it["generator"] == "mercato"]
+    minor = [it for it in items if it["generator"] == "mercato_minore"]
+    assert len(big) + len(minor) == len(items) and len(big) >= 900
+    millions = lambda it: float(it["clues"][0].split()[0].replace(".", "").replace(",", ".")) if "mln" in it["clues"][0] else 0.0  # noqa: E731
+    assert all(millions(it) >= 20 for it in big) and all(millions(it) < 20 for it in minor)
+    assert all(it["fame"] >= 80 for it in minor)
+    for lg in ("IT1", "GB1", "ES1", "L1", "FR1"):
+        assert sum(1 for it in big if f"comp:{lg}" in it["entities"]) >= 150, lg
+        assert sum(1 for it in minor if f"comp:{lg}" in it["entities"]) >= 50, lg
+
+
 def test_maglia_asks_for_a_number_and_skips_banal_ones():
     items = load("maglia")
     for it in items:

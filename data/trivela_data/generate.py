@@ -15,7 +15,7 @@ from .tm_core import SNAPSHOT, TM, TM_DATASET, norm
 
 GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia"]
 MIN_ITEMS = 1000
-CAPS = {"tiro_secco": 3600, "mercato": 1300, "decina": 1400, "dischetto": 1350, "formazione": 1400,
+CAPS = {"tiro_secco": 3600, "mercato": 2400, "decina": 1400, "dischetto": 1350, "formazione": 1400,
         "giramondo": 1400, "asta": 1500, "maglia": 1500}
 
 

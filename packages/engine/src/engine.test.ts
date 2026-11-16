@@ -127,6 +127,24 @@ describe("year filter and sampling", () => {
     if (!rested.ok) throw new Error(rested.reason);
     expect(rested.state.content.flat().some((m) => (m as { entities: string[] }).entities.some((e) => all.slice(0, 10).includes(e)))).toBe(false);
   });
+  it("draws about four transfers in five above 20 million (SPEC §4.3)", () => {
+    const items = [
+      ...Array.from({ length: 300 }, (_, k) => meta({ generator: "mercato", entities: [`tm:p:${k}`] })),
+      ...Array.from({ length: 300 }, (_, k) => meta({ generator: k % 2 ? "mercato_minore" : "mercato_minore@x", entities: [`tm:p:${1000 + k}`] })),
+    ];
+    let big = 0;
+    let all = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+      const picked = sampleVaried(items, 4, new Rng(seed), new Set())!;
+      expect(new Set(picked.map((p) => p.entities[0])).size).toBe(4);
+      big += picked.filter((p) => p.generator === "mercato").length;
+      all += picked.length;
+    }
+    expect(big / all).toBeGreaterThan(0.73);
+    expect(big / all).toBeLessThan(0.83);
+    // with no cheap transfer left (e.g. a narrow league filter), the big ones still fill the game
+    expect(sampleVaried(items.slice(0, 300), 6, new Rng(1), new Set())!.length).toBe(6);
+  });
   it("respects draw constraints", () => {
     for (let seed = 1; seed < 200; seed++) {
       const d = drawGames(new Rng(seed), POOL);
