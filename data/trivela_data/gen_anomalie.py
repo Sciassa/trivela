@@ -25,8 +25,9 @@ from .tm_core import IN_COMP, L5, SRC_DATASET, base, date_it, opts4, season_labe
 COMPS = (*L5, "CL")
 SING = {"Defender": "difensore", "Midfield": "centrocampista", "Attack": "attaccante", "Goalkeeper": "portiere"}
 WORD = {1: "un gol", 2: "due gol", 3: "tre gol", 4: "quattro gol"}
-# how many differently-worded-by-options variants one rare event may yield (distinct distractor triples); rarer events get more
-MAX_VARIANTS = 6
+# one question per rare event (SPEC §4.2, v10): six variants of the same fact with other company were six times the same
+# question, and the second time everybody remembers the answer
+MAX_VARIANTS = 1
 
 
 def longest_run(ok: dict[int, bool], min_seasons: int) -> tuple[int, int] | None:
@@ -112,15 +113,17 @@ class Anomalie(Quiz):
         return n
 
     def pool(self, pid: int, comp: str, season: int, line: str | None, k: int = 80) -> list[int]:
-        """Famous players of the same age group who played in the comp around that season (same role when given)."""
+        """Known players of the same age group who played in the comp around that season (same role when given), as famous
+        as the answer: closest in fame first. Three stars around an unknown name gave the answer away (SPEC §4.2, v10)."""
         t = self.t
         yob = (t.players[pid]["dob"] or dt.date(1990, 1, 1)).year
         cand = set()
         for s in (season - 1, season, season + 1):
             cand |= self.season_players.get((comp, s), set())
         cand.discard(pid)
-        ok = [p for p in cand if t.players[p]["dob"] and abs(t.players[p]["dob"].year - yob) <= 6 and (line is None or self.line.get(p) == line)]
-        return sorted(ok, key=lambda p: (-t.fame(p), p))[:k]
+        ok = [p for p in cand if t.is_notable(p) and t.players[p]["dob"] and abs(t.players[p]["dob"].year - yob) <= 6
+              and (line is None or self.line.get(p) == line)]
+        return t.near_in_fame(t.fame(pid), ok, seed=(pid, comp, line))[:k]
 
     def trusted_cards(self, pid: int, comp: str) -> bool:
         """Every game he played in the comp has cards on which both records agree."""
@@ -133,16 +136,24 @@ class Anomalie(Quiz):
     def window(self, comp: str, kind: str, min_seasons: int = 5):
         return longest_run(self.ok[comp][kind], min_seasons)
 
-    def distractors(self, pid: int, comp: str, season: int, owners: set[int], check, line: str | None = None, n: int = 14) -> list[str]:
-        """Famous players of the same age group for whom the record is false. Same role as the right answer (SPEC §4.2,
-        v7.2): a striker is never hidden among three goalkeepers. Only when a role has too few, any role."""
+    def distractors(self, pid: int, comp: str, season: int, owners: set[int], check, line: str | None = None, n: int = 14,
+                    near: set[int] | None = None) -> list[str]:
+        """Known players for whom the record is false, as famous as the right answer. Same role (SPEC §4.2, v7.2): a striker
+        is never hidden among three goalkeepers; only when a role has too few, any role.
+
+        `near` are the near misses (SPEC §4.2, v10): players who came close to the record without reaching it, e.g. a
+        defender with many goals but never two in one game. They come first, so that the wrong options are not
+        recognisable as wrong at a glance."""
         t = self.t
 
         def pick(role: str | None) -> list[str]:
-            ds = []
-            for q in self.pool(pid, comp, season, role):
-                if q not in owners and check(q, comp):
-                    ds.append(t.pname(q))
+            ds: list[str] = []
+            close = [q for q in (near or ()) if q != pid and t.is_notable(q) and (q, comp) in self.seasons_of
+                     and (role is None or self.line.get(q) == role)]
+            for q in [*t.near_in_fame(t.fame(pid), close, seed=(pid, comp, "near")), *self.pool(pid, comp, season, role)]:
+                name = t.pname(q)
+                if q not in owners and name not in ds and check(q, comp):
+                    ds.append(name)
                 if len(ds) >= n:
                     break
             return ds
@@ -165,9 +176,19 @@ class Anomalie(Quiz):
         owners = defaultdict(set)  # comp -> players for whom the record is true
         for (pid, comp) in best:
             owners[comp].add(pid)
+        # near misses: one goal short of the record in their best game (a defender's brace, for a hat-trick)
+        most = defaultdict(int)
+        for pid, lst in self.pgoals.items():
+            for d, comp, season, gid, club, n in lst:
+                if comp in COMPS and (not as_sub or (gid, pid) in self.subin):
+                    most[(pid, comp)] = max(most[(pid, comp)], n)
+        near = defaultdict(set)
+        for (pid, comp), n in most.items():
+            if min_goals >= 2 and n == min_goals - 1:
+                near[comp].add(pid)
         clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
         for (pid, comp), (d, season, gid, n) in sorted(best.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
-            ds = self.distractors(pid, comp, season, owners[comp], clean, line)
+            ds = self.distractors(pid, comp, season, owners[comp], clean, line, near=near[comp])
             g = self.G[gid]
             who = f"Quale di questi {subject} {what} {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
             self.emit(gen, (pid, comp), who, t.pname(pid), ds, v, year=d.year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
@@ -189,10 +210,14 @@ class Anomalie(Quiz):
         owners = defaultdict(set)
         for (pid, comp) in events:
             owners[comp].add(pid)
+        # near misses: players who scored an own goal in the comp, but never together with a goal of their own
+        near = defaultdict(set)
+        for pid, comp in t.q(f"select o.pid, gm.comp from goal o join gm on gm.gid = o.gid where o.own and gm.comp in ({self.cmp}) group by 1, 2"):
+            near[comp].add(int(pid))
         clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
         for (pid, comp), (gid, gmin, omin) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
             g = self.G[gid]
-            ds = self.distractors(pid, comp, g["season"], owners[comp], clean)
+            ds = self.distractors(pid, comp, g["season"], owners[comp], clean, near=near[comp])
             q = f"Quale di questi giocatori ha segnato un autogol e un gol per la propria squadra nella stessa partita {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
             self.emit("an_autogol_e_gol", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
                       sources=[t.src_game(g), t.src_player(pid)], kind="autogol",
@@ -213,10 +238,15 @@ class Anomalie(Quiz):
             everyone[comp].add(pid)
             if t.is_notable(pid):
                 events.setdefault((pid, comp), (gid, int(sm), int(gmin)))
+        # near misses: substitutes who scored soon after coming on, but not that soon
+        near = defaultdict(set)
+        for pid, comp in t.q(f"""select s.pin, gm.comp from sub s join goal g on g.gid = s.gid and g.pid = s.pin and not g.own
+                and g.minute - s.minute between {limit + 1} and 15 join gm on gm.gid = s.gid where gm.comp in ({self.cmp}) group by 1, 2"""):
+            near[comp].add(int(pid))
         clean = lambda q, comp: self.clean_history(q, comp, END)  # noqa: E731
         for (pid, comp), (gid, sm, gmin) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
             g = self.G[gid]
-            ds = self.distractors(pid, comp, g["season"], everyone[comp], clean)
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], clean, near=near[comp])
             q = f"Quale di questi giocatori è entrato dalla panchina e ha segnato entro {limit} minuti dal suo ingresso {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
             when = "nello stesso minuto" if gmin == sm else f"{gmin - sm} minut{'o' if gmin - sm == 1 else 'i'} dopo"
             self.emit(f"an_gol_lampo_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
@@ -237,10 +267,15 @@ class Anomalie(Quiz):
             everyone[self.G[gid]["comp"]].add(pid)
             if gid in self.cards_ok and t.is_notable(pid) and rm - sm >= lo:
                 events.setdefault((pid, self.G[gid]["comp"]), (gid, int(sm), int(rm)))
+        # near misses: substitutes sent off later in the game
+        near = defaultdict(set)
+        for pid, comp in t.q(f"""select s.pin, gm.comp from sub s join red d on d.gid = s.gid and d.pid = s.pin and d.minute - s.minute between {limit} and 40
+                join gm on gm.gid = s.gid where gm.comp in ({self.cmp}) group by 1, 2"""):
+            near[comp].add(int(pid))
         check = lambda q, comp: self.trusted_cards(q, comp)  # noqa: E731
         for (pid, comp), (gid, sm, rm) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
             g = self.G[gid]
-            ds = self.distractors(pid, comp, g["season"], everyone[comp], check)
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], check, near=near[comp])
             q = f"Quale di questi giocatori è stato espulso meno di {limit} minuti dopo essere entrato dalla panchina {IN_COMP[comp]} (stagioni 2012/13–2025/26)?"
             self.emit(f"an_subentrato_espulso_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
                       sources=[t.src_game(g), t.src_player(pid)], kind="disciplina",
@@ -257,10 +292,15 @@ class Anomalie(Quiz):
             everyone[self.G[gid]["comp"]].add(pid)
             if gid in self.cards_ok and t.is_notable(pid) and m > lo:
                 events.setdefault((pid, self.G[gid]["comp"]), (gid, int(m)))
+        # near misses: starters sent off in the first half hour, but not that early
+        near = defaultdict(set)
+        for pid, comp in t.q(f"""select d.pid, gm.comp from red d join pres p on p.gid = d.gid and p.pid = d.pid and p.starter
+                join gm on gm.gid = d.gid where gm.comp in ({self.cmp}) and d.minute between {limit + 1} and 30 group by 1, 2"""):
+            near[comp].add(int(pid))
         check = lambda q, comp: self.trusted_cards(q, comp)  # noqa: E731
         for (pid, comp), (gid, m) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
             g = self.G[gid]
-            ds = self.distractors(pid, comp, g["season"], everyone[comp], check)
+            ds = self.distractors(pid, comp, g["season"], everyone[comp], check, near=near[comp])
             q = f"Quale di questi giocatori è stato espulso nei primi {limit} minuti di una partita {IN_COMP[comp]}, da titolare (stagioni 2012/13–2025/26)?"
             self.emit(f"an_espulso_presto_{limit}", (pid, comp), q, t.pname(pid), ds, v, year=g["date"].year, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
                       sources=[t.src_game(g), t.src_player(pid)], kind="disciplina",
@@ -318,14 +358,20 @@ class Anomalie(Quiz):
                         owners[comp].add(pid)
                         if t.is_notable(pid):
                             first, second = sorted(((self.G[g1]["date"], g1, c1), (self.G[g2]["date"], g2, c2)))
-                            events.setdefault((pid, comp, season), (first, second))
+                            # once per player and competition: the question does not name the season
+                            events.setdefault((pid, comp), (season, first, second))
+        # near misses: players who changed club within the same season of the comp, without meeting their old team
+        near = defaultdict(set)
+        for (pid, comp, season), lst in by.items():
+            if len({c for _g, c, _h, _a in lst}) >= 2:
+                near[comp].add(pid)
         check = lambda q, comp: self.trusted_pres(q, comp)  # noqa: E731
-        for (pid, comp, season), ((d1, g1, c1), (d2, g2, c2)) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
-            ds = self.distractors(pid, comp, season, owners[comp], check)
+        for (pid, comp), (season, (d1, g1, c1), (d2, g2, c2)) in sorted(events.items(), key=lambda kv: (-t.fame(kv[0][0]), kv[0])):
+            ds = self.distractors(pid, comp, season, owners[comp], check, near=near[comp])
             ga, gb = self.G[g1], self.G[g2]
             q = (f"Quale di questi giocatori ha giocato per una squadra all'andata e per l'avversaria al ritorno, nelle due partite della stessa stagione "
                  f"tra le stesse due squadre {IN_COMP[comp]} (stagioni 2012/13–2025/26)?")
-            self.emit("an_andata_ritorno", (pid, comp, season), q, t.pname(pid), ds, v, year=season, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
+            self.emit("an_andata_ritorno", (pid, comp), q, t.pname(pid), ds, v, year=season, fame=t.fame(pid), entities=[t.pid(pid)], comp=comp,
                       sources=[t.src_game(ga), t.src_game(gb), t.src_player(pid)], kind="mercato",
                       script=f"{t.pname(pid)} ha giocato {t.con(c1)} in {t.teams(ga)} ({date_it(d1)}) e {t.con(c2)} nel ritorno {t.teams(gb)} ({date_it(d2)}): "
                              f"la stessa sfida con maglie opposte.")
@@ -348,7 +394,7 @@ class Anomalie(Quiz):
             if len(bad) < 3:
                 continue
             for pid in good:
-                near = sorted(bad, key=lambda p: (abs(t.players[p]["dob"].year - t.players[pid]["dob"].year) if t.players[p]["dob"] and t.players[pid]["dob"] else 9, -t.fame(p)))[:14]
+                near = t.near_in_fame(t.fame(pid), bad, seed=(pid, comp))[:14]
                 q = f"Quale di questi portieri ha fornito almeno un assist {IN_COMP[comp]} tra il {season_label(w[0])} e il {season_label(w[1])}?"
                 self.emit("an_portiere_assist", (pid, comp, w), q, t.pname(pid), [t.pname(p) for p in near], v, year=w[1], fame=t.fame(pid),
                           entities=[t.pid(pid)], comp=comp, sources=[SRC_DATASET, t.src_player(pid)], kind="portiere",
@@ -359,17 +405,17 @@ class Anomalie(Quiz):
         v = MAX_VARIANTS
         self.multi_goals("an_portiere_gol", "Goalkeeper", 1, False, "portieri", "ha segnato un gol", "portiere", v)
         self.multi_goals("an_difensore_tripletta", "Defender", 3, False, "difensori", "ha segnato almeno tre gol in una partita (una tripletta)", "difensore", v)
-        self.multi_goals("an_difensore_doppietta", "Defender", 2, False, "difensori", "ha segnato almeno due gol in una singola partita", "difensore", 2)
+        self.multi_goals("an_difensore_doppietta", "Defender", 2, False, "difensori", "ha segnato almeno due gol in una singola partita", "difensore", v)
         self.multi_goals("an_panchina_tripletta", None, 3, True, "giocatori", "è entrato dalla panchina e ha segnato almeno tre gol nella stessa partita", "panchina", v)
-        self.multi_goals("an_poker", "Attack", 4, False, "attaccanti", "ha segnato almeno quattro gol in una partita", "attaccante", 3)
-        self.own_and_goal(3)
-        self.flash_sub(2, 3)
+        self.multi_goals("an_poker", "Attack", 4, False, "attaccanti", "ha segnato almeno quattro gol in una partita", "attaccante", v)
+        self.own_and_goal(v)
+        self.flash_sub(2, v)
         self.sub_sent_off(0, 5, v)
-        self.sub_sent_off(5, 10, 3)
+        self.sub_sent_off(5, 10, v)
         self.early_red(-1, 5, v)
-        self.early_red(5, 10, 3)
-        self.three_reds(v + 2)
-        self.both_legs(3)
+        self.early_red(5, 10, v)
+        self.three_reds(v)
+        self.both_legs(v)
         self.gk_assist(v)
         return self.out
 

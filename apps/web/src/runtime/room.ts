@@ -76,6 +76,8 @@ export function useHostedRoom(ctx: EngineCtx) {
 /** Phone side (Regia or controller): renders the views sent by the Screen. */
 export function useRoom(role: ClientRole, code: string) {
   const [state, setState] = useState<MatchState | null>(null);
+  /** Revision of the last view: the same view may arrive twice (two relays), its events must count once. */
+  const [viewRev, setViewRev] = useState(0);
   const [roster, setRoster] = useState<Roster>(NOBODY);
   const [votes, setVotes] = useState<Votes | null>(null);
   const [connected, setConnected] = useState(false);
@@ -104,6 +106,7 @@ export function useRoom(role: ClientRole, code: string) {
           if (m.rev < rev && m.rev > rev - 1000) return; // late duplicate from another relay
           rev = m.rev;
           setState(m.state);
+          setViewRev(m.rev);
           setRoster(m.roster);
           setVotes(m.votes ?? null);
           setTimerStart(samples.length ? m.timerStart - offset.current : Date.now() - (m.now - m.timerStart));
@@ -141,6 +144,7 @@ export function useRoom(role: ClientRole, code: string) {
 
   return {
     state,
+    viewRev,
     roster,
     votes,
     code,

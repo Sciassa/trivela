@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v7 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v10 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -175,6 +175,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 ---
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
+
+> **v10** (novembre 2026): il **Tiro Secco** cambia il modo di scegliere le opzioni sbagliate, che si scartavano a colpo d'occhio: ora sono **famose quanto la risposta**, sono **«quasi riusciti»** dove i dati lo permettono, e **ogni fatto raro diventa una sola domanda** (§4.1, §4.2). *La Maglia*: una domanda per maglia e al massimo due per giocatore; il motore non chiede due volte della stessa persona nella stessa partita e la fa riposare per 6 partite su quel dispositivo (§4.10, §5.3). La **tastiera di gioco** dice se il nome appena inviato è giusto o sbagliato (§10.4), con una vibrazione (§12.9). Valutata la fonte *GOAL API* (`goal-api.com`, alternativa con licenza a SofaScore): **non adottata per ora**, decisione rimandata. Non ha i voti dei giocatori e la Serie A è coperta molto meno che dal dataset.
 
 > **v8.1** (novembre 2026): nel Tiro Secco le opzioni sbagliate dei giochi di nomi sono **cognomi veri di calciatori** della stessa famiglia (Gallo · Gatto · Cavallo · Leone), non più parole finte; i record usano distrattori **dello stesso ruolo**; nuovo record «subentrato in gol entro 2 minuti» (§4.1, §4.2). Richiesta di usare le API interne di SofaScore aggirando Cloudflare: **non accolta**, resta valida la decisione di §0.5 (servirebbe una licenza).
 >
@@ -401,11 +403,27 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - per i gol una sola persona deve aver raggiunto la soglia (100, 50, 30, 20, 10 o 5), contando solo le stagioni con i gol completi; un'opzione sbagliata può essere anche un cognome vero della stessa famiglia, se tutti quelli che lo portano insieme non arrivano a un quarto della soglia;
   - una domanda per cognome e competizione; lo script dice di chi è il cognome, che cosa significa e perché le altre tre sono sbagliate;
   - i tipi «chi è?», «l'intruso», «più gol», «più presenze» e «chi ha giocato» con nomi completi della v7 sono stati **tolti**: non si capiva che cosa c'entrasse il cognome.
-- Stato: 3600 domande (circa 1800 curiosità, 1525 record, 270 giochi di nomi). Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
+- **Opzioni sbagliate che non si scartano a colpo d'occhio (v10)**. Fino alla v8 le opzioni sbagliate erano le stelle del campionato: la risposta giusta era il nome meno noto (nel 52% dei record e nel 40% delle curiosità), e bastava scegliere «quello che non conosco». Regole valide per tutte le famiglie:
+  - **stessa fama della risposta**: tra i candidati verificati come errati si prendono quelli con la fama più vicina a quella della risposta (`TM.near_in_fame`), tutti noti (filtro notorietà); la risposta risulta la più famosa delle quattro, la meno famosa o una di mezzo **con la stessa frequenza** (circa un quarto ciascuna);
+  - **«quasi riusciti» per primi**, dove il dato c'è: per i record vedi §4.2; tra le curiosità, per «chi non ha mai segnato» giocatori dello **stesso ruolo** con 1–3 gol, per «chi ha segnato con due squadre» giocatori che **hanno cambiato squadra** quella stagione ma hanno segnato con una sola (solo se i gol di entrambe le squadre sono completi);
+  - **nessun nome ripetuto tra le opzioni** («Gourvennec e X» in tre coppie su quattro indicava la risposta);
+  - **omonimi**: le opzioni sbagliate sono i cognomi **più comuni** tra gli altri titolari, così «Silva» non è l'unico cognome diffuso;
+  - **stadi**: mai lo stadio di una grande squadra tra le opzioni di una piccola; prima gli altri stadi usati da quella squadra, poi quelli dei club non grandi del campionato;
+  - **giochi di nomi**: i cognomi sbagliati sono di un **calciatore noto** (supera il filtro notorietà), il più vicino per fama al portatore della risposta, e lo script dice di chi sono («Soria, Valencia e Lucca sono cognomi di calciatori veri (David Soria, Antonio Valencia, Lorenzo Lucca)…»). Le domande scendono da circa 270 a circa 70, ma le quattro opzioni «suonano» tutte;
+  - **una domanda per fatto e per cognome**: niente varianti dello stesso fatto con altre opzioni.
+- Test: `test_wrong_options_are_not_spotted_by_fame` (ogni posizione della risposta per fama tra il 10% e il 40%), `test_one_question_per_rare_fact`.
+- Stato: 3600 domande (circa 2470 curiosità, 1060 record, 70 giochi di nomi). Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
 
 ### 4.2 I record rarissimi del Tiro Secco (ex *L'Anomalia Statistica*)
 - Fino alla v6 erano un gioco a sé (`anomalia`, +3 a domanda); dalla v7 sono domande del Tiro Secco (+2), generate da `data/trivela_data/gen_anomalie.py`.
-- **Distrattori dello stesso ruolo** (v8.1): le tre opzioni sbagliate sono giocatori famosi, della stessa età circa e dello **stesso ruolo** della risposta (un attaccante non è mai nascosto tra tre portieri); solo se il ruolo ne ha meno di tre si allarga a tutti i ruoli.
+- **Distrattori dello stesso ruolo** (v8.1): le tre opzioni sbagliate sono giocatori della stessa età circa e dello **stesso ruolo** della risposta (un attaccante non è mai nascosto tra tre portieri); solo se il ruolo ne ha meno di tre si allarga a tutti i ruoli. Dalla v10 sono **noti quanto la risposta**, non i più famosi (§4.1).
+- **«Quasi riusciti» (v10)**: le opzioni sbagliate sono prima di tutto giocatori che **ci sono andati vicino** senza riuscirci, sempre verificati sugli stessi dati:
+  - doppietta, tripletta, poker: chi nella sua partita migliore è arrivato a **un gol in meno** (un difensore con una doppietta, per la tripletta);
+  - autogol e gol: chi ha segnato **un autogol** in quella competizione, ma mai insieme a un gol;
+  - subentrato in gol entro 2 minuti: subentrati che hanno segnato **tra 3 e 15 minuti** dopo l'ingresso;
+  - subentrato espulso: subentrati espulsi **più tardi** (fino a 40 minuti dopo l'ingresso); titolare espulso presto: titolari espulsi **entro la mezz'ora**;
+  - andata e ritorno con due maglie: giocatori che hanno **cambiato squadra nella stessa stagione** senza incontrare la vecchia;
+  - portiere con un assist: portieri con almeno 30 presenze e nessun assist (già dalla v6.1).
 - **Nuovo record (v8.1)**: un **subentrato che segna entro 2 minuti dal suo ingresso** (`an_gol_lampo_2`, stesso minuto compreso), dai minuti di sostituzione e gol del dataset; lo script dice al minuto quando è entrato e quando ha segnato.
 - **Non fattibili con la fonte attuale**: voti in pagella (SofaScore Rating) e rigori sbagliati in partita. Il dataset non li contiene e la fonte che li ha (SofaScore) non si può usare senza licenza (§0.5, invariante 9).
 - **Regola di rarità (v6.1)**: entrano solo eventi che nelle prime cinque leghe europee e in Champions League succedono poche volte l'anno. Sono stati **tolti** i record comuni: un subentrato che segna (anche una doppietta), un difensore con almeno 6 gol in stagione, un attaccante a secco in 25 partite, 15 gol senza rigori, 100 presenze senza espulsioni, 30 partite senza ammonizioni, un gol con due squadre diverse nella stessa stagione, una tripletta di un centrocampista.
@@ -420,7 +438,7 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - una partita in cui **una stessa squadra ha chiuso con almeno tre espulsi** (le opzioni sono partite, con stagione; le false hanno al massimo due espulsi per squadra);
   - un giocatore che, **nella stessa stagione e competizione, ha giocato per una squadra all'andata e per l'avversaria al ritorno** (trasferimento tra le due partite).
 - **Non fattibile con i dati**: i **rigori sbagliati in partita** non sono nel dataset (Transfermarkt registra solo i tiri delle serie finali), quindi «due rigori sbagliati nella stessa partita» non viene generata: servirebbe una fonte che al momento non è ammessa (SofaScore è scartata, SPEC §0.5).
-- **Più varianti per evento**: i fatti rarissimi sono pochi (es. 9 gol di portieri), quindi lo stesso evento compare con **terne di distrattori diverse** (fino a 6 varianti) per arrivare a 1000 istanze senza abbassare la soglia di rarità. Un'istanza è identificata da evento + variante.
+- **Una domanda per evento (v10)**: fino alla v8 lo stesso evento compariva con terne di distrattori diverse (fino a 6 varianti). Era sempre la stessa domanda: vista una volta, la risposta si ricordava. Ora ogni fatto (giocatore + record + competizione) è **una sola domanda**; per «andata e ritorno» una sola per giocatore e competizione, anche se è successo in più stagioni. I record scendono da 1525 a circa 1060; il Tiro Secco resta a 3600 con più curiosità.
 - **Affermazioni «mai» solo dove i dati lo permettono**: i distrattori sono giocatori senza quell'evento in stagioni con dati completi (gol, formazioni o cartellini concordanti tra eventi e righe di presenza) e la finestra «stagioni 2012/13–2025/26» è scritta nella domanda.
 - Le istanze portano il campionato (`comp:`), quindi rispettano il filtro campionati (§3.4).
 - Test: `test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare` (solo generatori ammessi, soglie verificate dagli script).
@@ -480,6 +498,10 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - Solo giocatori con un unico numero in quella stagione e almeno 25 presenze (10 per i numeri iconici, 12 per i numeri fuori ruolo).
 - **Niente numeri banali**: mai l'1 di un portiere né il 9 di un attaccante.
 - **Priorità alle anomalie**: tre generatori pescati in parti uguali: *fuori ruolo* (un difensore col 10, un portiere con l'8, un attaccante col 4…; ruolo dedotto dalle partite da titolare), *numeri pesanti* (20 e oltre: 21, 22, 45, 77, 99…) e *numeri di rosa* (12–19, con una piccola quota, circa il 2%, di numeri classici).
+- **Niente giocatori che tornano sempre (v10)**. Viviano usciva 4 volte in una ventina di partite: aveva 5 domande quasi uguali (il 2 della Sampdoria in quattro stagioni, più la SPAL) tra le sole 45 anomalie di Serie A, che il sorteggio pesca a pari quota con gli altri tipi. Ora:
+  - **una domanda per maglia**: stesso giocatore, stessa squadra, stesso numero in più stagioni ⇒ una sola, la stagione con più presenze;
+  - **al massimo 2 domande per giocatore** nel pacchetto (prima le fuori ruolo); i giocatori diversi passano da 450 a circa 1070;
+  - nel motore, mai due domande sulla **stessa persona** nella stessa partita e **riposo di 6 partite** per le persone già chieste su quel dispositivo (§5.3).
 
 ---
 
@@ -508,6 +530,13 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - un gioco è escluso se non ha abbastanza istanze ammissibili con il filtro corrente.
 - Le domande di ogni gioco sono pescate **alternando i tipi di domanda** (un generatore alla volta).
 - Sorteggio deterministico dal seme della partita (riproducibile nei test).
+
+### 5.3 Scelta delle domande e persone già viste (v10)
+- Dentro un gioco le domande alternano i generatori (`sampleVaried`), poi:
+  - **una persona per partita**: due domande sulla stessa persona (le entità `tm:p:` di una domanda che ne nomina al massimo due; le liste non contano) non escono mai nella stessa partita;
+  - **riposo sul dispositivo**: le persone delle ultime **6 partite** (`trivela.people` in `localStorage`, comodità del singolo dispositivo) passano in fondo: escono solo se senza di loro le domande non bastano;
+  - le domande già viste su quel dispositivo (`trivela.seen`) restano escluse come prima. Domande e persone si registrano **quando la partita viene creata**, quindi contano anche le partite interrotte.
+- Il motore resta deterministico: le persone da far riposare arrivano nella configurazione (`MatchConfig.avoidPeople`).
 
 ---
 
@@ -730,6 +759,7 @@ NFKD + rimozione diacritici; mappe speciali (ø→o, ł→l, ß→ss, đ→d, æ
 - Si apre da sola quando tocca scrivere. Una tastiera fisica collegata continua a funzionare; su PC non cambia niente. Il tastierino dei numeri della Maglia era già del gioco.
 - I moduli (nomi dei giocatori, anno, codice stanza) usano ancora la tastiera del sistema: lì non ci sono suggerimenti da coprire e servono tutti i caratteri.
 - La tastiera sta dentro le aree sicure (§12.6).
+- **Esito sulla tastiera (v10)**: sul telefono in orizzontale si vedono solo i tasti e la riga di scrittura, quindi la tastiera stessa dice com'è andato il nome appena inviato: una striscia **verde «✓ GIUSTO»** o **rossa «✗ SBAGLIATO»** con il testo inviato, per 1,6 secondi, in cima alla striscia (in orizzontale) o sopra i tasti (agganciata). Vale per tutti i giochi a risposta scritta (Formazione, Decina, Dischetto, Asta, Mercato, Giramondo), sullo schermo singolo e sulle pulsantiere, dove si vede solo l'esito delle proprie risposte. È la stessa informazione che lo Schermo mostra subito dopo (§3.6), quindi non anticipa nessuna soluzione.
 
 ### 10.5 Modalità A
 
@@ -812,7 +842,8 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 - **Vibrazioni** (dove il browser le supporta: Android sì, iPhone no), disattivabili dalle Impostazioni:
   1. **mi prenoto**: un colpo da 50 ms;
   2. **l'avversario si prenota prima di me**: due colpi brevi (30, 50, 30);
-  3. **scade il tempo e partono i 10 secondi extra** (§3.8), sul telefono di chi sta scrivendo o sul dispositivo dello schermo singolo: due colpi lunghi (120, 60, 120).
+  3. **scade il tempo e partono i 10 secondi extra** (§3.8), sul telefono di chi sta scrivendo o sul dispositivo dello schermo singolo: due colpi lunghi (120, 60, 120);
+  4. **(v10) esito del nome scritto**, mentre la tastiera è aperta: giusto un colpo breve (25 ms), sbagliato tre colpi (70, 40, 70, 40, 70).
 
 ---
 

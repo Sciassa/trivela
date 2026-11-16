@@ -10,7 +10,6 @@ The meanings come from the hand-written word lists in `lexicon`; no football fac
 
 from __future__ import annotations
 
-import random
 import re
 from collections import defaultdict
 
@@ -153,15 +152,23 @@ class Nomi(Quiz):
     def _real_surnames(self) -> None:
         """Every one-word surname of a footballer in the dataset (any league, any level), as written: «Volpi», «Orsi»…"""
         self.real_surname: dict[str, str] = {}
-        for p in self.t.players.values():
+        self.best_bearer: dict[str, int] = {}  # surname -> its best-known bearer in the whole dataset
+        t = self.t
+        for pid, p in t.players.items():
             last = (p["last"] or "").strip()
             if p["first"] and last and len(re.split(r"[\s\-]+", last)) == 1:
-                self.real_surname.setdefault(last.lower(), last)  # accents kept: «Fariña» is not «Farina»
+                k = last.lower()
+                self.real_surname.setdefault(k, last)  # accents kept: «Fariña» is not «Farina»
+                if k not in self.best_bearer or (t.fame(pid), -pid) > (t.fame(self.best_bearer[k]), -self.best_bearer[k]):
+                    self.best_bearer[k] = pid
 
-    def decoy_pool(self, cat: str, lang: str, word: str, comp: str) -> list[str]:
+    def decoy_pool(self, cat: str, lang: str, word: str, comp: str, fame: int) -> list[str]:
         """Wrong options that look exactly like the right one (SPEC §4.1, v7.2): words of the same family and language
         that are the surname of a real footballer somewhere in the dataset («Volpi», «Orsi», «Lupi»), but of nobody
-        who ever played in this competition. Italian words keep the number of the right one (Gatti with Volpi)."""
+        who ever played in this competition. Italian words keep the number of the right one (Gatti with Volpi).
+
+        v10: only surnames of a known footballer (one who passes the notoriety filter), as famous as the bearer of the
+        right one, closest first: four names that all ring a bell, and the question is which of them played there."""
         family = "storia" if cat == "dittatori" else cat
         words = [w for w, (meaning, note) in lexicon.CATEGORIES[family].items()
                  if (cat != "dittatori" or note == "dittatore") and (lang == "*" or self.lang_of(family, note) == lang)]
@@ -172,10 +179,14 @@ class Nomi(Quiz):
         out = []
         for w in words:
             k = norm(w)
-            if " " in w or k == norm(word) or k in used or w.lower() not in self.real_surname:
+            if " " in w or k == norm(word) or k in used or w.lower() not in self.real_surname or not self.t.is_notable(self.best_bearer[w.lower()]):
                 continue
             out.append(self.real_surname[w.lower()])
-        return sorted(set(out))
+        return self.t.near_in_fame(fame, sorted(set(out)), key=lambda x: self.best_bearer[x.lower()], seed=(word, comp))
+
+    def known_as(self, surname: str) -> str:
+        """«Leão (Rafael Leão, Lille)»: who the wrong surname belongs to, for the Copione."""
+        return self.t.pname(self.best_bearer[surname.lower()])
 
     def candidates(self) -> list[tuple[int, str, str, str]]:
         """(pid, category, surname as written, language) for every notable player whose whole surname is one word of the lexicon."""
@@ -226,11 +237,9 @@ class Nomi(Quiz):
                 seasons = [s for (p, c, s) in self.apps if p == pid and c == comp and w and w[0] <= s <= w[1]]
                 if not w or not seasons:
                     continue
-                pool = self.decoy_pool(cat, lang, surname, comp)
+                pool = self.decoy_pool(cat, lang, surname, comp, t.fame(pid))
                 if len(pool) < 3:
                     continue
-                r = random.Random(f"nomi-giocato-{pid}-{comp}")
-                r.shuffle(pool)
                 n_apps = sum(self.apps[(pid, comp, s)] for s in seasons)
                 done.add((norm(surname), comp))
                 span = f"dal {season_label(w[0])} al {season_label(w[1])}"
@@ -240,9 +249,11 @@ class Nomi(Quiz):
                     if len(trio) < 3:
                         break
                     wrong = list(trio)
+                    who = ", ".join(self.known_as(x) for x in wrong)
                     self.put(f"nomi_{cat}", (pid, comp, k), q, surname, wrong, pid=pid, comp=comp, year=min(seasons),
                              script=f"{surname} è il cognome di {t.pname(pid)}: {n_apps} presenze {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
-                                    f"{', '.join(wrong[:-1])} e {wrong[-1]} sono cognomi di calciatori veri, ma nessun giocatore con quei cognomi ha mai giocato {IN_COMP[comp]} in queste stagioni.")
+                                    f"{', '.join(wrong[:-1])} e {wrong[-1]} sono cognomi di calciatori veri ({who}), ma nessun giocatore con quei cognomi "
+                                    f"ha mai giocato {IN_COMP[comp]} in queste stagioni.")
 
     # ------------------------------------------------------------------ "... who scored at least N goals in Serie A?"
     def scored(self, variants: int = 2) -> None:
@@ -260,7 +271,7 @@ class Nomi(Quiz):
                     continue
                 done.add((norm(surname), comp))
                 span = f"dal {season_label(w[0])} al {season_label(w[1])}"
-                pool = self.decoy_pool(cat, lang, surname, comp)
+                pool = self.decoy_pool(cat, lang, surname, comp, t.fame(pid))
                 # real surnames of the same family whose bearers scored far fewer: the closest wrong options
                 near = []
                 for p2, cat2, sur2, lang2 in self.candidates():
@@ -268,9 +279,7 @@ class Nomi(Quiz):
                         bearers = self.bearers[comp].get(norm(sur2), set())
                         if bearers and sum(self.goals_w[(b, comp)] for b in bearers) <= n // 4:
                             near.append(sur2)
-                r = random.Random(f"nomi-gol-{pid}-{comp}")
-                r.shuffle(pool)
-                r.shuffle(near)
+                near = t.near_in_fame(t.fame(pid), near, key=lambda x: max(self.bearers[comp].get(norm(x), {pid}), key=t.fame))
                 q = f"Quale di questi cognomi ({self.phrase(cat, lang)}) appartiene a un giocatore che ha segnato almeno {n} gol {IN_COMP[comp]} ({span})?"
                 for k in range(variants):
                     wrong = (near[k:k + 1] + pool[3 * k:3 * k + 3])[:3]
@@ -283,7 +292,7 @@ class Nomi(Quiz):
                             tot = sum(self.goals_w[(b, comp)] for b in bs)
                             notes.append(f"{x}: {tot} gol" + (f" in tutto ({len(bs)} giocatori)" if len(bs) > 1 else ""))
                         else:
-                            notes.append(f"{x}: cognome di calciatori che non hanno mai giocato lì")
+                            notes.append(f"{x}: come {self.known_as(x)}, che lì non ha mai giocato")
                     self.put("nomi_gol", (cat, pid, comp, n, k), q, surname, wrong, pid=pid, comp=comp, year=w[0],
                              script=f"{t.pname(pid)} ha segnato {self.goals_w[(pid, comp)]} gol {IN_COMP[comp]} {span}. {self.cap(self.meaning(pid, cat))}. "
                                     f"Gli altri cognomi: {'; '.join(notes)}.")
@@ -291,8 +300,9 @@ class Nomi(Quiz):
     def run(self) -> list[dict]:
         self._bearers()
         self._real_surnames()
-        self.played()
-        self.scored()
+        # one question per surname (SPEC §4.1, v10): the same answer with other company is the same question
+        self.played(variants=1)
+        self.scored(variants=1)
         return self.out
 
 

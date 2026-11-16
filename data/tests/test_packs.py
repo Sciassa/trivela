@@ -2,6 +2,7 @@
 
 import json
 import re
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -60,6 +61,32 @@ RARE_ANOMALIES = {"an_portiere_gol", "an_difensore_tripletta", "an_difensore_dop
                   "an_andata_ritorno", "an_portiere_assist", "an_gol_lampo_2"}
 
 
+def test_wrong_options_are_not_spotted_by_fame():
+    """SPEC §4.1, v10: the right answer used to be the one unknown name among three stars (half of the records). The
+    wrong options are now as famous as the answer and the answer is the least famous, the most famous or one in between
+    about equally often."""
+    fame = {e["name"]: e["fame"] for e in json.loads((DATA / "entities.json").read_text(encoding="utf-8"))}
+    for tag in ("record", None):
+        rank, n = Counter(), 0
+        for it in load("tiro_secco"):
+            if it.get("tag") != tag:
+                continue
+            f = [fame.get(o) for o in it["options"]]
+            if None in f:
+                continue
+            n += 1
+            rank[sum(1 for v in f if v < f[it["correct"]])] += 1
+        assert n >= 300, (tag, n)
+        assert all(0.1 <= rank[k] / n <= 0.4 for k in range(4)), (tag, {k: round(v / n, 2) for k, v in rank.items()})
+
+
+def test_one_question_per_rare_fact():
+    """The same record with three other names was the same question: once seen, never hard again."""
+    items = [it for it in load("tiro_secco") if it.get("tag") == "record"]
+    facts = Counter((it["generator"], next(e for e in it["entities"] if e.startswith("comp:")), it["options"][it["correct"]]) for it in items)
+    assert max(facts.values()) == 1, facts.most_common(3)
+
+
 def test_rare_records_are_part_of_tiro_secco_and_only_genuinely_rare():
     """The old Anomalia game is one family of Tiro Secco questions. Everyday events (a substitute scoring, a forward without a goal) are not records."""
     assert not (DATA / "games" / "anomalia.json").exists()
@@ -96,12 +123,16 @@ def test_name_games_offer_four_surnames_of_one_family():
     from trivela_data import lexicon
 
     items = [it for it in load("tiro_secco") if it.get("tag") == "nomi"]
-    assert len(items) >= 200
+    # v10: only wrong surnames that belong to a known footballer, as famous as the right one: fewer questions, none
+    # answered by "it is the only surname I have heard of"
+    assert len(items) >= 50
     gens = {it["generator"].split("@")[0] for it in items}
     cats = {g[5:] for g in gens if g[5:] in {*lexicon.CATEGORIES, "dittatori"}}
-    assert len(cats) >= 6, cats
-    assert {"animali", "dittatori", "citta", "colori", "mestieri"} <= cats
+    assert len(cats) >= 3, cats
     assert "nomi_gol" in gens  # crossed with goals
+    comp = lambda it: next(e for e in it["entities"] if e.startswith("comp:"))
+    asked = Counter((it["options"][it["correct"]], it["generator"].split("@")[0], comp(it)) for it in items)
+    assert max(asked.values()) == 1, asked.most_common(3)  # one question per surname and competition
     for it in items:
         assert it["question"].startswith("Quale di questi cognomi (")
         assert all(" " not in o for o in it["options"]) and len(set(it["options"])) == 4
@@ -110,7 +141,7 @@ def test_name_games_offer_four_surnames_of_one_family():
         assert sum(1 for e in it["entities"] if e.startswith("tm:p:")) == 1  # one real player: the owner of the right surname
         assert "«" in it["script"]  # the script says what the word means
     played = [it for it in items if it["generator"].split("@")[0] != "nomi_gol"]
-    assert all("ha giocato" in it["question"] and "sono cognomi di calciatori veri" in it["script"] for it in played)
+    assert all("ha giocato" in it["question"] and "sono cognomi di calciatori veri (" in it["script"] for it in played)  # with their bearers
     # credible wrong options: words of the same family, never made-up plurals like «Salmoni» or «Topi»
     family = {f"nomi_{c}": {lexicon_word for lexicon_word in words} for c, words in lexicon.CATEGORIES.items()}
     family["nomi_dittatori"] = set(lexicon.CATEGORIES["storia"])
@@ -168,7 +199,12 @@ def test_maglia_asks_for_a_number_and_skips_banal_ones():
         v, role = it["answer"]["value"], it["role"]
         assert not (v == 1 and role == "GK") and not (v == 9 and role == "ATT"), it["question"]
     kinds = [it["generator"].split("@")[0] for it in items]
-    assert kinds.count("maglia_anomala") >= 150 and kinds.count("maglia_pesante") >= 300
+    assert kinds.count("maglia_anomala") >= 120 and kinds.count("maglia_pesante") >= 300
+    # the same shirt in five seasons is one question, and nobody fills more than two (Viviano came back match after match)
+    shirts = [(it["player"], it["team"], it["answer"]["value"]) for it in items]
+    assert len(shirts) == len(set(shirts))
+    per_player = Counter(next(e for e in it["entities"] if e.startswith("tm:p:")) for it in items)
+    assert max(per_player.values()) <= 2, per_player.most_common(3)
     classic = [it for it in items if it["generator"].startswith("maglia_numero") and it["answer"]["value"] < 12]
     assert len(classic) <= 0.08 * len(items)  # plain numbers are the exception
 

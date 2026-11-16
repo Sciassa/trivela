@@ -1,7 +1,7 @@
 import { emptyPackItems, LEAGUES, type GameId, type Packs } from "@trivela/protocol";
 import { buildIndex, type MatchIndex } from "@trivela/matcher";
 import { timerOn } from "./settings";
-import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, POOL, Rng, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
+import { createMatch, drawGames, GAMES_PER_MATCH, itemsNeeded, POOL, Rng, usedIds, usedPeople, type EngineCtx, type MatchConfig, type MatchState } from "@trivela/engine";
 
 /**
  * Lazy data loading (SPEC §0.4):
@@ -144,10 +144,36 @@ export function rememberSeen(ids: string[]): void {
   }
 }
 
+/** How many matches a person rests after a question about them. */
+const PEOPLE_REST = 6;
+
+/** People the last matches on this device were about (one list per match, newest last). */
+function recentPeople(): string[][] {
+  try {
+    const v = JSON.parse(localStorage.getItem("trivela.people") ?? "[]") as unknown;
+    return Array.isArray(v) ? v.filter((x): x is string[] => Array.isArray(x)) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Remember a match as soon as it is created: questions and people of an abandoned match count as seen too. */
+export function rememberMatch(s: MatchState): void {
+  rememberSeen(usedIds(s));
+  try {
+    localStorage.setItem("trivela.people", JSON.stringify([...recentPeople(), usedPeople(s)].slice(-PEOPLE_REST)));
+  } catch {
+    /* ignore */
+  }
+}
+
 /** Create a match avoiding questions already seen on this device, when possible. */
 export async function prepareFreshMatch(base: MatchConfig): Promise<PrepareResult> {
   // the timer switch of the home screen applies to every match started on this device (SPEC §3.8)
   const config: MatchConfig = base.timer === undefined && !timerOn() ? { ...base, timer: false } : base;
-  const r = await prepareMatch({ ...config, excludeIds: [...seenIds(), ...(config.excludeIds ?? [])] });
-  return r.ok ? r : prepareMatch(config);
+  const avoidPeople = [...new Set(recentPeople().flat())];
+  const r = await prepareMatch({ ...config, avoidPeople, excludeIds: [...seenIds(), ...(config.excludeIds ?? [])] });
+  const out = r.ok ? r : await prepareMatch({ ...config, avoidPeople });
+  if (out.ok) rememberMatch(out.state);
+  return out;
 }

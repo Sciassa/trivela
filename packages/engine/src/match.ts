@@ -99,10 +99,21 @@ export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): G
 }
 
 /**
- * Pick n items evenly across generators: question types alternate instead of
- * being proportional to how many instances each type has.
+ * The people a question is about: its player entities, when there are at most two of them (a list or a ranking
+ * names many people and is not "about" any of them).
  */
-export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng: Rng, used: Set<string>): T[] | null {
+export function subjectsOf(item: InstanceMeta): string[] {
+  const people = item.entities.filter((e) => e.startsWith("tm:p:"));
+  return people.length <= 2 ? people : [];
+}
+
+/**
+ * Pick n items evenly across generators: question types alternate instead of
+ * being proportional to how many instances each type has. Two picked items are
+ * never about the same person, nor about one in `people` (the people already met
+ * in this match); the people of the picked items are added to it.
+ */
+export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng: Rng, used: Set<string>, people: Set<string> = new Set()): T[] | null {
   const groups = new Map<string, T[]>();
   for (const it of rng.shuffle(items)) {
     if (used.has(it.id)) continue;
@@ -112,14 +123,22 @@ export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng:
   }
   const order = rng.shuffle([...groups.keys()]);
   const picked: T[] = [];
-  while (picked.length < n && order.some((k) => groups.get(k)!.length)) {
+  const taken = new Set(people);
+  const free = (it: T) => !subjectsOf(it).some((p) => taken.has(p));
+  while (picked.length < n && order.some((k) => groups.get(k)!.some(free))) {
     for (const k of order) {
       const g = groups.get(k)!;
-      if (g.length && picked.length < n) picked.push(g.pop()!);
+      if (picked.length >= n) break;
+      while (g.length && !free(g[g.length - 1]!)) g.pop();
+      const it = g.pop();
+      if (!it) continue;
+      picked.push(it);
+      subjectsOf(it).forEach((p) => taken.add(p));
     }
   }
   if (picked.length < n) return null;
   picked.forEach((it) => used.add(it.id));
+  taken.forEach((p) => people.add(p));
   return rng.shuffle(picked);
 }
 
@@ -149,9 +168,14 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
     needs = order.map(itemsNeeded);
   }
   const content: unknown[][] = [];
+  const recent = new Set(config.avoidPeople ?? []);
+  const people = new Set<string>();
   for (let k = 0; k < order.length; k++) {
     const g = order[k]!;
-    const items = sampleVaried(eligibleItems(g, packs, config), needs[k]!, rng, used);
+    // people met in the last matches on this device come back only when there is nobody else to ask about
+    const pool = eligibleItems(g, packs, config);
+    const fresh = pool.filter((it) => !subjectsOf(it).some((p) => recent.has(p)));
+    const items = sampleVaried(fresh, needs[k]!, rng, used, people) ?? sampleVaried(pool, needs[k]!, rng, used, people);
     if (!items) return { ok: false, reason: `Contenuti insufficienti per ${g}.` };
     content.push(items);
   }
@@ -322,6 +346,17 @@ export function viewFor(s: MatchState, role: Role): MatchState {
 export function winnerOf(s: MatchState): PlayerIdx | null {
   const [a, b] = s.scores;
   return a === b ? null : a > b ? 0 : 1;
+}
+
+/** People the questions of a match were about (device history: they rest for a few matches). */
+export function usedPeople(s: MatchState): string[] {
+  const out = new Set<string>();
+  const walk = (x: unknown) => {
+    if (Array.isArray(x)) x.forEach(walk);
+    else if (x && typeof x === "object" && "id" in x && "generator" in x) subjectsOf(x as InstanceMeta).forEach((p) => out.add(p));
+  };
+  s.content.forEach(walk);
+  return [...out];
 }
 
 /** Instance ids used in a match (for tournament dedup and device history). */

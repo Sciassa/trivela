@@ -8,6 +8,7 @@ import { GAME_NAMES } from "../rules";
 import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
 import { Backdrop } from "./scenery";
 import type { Votes } from "../runtime/roomCore";
+import { HAPTIC, vibrate } from "../runtime/haptics";
 
 /* ------------------------------------------------------------ contexts */
 
@@ -38,6 +39,66 @@ export const PlayCtx = createContext<PlayMode>({ readonly: false, flow: true, pa
  * Screen of a room with two controllers and no Regia (SPEC §12.8): the game moves on when both phones agree, and the
  * Screen shows who has already pressed. null everywhere else.
  */
+/**
+ * The verdict on the last answer (SPEC §10.4): a phone held sideways shows only the keys and the typing line, so
+ * the keyboard itself must say whether the name just sent was right or wrong.
+ */
+export interface Verdict {
+  ok: boolean;
+  /** Counter, a new one for each verdict. */
+  id: number;
+  /** What was sent, when it was typed on this device. */
+  said: string | null;
+}
+export const VerdictCtx = createContext<Verdict | null>(null);
+
+/** The text sent by the last answer box of this device, to be named in the verdict. */
+let lastSent: { text: string; at: number } | null = null;
+let verdictSeq = 0;
+
+type MatchEvents = MatchState["events"];
+
+/** Right or wrong in a batch of match events (only those of `player`, when given). */
+export function verdictOf(events: MatchEvents | undefined, player?: PlayerIdx): boolean | null {
+  const mine = (events ?? []).filter((e) => player === undefined || !("player" in e) || e.player === player);
+  // a name found in La Formazione or L'Asta is announced by a notice (the name, no player)
+  if (mine.some((e) => e.type === "correct" || e.type === "goal" || e.type === "notice")) return true;
+  if (mine.some((e) => e.type === "wrong" || e.type === "miss")) return false;
+  return null;
+}
+
+/**
+ * The verdict to show for 1.6 seconds after each judged answer. `stamp` (the room revision on a phone) makes a view
+ * received twice count once.
+ */
+export function useVerdict(events: MatchEvents | undefined, player?: PlayerIdx, stamp?: number): Verdict | null {
+  const [v, setV] = useState<Verdict | null>(null);
+  const last = useRef<unknown>(null);
+  useEffect(() => {
+    const key = stamp ?? events;
+    if (key === last.current) return;
+    last.current = key;
+    const ok = verdictOf(events, player);
+    if (ok === null) return;
+    const said = lastSent && Date.now() - lastSent.at < 15_000 ? lastSent.text : null;
+    lastSent = null;
+    setV({ ok, id: ++verdictSeq, said });
+    const t = window.setTimeout(() => setV(null), 1600);
+    return () => window.clearTimeout(t);
+  }, [events, player, stamp]);
+  return v;
+}
+
+/** The verdict strip of the game keyboard: green with a tick, red with a cross. */
+function VerdictStrip({ v }: { v: Verdict }) {
+  return (
+    <div key={v.id} className={`vk-verdict ${v.ok ? "ok" : "ko"}`} role="status" aria-live="assertive">
+      {v.ok ? "✓ GIUSTO" : "✗ SBAGLIATO"}
+      {v.said && <span className="said">«{v.said}»</span>}
+    </div>
+  );
+}
+
 export const VotesCtx = createContext<{ votes: Votes | null; players: [string, string] } | null>(null);
 
 /** «AVANTI» or «PROSSIMO INDIZIO» on the Screen: a green check for each player who has pressed it on the phone. */
@@ -478,10 +539,16 @@ function PixelKeyboard({
       {label}
     </button>
   );
+  const verdict = useContext(VerdictCtx);
+  useEffect(() => {
+    if (verdict) vibrate(verdict.ok ? HAPTIC.right : HAPTIC.wrong);
+  }, [verdict]);
   return (
     <div className={`vk-layer ${over ? "over" : "dock"} ${inStage ? "of-stage" : ""}`}>
+      {!over && verdict && <VerdictStrip v={verdict} />}
       {over && (
         <div className="vk-top">
+          {verdict && <VerdictStrip v={verdict} />}
           <div className="vk-ctx">
             <span className="vk-prompt">{prompt}</span>
             {timer}
@@ -646,6 +713,7 @@ export function AnswerBox({
   const [text, setText] = useState("");
   const submit = () => {
     if (!text.trim()) return;
+    lastSent = { text: text.trim(), at: Date.now() };
     onSubmit(text.trim());
     setText("");
   };

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameId } from "@trivela/protocol";
 import { MODULES } from "./games";
-import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, singleGamePlan, viewFor } from "./match";
+import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, singleGamePlan, subjectsOf, viewFor } from "./match";
 import { Rng } from "./rng";
 import { createTournament, recordResult, roundRobin, standings } from "./tournament";
 import type { Intent, MatchConfig, MatchState } from "./types";
@@ -100,6 +100,32 @@ describe("year filter and sampling", () => {
     const items = [...Array.from({ length: 50 }, () => meta({ generator: "big" })), meta({ generator: "rare1" }), meta({ generator: "rare2" }), meta({ generator: "rare3" })];
     const picked = sampleVaried(items, 4, new Rng(3), new Set())!;
     expect(new Set(picked.map((p) => p.generator)).size).toBe(4);
+  });
+  it("never asks twice about the same person in a match, and rests the people of the last matches", () => {
+    // one player fills half of a generator, as Viviano did with five seasons of the same shirt
+    const items = [
+      ...Array.from({ length: 6 }, () => meta({ generator: "anomala", entities: ["tm:p:1"] })),
+      ...Array.from({ length: 6 }, (_, k) => meta({ generator: "anomala", entities: [`tm:p:${10 + k}`] })),
+      ...Array.from({ length: 12 }, (_, k) => meta({ generator: "pesante", entities: [`tm:p:${20 + k}`] })),
+    ];
+    for (let seed = 1; seed < 60; seed++) {
+      const people = new Set<string>();
+      const picked = sampleVaried(items, 4, new Rng(seed), new Set(), people)!;
+      const subjects = picked.map((p) => p.entities[0]);
+      expect(new Set(subjects).size).toBe(4);
+      expect(people.size).toBe(4);
+      expect(sampleVaried(items, 4, new Rng(seed), new Set(), new Set(["tm:p:1"]))!.some((p) => p.entities[0] === "tm:p:1")).toBe(false);
+    }
+    // a list names many people and is about none of them
+    expect(subjectsOf(meta({ entities: ["tm:p:1", "tm:p:2", "tm:p:3"] }))).toEqual([]);
+    // the device history is soft: with nobody else left, the rested people come back
+    const packs = makePacks();
+    const all = packs.items.maglia.flatMap((m) => (m as { entities: string[] }).entities);
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 5, forcedGames: ["maglia"], rounds: 3, avoidPeople: all }, packs);
+    expect(r.ok).toBe(true);
+    const rested = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 5, forcedGames: ["maglia"], rounds: 3, avoidPeople: all.slice(0, 10) }, packs);
+    if (!rested.ok) throw new Error(rested.reason);
+    expect(rested.state.content.flat().some((m) => (m as { entities: string[] }).entities.some((e) => all.slice(0, 10).includes(e)))).toBe(false);
   });
   it("respects draw constraints", () => {
     for (let seed = 1; seed < 200; seed++) {

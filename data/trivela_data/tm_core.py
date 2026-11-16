@@ -255,13 +255,17 @@ def ensure_db() -> None:
             f.write(chunk)
 
 
-def opts4(correct: str, distractors: list[str], key: str):
-    """4 shuffled options with the correct one; None if fewer than 3 valid distractors."""
+def opts4(correct: str, distractors: list[str], key: str, head: int | None = None):
+    """4 shuffled options with the correct one; None if fewer than 3 valid distractors.
+
+    With `head`, the distractors come from the first `head` of the list only: the caller ordered them from the most
+    convincing (a near miss, a player as famous as the answer) to the least (SPEC §4.1, v10).
+    """
     ds = [d for d in dict.fromkeys(distractors) if d and d != correct]
     if len(ds) < 3:
         return None
     r = random.Random(key)
-    o = r.sample(ds, 3) + [correct]
+    o = r.sample(ds[:head] if head else ds, 3) + [correct]
     r.shuffle(o)
     return o, o.index(correct)
 
@@ -420,6 +424,24 @@ class TM:
         mv = p["mv"] if p else 0
         f = 30 * math.log10(1 + mv / 100_000) if mv else 0
         return int(min(100, f + min(15, self.apps.get(int(pid), 0) / 25)))
+
+    def near_in_fame(self, target: int, cands, key=None, seed=None) -> list:
+        """Candidates ordered by how close their fame is to `target`: three stars around an unknown name give the
+        answer away, three names of the same standing do not (SPEC §4.1, v10).
+
+        With `seed`, the first three are split around the target so that the answer is the most famous of the four
+        options, the least famous or one in between equally often: an answer always in the middle would be a tell too."""
+        key = key or (lambda p: p)
+        ordered = sorted(cands, key=lambda c: (abs(self.fame(key(c)) - target), str(key(c))))
+        if seed is None or len(ordered) < 3:
+            return ordered
+        below = int(hashlib.sha1(str(seed).encode()).hexdigest(), 16) % 4  # how many options are less famous than the answer
+        lo = [c for c in ordered if self.fame(key(c)) < target]
+        hi = [c for c in ordered if self.fame(key(c)) >= target]
+        head = lo[:below] + hi[:3 - below]
+        if len(head) < 3:  # one side is short: take what the other offers
+            head += [c for c in ordered if c not in head][:3 - len(head)]
+        return head + [c for c in ordered if c not in head]
 
     def is_notable(self, pid) -> bool:
         return pid is not None and int(pid) in self.notable

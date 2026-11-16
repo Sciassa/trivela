@@ -8,7 +8,7 @@ import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
-import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useWakeLock, VotesCtx } from "../components/ui";
+import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useVerdict, useWakeLock, VerdictCtx, VotesCtx } from "../components/ui";
 import { GameView } from "../games/GameView";
 import { Buzz3D, VoxelBall } from "../components/Voxel3D";
 import { GAME_NAMES } from "../rules";
@@ -204,7 +204,10 @@ function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: Clien
   const s = room.state;
   const g = s?.order[s.gameIdx];
   const [asking, setAsking] = useState(false);
+  // a controller hears only about its own answers (the keyboard covers the board on a phone held sideways)
+  const verdict = useVerdict(role === "host" ? undefined : s?.events, role === "p1" ? 0 : 1, room.viewRev);
   return (
+    <VerdictCtx.Provider value={verdict}>
     <div className="page phone-shell">
       <div className="page-bg" aria-hidden />
       <div className="phone-head">
@@ -261,6 +264,7 @@ function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: Clien
         />
       )}
     </div>
+    </VerdictCtx.Provider>
   );
 }
 

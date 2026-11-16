@@ -25,6 +25,11 @@ export interface MatchConfig {
   timer?: boolean;
   /** Instance ids that must not be used (tournament / device history). */
   excludeIds?: string[];
+  /**
+   * People the last matches on this device were about: their questions are picked only when nobody else is left,
+   * so that the same player does not come back match after match.
+   */
+  avoidPeople?: string[];
   /** Force the 4 drawn games (tests, debug). */
   forcedGames?: PoolGameId[];
 }
