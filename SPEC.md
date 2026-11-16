@@ -84,7 +84,7 @@ Regole che restano: si scartano i record con campi mancanti o incompleti (es. pa
 
 Il "1990" indicato come inizio per le statistiche granulari non è raggiungibile con le fonti gratuite disponibili: il dataset Transfermarkt parte dalla stagione 2012/13. Per il periodo precedente restano i Mondiali (verificati) e i risultati delle nazionali.
 
-**Aggiornamento automatico gratuito:** `pnpm data:sync` (o `npm run data:sync`) e la GitHub Action `.github/workflows/sync-data.yml` (ogni lunedì 02:17 UTC) riscaricano le fonti, rigenerano i pacchetti e aprono una pull request.
+**Aggiornamento dei dati (v11.1):** solo a mano, con `pnpm data:sync` (riscarica il dataset se è cambiato e rigenera i pacchetti), in una sessione dedicata. La GitHub Action settimanale `sync-data.yml` è stata **tolta**: il dataset è fermo al **6 luglio 2026** e quella data è scritta nei testi («dati al 6 luglio 2026»), nei limiti dei generatori (trasferimenti fino al 2026-07-06) e in `SNAPSHOT`. Un aggiornamento automatico avrebbe prodotto domande con fatti più recenti della data dichiarata (un «non ha mai segnato» falso dopo un gol di settembre) e avrebbe rimescolato i pacchetti di Asta, Formazione e Giramondo, che la rigenerazione cambia senza motivo. Prima di aggiornare il dataset vanno spostate tutte queste date insieme e ricontrollati i pacchetti.
 
 Contenuti dopo la v2:
 
