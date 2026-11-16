@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { isTimed, usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import { GAME_IDS, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TiroSeccoItem } from "@trivela/protocol";
+import { GAME_IDS, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TestaItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
@@ -9,7 +9,7 @@ import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed,
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
 import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useVerdict, useWakeLock, VerdictCtx, VotesCtx } from "../components/ui";
-import { GameView } from "../games/GameView";
+import { GameView, isBuzzerGame } from "../games/GameView";
 import { Buzz3D, VoxelBall } from "../components/Voxel3D";
 import { GAME_NAMES } from "../rules";
 import { savedYear } from "../runtime/settings";
@@ -277,7 +277,8 @@ function solutionOf(g: GameStateAny): string[] {
       return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "mercato":
-    case "giramondo": {
+    case "giramondo":
+    case "quotazione": {
       const it = g.items[g.i] as { answer: { display: string }; clues: string[] };
       return [`Risposta: ${it.answer.display}`, ...it.clues.map((c, k) => `${k + 1}. ${c}`)];
     }
@@ -295,6 +296,17 @@ function solutionOf(g: GameStateAny): string[] {
     case "maglia": {
       const it = g.items[g.i] as MagliaItem;
       return [it.question, `Risposta: numero ${it.answer.display}`];
+    }
+    case "testa_a_testa": {
+      const it = g.items[g.i] as TestaItem;
+      const k = g.stage === "decide" ? g.k + 1 : g.k;
+      const now = it.chain[k];
+      const before = it.chain[k - 1];
+      return [
+        it.title,
+        now && before ? `Prossimo: ${now.name} ${now.label} → ${(now.value ?? 0) > (before.value ?? 0) ? "PIÙ" : "MENO"} di ${before.name}` : "",
+        ...it.chain.map((c, j) => `${j + 1}. ${c.name} ${c.label}`),
+      ];
     }
   }
   return [];
@@ -384,8 +396,26 @@ export function HostRoom({ code }: { code: string }) {
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
         }
+        case "testa_a_testa":
+          controls = (
+            <div className="grid2">
+              {g.stage === "guess" ? (
+                <>
+                  <Btn label="▲ PIÙ" cls="ok" onClick={() => d({ type: "ANSWER", payload: { choice: 1 } })} />
+                  <Btn label="▼ MENO" cls="ko" onClick={() => d({ type: "ANSWER", payload: { choice: 0 } })} />
+                </>
+              ) : (
+                <>
+                  <Btn label={`INCASSA ${g.pot}`} onClick={() => d({ type: "ANSWER", payload: { choice: 0 } })} />
+                  <Btn label="CONTINUA ▶" cls="ghost" onClick={() => d({ type: "ANSWER", payload: { choice: 1 } })} />
+                </>
+              )}
+            </div>
+          );
+          break;
         case "mercato":
         case "giramondo":
+        case "quotazione":
           controls =
             g.stage === "answering" ? (
               okKo
@@ -558,7 +588,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
     if (turn) navigator.vibrate?.(80);
   }, [turn]);
   // the opponent got to the buzzer first (SPEC §12.9)
-  const beatenBy = g && (g.game === "mercato" || g.game === "giramondo") && g.stage === "answering" && g.buzzer !== null && g.buzzer !== me ? `${g.i}-${g.revealed}` : null;
+  const beatenBy = g && isBuzzerGame(g.game) && g.stage === "answering" && g.buzzer !== null && g.buzzer !== me ? `${g.i}-${g.revealed}` : null;
   useEffect(() => {
     if (beatenBy) vibrate(HAPTIC.beaten);
   }, [beatenBy]);
@@ -606,7 +636,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       </PhoneFrame>
     );
   }
-  if (g.game === "mercato" || g.game === "giramondo") {
+  if (isBuzzerGame(g.game)) {
     const can = (g.stage === "clues" || g.stage === "ready") && !g.out[me];
     return (
       <PhoneFrame
@@ -663,6 +693,58 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
     );
   }
   const closed = g.stage === "reveal" || g.stage === "final";
+  if (turn && s.config.judging !== "host" && g.game === "testa_a_testa") {
+    // the two choices under the thumb, the duel above them
+    const it = g.items[g.i] as TestaItem;
+    const k: number = g.stage === "decide" ? g.k + 1 : g.k;
+    const pick = (choice: 0 | 1) => (navigator.vibrate?.(30), room.dispatch({ type: "ANSWER", payload: { choice } }));
+    return (
+      <PhoneFrame
+        role={role}
+        room={room}
+        actions={
+          g.stage === "guess" ? (
+            <>
+              <button className="btn big duel-more" onClick={() => pick(1)}>
+                ▲ PIÙ
+              </button>
+              <button className="btn big duel-less" onClick={() => pick(0)}>
+                ▼ MENO
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn big duel-cash" onClick={() => pick(0)}>
+                INCASSA {g.pot}
+              </button>
+              <button className="btn big ghost" onClick={() => pick(1)}>
+                CONTINUA ▶
+              </button>
+            </>
+          )
+        }
+      >
+        <TimerClockCtx.Provider value={room.timer}>
+          <div className="pad-question">
+            <div className="px dim" style={{ fontSize: 11 }}>
+              {it.title}
+            </div>
+            <StateTimer state={s} start={room.timerStart} />
+            <div className="q-card">
+              <div className="q small">
+                {it.chain[k - 1]?.name} <b className="c-ok">{it.chain[k - 1]?.label}</b>
+                <br />
+                {g.stage === "guess" ? "vs" : "prossimo:"} {it.chain[k]?.name} <b className="dim">???</b>
+              </div>
+            </div>
+            <div className="px c-accent" style={{ fontSize: 12 }}>
+              PIATTO {g.pot}
+            </div>
+          </div>
+        </TimerClockCtx.Provider>
+      </PhoneFrame>
+    );
+  }
   if (turn && s.config.judging !== "host" && g.game === "tiro_secco") {
     // four options: the question scrolls, the answers stay under the thumb
     const it = g.items[g.i] as TiroSeccoItem;

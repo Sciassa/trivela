@@ -29,7 +29,7 @@ const timeout = (s: MatchState) => {
 const first = (g: GameId) => [g, ...g5.filter((x) => x !== g)].slice(0, 5) as GameId[];
 
 describe("match flow", () => {
-  it("draws five games out of eight, deterministically per seed, with no fixed final", () => {
+  it("draws five games out of ten, deterministically per seed, with no fixed final", () => {
     const cfg = { judging: "auto" as const, players: ["A", "B"] as [string, string], yearFrom: null, seed: 42 };
     const a = createMatch(cfg, packs);
     const b = createMatch(cfg, packs);
@@ -39,7 +39,7 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(8);
+    expect(POOL).toHaveLength(10);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
@@ -51,7 +51,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(8);
+    expect(Object.keys(MODULES)).toHaveLength(10);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -160,7 +160,7 @@ describe("year filter and sampling", () => {
     for (let seed = 1; seed < 200; seed++) seen.add([...drawGames(new Rng(seed), POOL)].sort().join());
     expect(seen.size).toBeGreaterThan(6);
     const all = new Set(Array.from({ length: 200 }, (_, k) => drawGames(new Rng(k + 1), POOL)).flat());
-    expect(all.size).toBe(8); // every game comes out sooner or later
+    expect(all.size).toBe(10); // every game comes out sooner or later
   });
 });
 
@@ -521,6 +521,124 @@ describe("single-game formats", () => {
     s = reduce(reduce(solo("formazione"), { type: "START" }, ctx), { type: "BEGIN_GAME" }, ctx);
     s = run(s, { type: "CHOOSE", value: 0 }, { type: "FINISH" }, { type: "NEXT" });
     expect(s.game!.stage).toBe("done");
+  });
+});
+
+describe("la quotazione (SPEC §4.11)", () => {
+  const begin = () => {
+    const s = start(first("quotazione"));
+    return expire(s); // ready -> first clue
+  };
+  it("shows the curve a quarter at a time and the clubs only from the fifth clue", () => {
+    let s = begin();
+    const shown = (st: MatchState) => viewFor(st, "screen").game!.items[0];
+    expect(shown(s).curve.at(-1).t).toBeLessThanOrEqual(2012.5);
+    expect(shown(s).answer.display).toBe("");
+    expect(viewFor(s, "p1").game!.items[0].curve.length).toBe(shown(s).curve.length);
+    for (let k = 0; k < 3; k++) s = expire(s);
+    expect(shown(s).curve.length).toBe(11);
+    expect(shown(s).moves.every((m: { club: string }) => m.club === "")).toBe(true);
+    s = expire(s);
+    expect(shown(s).moves.map((m: { club: string }) => m.club)).toEqual(["Cedro FC", "Juventus"]);
+    expect(viewFor(s, "host").game!.items[0].answer.display).not.toBe("");
+  });
+  it("pays 15 points on the first quarter of the curve", () => {
+    let s = begin();
+    const who = s.game!.items[0].answer.display as string;
+    s = run(s, { type: "BUZZ", player: 0 }, { type: "ANSWER", player: 0, payload: { text: who } });
+    expect(s.scores[0]).toBe(15);
+  });
+  it("is one of the clue games: never two of them in a match", () => {
+    for (let seed = 1; seed < 300; seed++) {
+      const d = drawGames(new Rng(seed), POOL);
+      expect(d.filter((g) => ["mercato", "giramondo", "quotazione"].includes(g)).length).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe("testa a testa (SPEC §4.12)", () => {
+  // the fixture chain goes 10, 20, 5, 30, 15, 40, 25: MORE, LESS, MORE, LESS, MORE, LESS
+  const MORE = (s: MatchState) => ({ type: "ANSWER", player: s.game!.turn, payload: { choice: 1 } }) as Intent;
+  const LESS = (s: MatchState) => ({ type: "ANSWER", player: s.game!.turn, payload: { choice: 0 } }) as Intent;
+  const GO = MORE;
+  const CASH = LESS;
+  it("raises the pot 1, 2, 3 and cashes it", () => {
+    let s = start(first("testa_a_testa"));
+    const p = s.game!.turn as 0 | 1;
+    s = run(s, MORE(s));
+    expect(s.game!.stage).toBe("decide");
+    expect(s.game!.pot).toBe(1);
+    s = run(s, GO(s));
+    s = run(s, LESS(s));
+    s = run(s, GO(s));
+    s = run(s, MORE(s));
+    expect(s.game!.pot).toBe(3);
+    s = run(s, CASH(s));
+    expect(s.scores[p]).toBe(3);
+    expect(s.game!.stage).toBe("reveal");
+  });
+  it("loses the whole pot on a wrong guess, and says what was answered", () => {
+    let s = start(first("testa_a_testa"));
+    const p = s.game!.turn as 0 | 1;
+    s = run(s, MORE(s));
+    s = run(s, GO(s));
+    s = run(s, MORE(s)); // 20 -> 5 is LESS
+    expect(s.scores[p]).toBe(0);
+    expect(s.game!.last).toMatchObject({ ok: false, said: "PIÙ" });
+    expect(s.events.some((e) => e.type === "wrong")).toBe(true);
+  });
+  it("pays 12 for the whole chain, cashed by itself", () => {
+    let s = start(first("testa_a_testa"));
+    const p = s.game!.turn as 0 | 1;
+    const plan = [MORE, LESS, MORE, LESS, MORE, LESS];
+    plan.forEach((f, j) => {
+      s = run(s, f(s));
+      if (j < plan.length - 1) s = run(s, GO(s));
+    });
+    expect(s.scores[p]).toBe(12);
+    expect(s.game!.stage).toBe("reveal");
+  });
+  it("out of time: a guess is wrong, a decision cashes", () => {
+    let s = start(first("testa_a_testa"));
+    const p = s.game!.turn as 0 | 1;
+    s = run(s, MORE(s));
+    s = timeout(s);
+    expect(s.scores[p]).toBe(1);
+    s = run(s, { type: "NEXT" });
+    const q = s.game!.turn as 0 | 1;
+    expect(q).not.toBe(p);
+    s = timeout(s);
+    expect(s.scores[q]).toBe(0);
+    expect(s.game!.stage).toBe("reveal");
+  });
+  it("only the player on turn answers", () => {
+    let s = start(first("testa_a_testa"));
+    const other = s.game!.turn === 0 ? 1 : 0;
+    s = run(s, { type: "ANSWER", player: other, payload: { choice: 1 } });
+    expect(s.game!.stage).toBe("guess");
+  });
+  it("never shows the Screen or the phones a value before it is compared", () => {
+    let s = start(first("testa_a_testa"));
+    for (const role of ["screen", "p1", "p2"] as const) {
+      const chain = viewFor(s, role).game!.items[0].chain;
+      expect(chain[0].value).toBe(10);
+      expect(chain[1]).toMatchObject({ value: null, label: null });
+      expect(chain[1].name).not.toBe("");
+      expect(chain.slice(2).every((c: { name: string; value: null }) => c.name === "" && c.value === null)).toBe(true);
+      expect(viewFor(s, role).game!.items[1]).toBeNull();
+    }
+    expect(viewFor(s, "host").game!.items[0].chain[3].value).toBe(30);
+    s = run(s, MORE(s));
+    expect(viewFor(s, "screen").game!.items[0].chain[1].value).toBe(20);
+    expect(viewFor(s, "screen").game!.items[0].chain[2].value).toBeNull();
+  });
+  it("works with the timer off: no countdown, the buttons move it on", () => {
+    let s = start(first("testa_a_testa"), { timer: false });
+    expect(s.timer).toBeNull();
+    s = run(s, MORE(s));
+    expect(s.timer).toBeNull();
+    s = run(s, CASH(s));
+    expect(s.game!.stage).toBe("reveal");
   });
 });
 

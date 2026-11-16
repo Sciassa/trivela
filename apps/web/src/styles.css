@@ -815,3 +815,53 @@ canvas.voxel { display: block; image-rendering: pixelated; }
 .vk-key { position: relative; }
 .vk-key::after { content: ""; position: absolute; inset: -3px -2px; } /* half of the gaps: the keys touch, no dead zone between them */
 .page .suggest button, .set-seg button, .set-step button, .league-pick button, .page .chip { min-height: 48px; }
+
+/* ------------------------------------------------------------ La Quotazione (SPEC §4.11) */
+.quotazione { display: flex; flex-direction: column; gap: 12px; width: 1180px; max-width: 100%; }
+.q-steps { display: flex; gap: 8px; }
+.q-steps span { flex: 1; text-align: center; font-family: var(--pixel); font-size: 16px; padding: 8px 0; background: #0a0a20; color: var(--line); border: 3px solid var(--line); }
+.q-steps span.on { background: #c084fc; color: var(--bg); border-color: #c084fc; }
+.value-chart { width: 100%; height: auto; background: linear-gradient(#0d0d26, #141432); border: 4px solid var(--line); }
+.value-chart .grid { stroke: #23234d; stroke-width: 2; }
+.value-chart .axis { fill: var(--dim); font-family: var(--pixel); font-size: 12px; }
+.value-chart .axis.unit { fill: #c084fc; }
+.value-chart .curve { fill: none; stroke: #c084fc; stroke-width: 6; stroke-linejoin: miter; }
+.value-chart .move line { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 6 6; }
+.value-chart .move rect { fill: var(--accent); }
+.value-chart .move .club { fill: var(--ink); font-family: var(--term); font-size: 22px; }
+.value-chart .peak rect { fill: var(--ok); }
+.value-chart .peak text { fill: var(--ok); font-family: var(--pixel); font-size: 14px; }
+.value-chart .curtain { transition: transform .6s cubic-bezier(.22,.8,.3,1); }
+.value-chart .curtain rect { fill: #0a0a20; opacity: .94; }
+.value-chart .curtain text { fill: var(--line); font-family: var(--pixel); font-size: 22px; }
+.q-facts { display: flex; flex-wrap: wrap; gap: 10px; }
+.q-facts span { font-size: 30px; line-height: 1.1; padding: 6px 14px; background: linear-gradient(var(--panel2), var(--panel)); border: 4px solid var(--line); animation: flip .4s cubic-bezier(.22,.8,.3,1); }
+@media (prefers-reduced-motion: reduce) { .value-chart .curtain { transition: none; } .q-facts span { animation: none; } }
+
+/* ------------------------------------------------------------ Testa a Testa (SPEC §4.12) */
+.pot-ladder { display: flex; align-items: center; gap: 8px; }
+.pot-ladder span { min-width: 56px; text-align: center; font-family: var(--pixel); font-size: 18px; padding: 10px 6px; background: #0a0a20; color: var(--line); border: 3px solid var(--line); }
+.pot-ladder span.done { color: var(--bg); background: #ff6fb5; border-color: #ff6fb5; }
+.pot-ladder span.now { color: var(--bg); background: var(--accent); border-color: var(--accent); transform: scale(1.12); }
+.pot-ladder .pot-now { margin-left: auto; font-family: var(--pixel); font-size: 20px; color: var(--accent); text-align: right; }
+.pot-ladder .pot-now.c-ok { color: var(--ok); }
+.duel { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: 22px; animation: pop .4s cubic-bezier(.22,.8,.3,1); }
+.duel-card { display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 20px 26px; min-height: 180px; background: linear-gradient(var(--panel2), var(--panel)); border: 4px solid var(--line); }
+.duel-card .name { font-size: 46px; line-height: 1; }
+.duel-card .value { font-family: var(--pixel); font-size: 30px; color: var(--ok); }
+.duel-card .value.q { color: var(--line); }
+.duel-card.next { border-color: #ff6fb5; }
+.duel .vs { align-self: center; font-family: var(--pixel); font-size: 28px; color: #ff6fb5; }
+.duel-actions { display: flex; gap: 18px; }
+.duel-actions .btn { flex: 1; min-height: calc(48px * var(--inv, 1)); font-size: 22px; }
+.duel-actions .more { background: var(--ok); color: var(--bg); }
+.duel-actions .less { background: var(--ko); color: var(--ink); }
+.duel-actions .cash { background: var(--accent); color: var(--bg); }
+.chain-reveal { display: flex; flex-wrap: wrap; gap: 10px; }
+.chain-reveal span { font-size: 28px; padding: 6px 12px; border: 3px solid var(--line); color: var(--dim); }
+.chain-reveal span.played { color: var(--ink); border-color: #ff6fb5; }
+.chain-reveal b { font-weight: normal; color: inherit; }
+@media (prefers-reduced-motion: reduce) { .duel { animation: none; } .pot-ladder span.now { transform: none; } }
+.phone-actions .duel-more { background: var(--ok); color: var(--bg); }
+.phone-actions .duel-less { background: var(--ko); color: var(--ink); }
+.phone-actions .duel-cash { background: var(--accent); color: var(--bg); }

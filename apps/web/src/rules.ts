@@ -10,6 +10,8 @@ export const GAME_NAMES: Record<GameId, string> = {
   giramondo: "IL GIRAMONDO",
   asta: "L'ASTA",
   maglia: "LA MAGLIA",
+  quotazione: "LA QUOTAZIONE",
+  testa_a_testa: "TESTA A TESTA",
 };
 
 export const GAME_RULES: Record<GameId, string[]> = {
@@ -21,4 +23,6 @@ export const GAME_RULES: Record<GameId, string[]> = {
   giramondo: ["2 carriere svelate in ordine cronologico.", "Si prenota col pulsante: un solo tentativo.", "Prima indovini, più vale: 12-9-6-3-1 punti."],
   asta: ["2 categorie: quanti nomi sai dire?", "Chi vince l'asta ha 60 secondi per dirne quanti ne ha puntati.", "Ci riesce: +puntata. Fallisce: +5 all'avversario."],
   maglia: ["2 giocatori a testa: squadra e stagione.", "Che numero aveva sulla maglia?", "+3 per ogni numero esatto."],
+  quotazione: ["2 giocatori: la curva del valore di mercato si scopre da sinistra.", "Si prenota col pulsante: un solo tentativo.", "Meno curva vedi, più vale: 15-12-9-6-3-1 punti."],
+  testa_a_testa: ["Una catena a testa, sempre sulla stessa statistica.", "Il prossimo ha PIÙ o MENO? Poi incassi o rilanci.", "Il piatto sale 1-2-3-5-8-12: un errore e lo perdi."],
 };
