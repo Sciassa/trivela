@@ -21,5 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
-      - run: uv run --project data pytest
-        working-directory: .
+        with:
+          python-version: "3.13"
+      # from inside data/: pytest reads data/pyproject.toml there (pythonpath "."), so trivela_data is importable
+      - run: uv run pytest
+        working-directory: data

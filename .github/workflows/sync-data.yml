@@ -16,13 +16,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
       - uses: actions/cache@v4
         with:
           path: data/cache
           key: data-cache-${{ github.run_id }}
           restore-keys: data-cache-
       - name: Scarica fonti e rigenera i pacchetti
-        run: uv run --project data python -m trivela_data.sync
+        # from inside data/, like `pnpm data:sync`: the package trivela_data lives there
+        run: uv run python -m trivela_data.sync
+        working-directory: data
       - name: Apri la pull request con i nuovi pacchetti
         uses: peter-evans/create-pull-request@v7
         with:
