@@ -247,6 +247,15 @@ try {
     await m.waitForFunction(() => [...document.querySelectorAll(".lives")].some((e) => e.textContent.includes("♡")), null, { timeout: 15000 });
     const lostAt = Date.now() - t0;
     check(lostAt - graceAt > 8000 && lostAt - graceAt < 12500, `the answer is lost only when the ten extra seconds are over too (${((lostAt - graceAt) / 1000).toFixed(1)} s)`);
+    // the keys cover the board: the keyboard itself says whether the name just sent was right
+    await m.locator(".vk-layer.over .vk-key").first().waitFor();
+    await typeVK(m, "Qwxz");
+    await m.locator('.vk-key[data-key="OK"]').tap();
+    const verdict = m.locator(".vk-layer.over .vk-verdict");
+    await verdict.waitFor({ timeout: 3000 });
+    check((await verdict.getAttribute("class")).includes("ko") && (await verdict.innerText()).toUpperCase().includes("QWXZ"), `a wrong name is shown in red on the keyboard strip, with what was typed (${(await verdict.innerText()).replace(/\s+/g, " ")})`);
+    check((await m.evaluate(() => window.__vib)).includes("70,40,70,40,70"), "and the phone buzzes the 'wrong' pattern");
+    await m.screenshot({ path: "test-results/phone-verdict.png" });
     await m.context().close();
 
     // a tablet has room: the keyboard is docked and the board stays in sight above it

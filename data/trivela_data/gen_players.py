@@ -142,13 +142,42 @@ def maglia(t: TM, classic_share: float = 0.02) -> list[dict]:
                   script=f"Nella {COMP_IT[comp]} {season_label(season)} {t.pname(pid)} ({ROLE_IT[group]}) indossava il numero {num} {t.di(club)}.")
         it.update({"player": t.pname(pid), "team": t.club(club), "season": f"{COMP_IT[comp]} {season_label(season)}",
                    "question": f"Che numero di maglia aveva {t.pname(pid)} {t.con(club)} nella {COMP_IT[comp]} {season_label(season)}?",
-                   "answer": {"kind": "number", "value": num, "display": str(num)}, "role": group})
+                   "answer": {"kind": "number", "value": num, "display": str(num)}, "role": group, "player_id": pid})
+        it["_n"] = n
         found[kind].append(it)
+    found = {k: _one_per_shirt(v) for k, v in found.items()}
     for v in found.values():
         v.sort(key=lambda x: (-x["fame"], x["id"]))
     classic = found["classica"][: int(len(found["insolita"]) * classic_share)]
     out = sorted(found["anomala"] + found["pesante"] + found["insolita"] + classic, key=lambda x: (-x["fame"], x["id"]))
-    return out
+    # at most MAX_PER_PLAYER questions on the same player, out-of-role numbers first: a pack where one player
+    # fills five slots makes him come back match after match (SPEC §4.8)
+    rank = {"maglia_anomala": 0, "maglia_pesante": 1, "maglia_numero": 2}
+    per_player: Counter = Counter()
+    kept = []
+    for it in sorted(out, key=lambda x: (rank[x["generator"].split("@")[0]], -x["fame"], x["id"])):
+        if per_player[it["player_id"]] >= MAX_PER_PLAYER:
+            continue
+        per_player[it["player_id"]] += 1
+        kept.append(it)
+    for it in kept:
+        del it["player_id"]
+    return sorted(kept, key=lambda x: (-x["fame"], x["id"]))
+
+
+MAX_PER_PLAYER = 2
+
+
+def _one_per_shirt(items: list[dict]) -> list[dict]:
+    """Same player, same club, same number in several seasons is one question, not five: keep the season with most games."""
+    best: dict[tuple, dict] = {}
+    for it in items:
+        k = (it["player_id"], it["team"], it["answer"]["value"])
+        if k not in best or (it["_n"], -it["yearMax"]) > (best[k]["_n"], -best[k]["yearMax"]):
+            best[k] = it
+    for it in best.values():
+        del it["_n"]
+    return list(best.values())
 
 
 def generate(t: TM) -> dict[str, list[dict]]:

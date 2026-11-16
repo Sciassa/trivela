@@ -5,7 +5,7 @@ import { VoxelTrophy } from "../components/Voxel3D";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
-import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, useWakeLock, type PlayMode, type Pop, type TimerClock } from "../components/ui";
+import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, useVerdict, useWakeLock, VerdictCtx, type PlayMode, type Pop, type TimerClock } from "../components/ui";
 import { GAME_COLORS, GameIcon, Sprite } from "../components/sprites";
 import { ClueBuzzer, GameView, isBuzzerGame } from "../games/GameView";
 import { GAME_NAMES, GAME_RULES } from "../rules";
@@ -94,6 +94,7 @@ export function MatchShell({
   }, [graceId]);
   const g = state.order[state.gameIdx];
   const fx = useFx(state);
+  const verdict = useVerdict(state.events);
   const pops = usePops(state);
   const wipe = useWipe(state);
   const buzzer = state.phase === "playing" && !!view.game && isBuzzerGame(view.game.game);
@@ -101,6 +102,7 @@ export function MatchShell({
     <Stage>
       <PlayCtx.Provider value={mode}>
         <TimerClockCtx.Provider value={clock}>
+        <VerdictCtx.Provider value={verdict}>
         <div className={`shake-root ${fx?.kind === "ko" ? "shake" : ""}`}>
         <Scoreboard state={state} />
         {onAbort && state.phase !== "match_over" && (
@@ -192,6 +194,7 @@ export function MatchShell({
             onCancel={() => setAsking(false)}
           />
         )}
+        </VerdictCtx.Provider>
         </TimerClockCtx.Provider>
       </PlayCtx.Provider>
     </Stage>

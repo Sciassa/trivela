@@ -63,8 +63,8 @@ class Quiz:
 
     # ------------------------------------------------------------------ helpers
     def add(self, gen: str, key, question: str, correct: str, distractors: list[str], *, year: int, fame: int, script: str, sources: list[dict],
-            entities: list[str], archetype: int, comp: str | None = None, active: list[int] | None = None) -> bool:
-        o = opts4(correct, distractors, f"{gen}-{key}")
+            entities: list[str], archetype: int, comp: str | None = None, active: list[int] | None = None, head: int | None = None) -> bool:
+        o = opts4(correct, distractors, f"{gen}-{key}", head)
         if not o:
             return False
         g = gen if comp in (None, "IT1", "CL") else f"{gen}@estero"
@@ -92,7 +92,8 @@ class Quiz:
         for s in (season - 1, season, season + 1):
             pool |= self.season_players.get((comp, s), set())
         pool.discard(pid)
-        return sorted((p for p in pool if t.players[p]["dob"] and abs(t.players[p]["dob"].year - yob) <= 5), key=lambda p: -t.fame(p))[:k]
+        # as famous as the answer, not the stars of the league: three stars around an unknown name give it away (SPEC §4.1, v10)
+        return t.near_in_fame(t.fame(pid), [p for p in pool if t.players[p]["dob"] and abs(t.players[p]["dob"].year - yob) <= 5], seed=(pid, comp, season))[:k]
 
     # ------------------------------------------------------------------ T1 birthday goals
     def birthday_goals(self) -> None:
@@ -118,7 +119,7 @@ class Quiz:
                         ds.append(t.pname(q))
                 g = self.G[gid]
                 self.add("ts_compleanno", (pid, comp), f"Quale di questi giocatori ha segnato {IN_COMP[comp]} nel giorno del suo {age}° compleanno?",
-                         t.pname(pid), ds, year=d.year, fame=t.fame(pid), comp=comp, archetype=1, entities=[f"comp:{comp}", t.pid(pid)],
+                         t.pname(pid), ds, year=d.year, fame=t.fame(pid), comp=comp, archetype=1, entities=[f"comp:{comp}", t.pid(pid)], head=3,
                          sources=[t.src_player(pid), t.src_game(g)],
                          script=f"{t.pname(pid)}, nato il {date_it(p['dob'])}, ha segnato in {t.label(g)} ({t.ctx(g)}) il {date_it(d)}: "
                                 f"era il giorno del suo {age}° compleanno.")
@@ -166,13 +167,16 @@ class Quiz:
         for (a, b), g in best.items():
             r = random.Random(f"{a}-{b}")
             pool = [p for p in starters[g["gid"]] if t.is_notable(p) and p not in (a, b) and t.players[p]["dob"]]
+            # every name once: a name that comes back in two options would point at the answer
+            r.shuffle(pool)
             ds = []
-            for _ in range(30):
-                if len(pool) < 2:
+            while len(pool) >= 2 and len(ds) < 3:
+                x = pool.pop()
+                y = next((q for q in pool if t.players[q]["dob"] != t.players[x]["dob"]), None)
+                if y is None:
                     break
-                x, y = r.sample(pool, 2)
-                if t.players[x]["dob"] != t.players[y]["dob"]:
-                    ds.append(f"{t.pname(x)} e {t.pname(y)}")
+                pool.remove(y)
+                ds.append(f"{t.pname(x)} e {t.pname(y)}")
             dob = t.players[a]["dob"]
             self.add("ts_gemelli", (a, b), f"Quali due titolari di {t.label(g)} ({t.ctx(g)}) sono nati esattamente lo stesso giorno?",
                      f"{t.pname(a)} e {t.pname(b)}", ds, year=g["date"].year, fame=min(t.fame(a), t.fame(b)), comp=g["comp"], archetype=1,
@@ -201,7 +205,13 @@ class Quiz:
                 continue
             on_day = [g for g in games if (g["date"].month, g["date"].day) == bd(x)]
             g = on_day[0] if on_day else max(games, key=lambda z: weight(t, z))
-            others = [f"{p} e {q}" for p, q in by_season[(g["comp"], g["season"])] if bd(p) != bd(q) and {p, q} != {x, y}]
+            # three pairs with no name in common, neither with each other nor with the answer: a name that comes back in
+            # three options out of four was the answer (SPEC §4.1, v10)
+            others, used = [], {x, y}
+            for p, q in sorted(by_season[(g["comp"], g["season"])], key=lambda pq: random.Random(f"{pair}{pq}").random()):
+                if bd(p) != bd(q) and not {p, q} & used:
+                    others.append(f"{p} e {q}")
+                    used |= {p, q}
             day = f"{md[x].day} {MONTHS[md[x].month - 1]}"
             if on_day:
                 q = f"Quali due allenatori si sono affrontati {IN_COMP[g['comp']]} proprio nel giorno in cui entrambi compivano gli anni?"
@@ -359,14 +369,13 @@ class Quiz:
             season = self.G[lst[0][1]]["season"]
             scorers = {p for p, _ in lst}
             pool = [p for p in self.season_players[(comp, season)] if p not in scorers and any(x[1] == comp and x[2] == season for x in self.pgoals.get(p, []))]
-            pool = sorted(pool, key=lambda p: -t.fame(p))[:30]
             for pid, gid in sorted(lst, key=lambda x: -t.fame(x[0]))[:3]:
                 if not t.is_notable(pid):
                     continue
                 g = self.G[gid]
                 label = feast if feast.startswith(("il ", "l'", "la ")) else f"il giorno di {feast}"
                 self.add("ts_festa", (comp, d, pid), f"Quale di questi giocatori ha segnato {IN_COMP[comp]} {label} del {d.year}?",
-                         t.pname(pid), [t.pname(p) for p in pool], year=d.year, fame=t.fame(pid), comp=comp, archetype=1,
+                         t.pname(pid), [t.pname(p) for p in t.near_in_fame(t.fame(pid), pool, seed=(pid, d))[:30]], year=d.year, fame=t.fame(pid), comp=comp, archetype=1, head=3,
                          entities=[f"comp:{comp}", t.pid(pid)], sources=[t.src_game(g)],
                          script=f"Il {date_it(d)} {t.pname(pid)} ha segnato in {t.label(g)} ({t.ctx(g)}).")
 
@@ -420,10 +429,14 @@ class Quiz:
             g = self.G[gid]
             if (a, b) not in best or weight(t, g) > weight(t, best[(a, b)][0]):
                 best[(a, b)] = (g, last)
+        # how common each surname is: "Silva" among three rare surnames gave itself away, so the wrong options are the most
+        # common surnames among the other starters
+        freq = Counter((p["last"] or "").lower() for p in t.players.values())
         for (a, b), (g, last) in best.items():
-            ds = sorted({t.surname(p) for p in self.starters(g["gid"]) if p not in (a, b) and t.surname(p).lower() != last.lower()})
+            ds = sorted({t.surname(p) for p in self.starters(g["gid"]) if p not in (a, b) and t.surname(p).lower() != last.lower()},
+                        key=lambda x: (-freq[x.lower()], x))
             self.add("ts_omonimi", (a, b), f"In {t.label(g)} ({t.ctx(g)}) due avversari, entrambi titolari, portavano lo stesso cognome: quale?",
-                     last, ds, year=g["date"].year, fame=max(t.fame(a), t.fame(b)), comp=g["comp"], archetype=4,
+                     last, ds, year=g["date"].year, fame=max(t.fame(a), t.fame(b)), comp=g["comp"], archetype=4, head=4,
                      entities=[f"comp:{g['comp']}", t.pid(a), t.pid(b)], sources=[t.src_game(g)],
                      script=f"In campo dal primo minuto, uno contro l'altro, c'erano {t.pname(a)} e {t.pname(b)} ({date_it(g['date'])}).")
 
@@ -435,14 +448,24 @@ class Quiz:
             for d, comp, season, gid, club, n in lst:
                 if comp in L5:
                     by[(comp, season)][pid].add(club)
+        # near misses: players who changed club during that season too, but scored with only one of the two
+        moved = defaultdict(set)
+        for pid, comp, season, clubs in t.q("""select p.pid, gm.comp, gm.season, list(distinct p.club) from pres p join gm using(gid)
+                                                group by 1, 2, 3 having count(distinct p.club) >= 2"""):
+            # only when the goals of both clubs are complete: otherwise "scored with one of them" is not proven
+            if comp in L5 and all(t.valid_seasons(comp, int(c), "goal").get(int(season)) for c in clubs):
+                moved[(comp, int(season))].add(int(pid))
         for (comp, season), players in by.items():
-            single = sorted((p for p, cs in players.items() if len(cs) == 1 and t.is_notable(p)), key=lambda p: -t.fame(p))[:25]
+            single = [p for p, cs in players.items() if len(cs) == 1 and t.is_notable(p)]
+            near = [p for p in single if p in moved[(comp, season)]]
             for pid, cs in players.items():
                 if len(cs) != 2 or not t.is_notable(pid) or not all(t.valid_seasons(comp, c, "goal").get(season) for c in cs):
                     continue
+                f = t.fame(pid)
+                ds = [*t.near_in_fame(f, near, seed=(pid, season)), *t.near_in_fame(f, [p for p in single if p not in near], seed=(pid, season))][:25]
                 a, b = sorted(cs, key=lambda c: min(x[0] for x in self.pgoals[pid] if x[4] == c and x[1] == comp and x[2] == season))
                 self.add("ts_due_maglie", (comp, season, pid), f"Quale di questi giocatori ha segnato con due squadre diverse nella {COMP_IT[comp]} {season_label(season)}?",
-                         t.pname(pid), [t.pname(p) for p in single], year=season, fame=t.fame(pid), comp=comp, archetype=5,
+                         t.pname(pid), [t.pname(p) for p in ds], year=season, fame=t.fame(pid), comp=comp, archetype=5, head=3,
                          entities=[f"comp:{comp}", t.pid(pid), t.cid(a), t.cid(b)], sources=[t.src_player(pid), SRC_DATASET],
                          script=f"Nella {COMP_IT[comp]} {season_label(season)} {t.pname(pid)} ha segnato prima {t.con(a)} e poi {t.con(b)}.")
 
@@ -478,7 +501,12 @@ class Quiz:
             real_other = bool(usual_of_others.get(st, set()) - {club})
             if not real_other and g["season"] >= last_season[club]:
                 continue
-            ds = [home_st] + sorted(s for s in league_stadiums[t.club_league.get(club)] if s not in (st, home_st))[:12]
+            # the club's own grounds first, then those of clubs of its league that are not big ones: the stadium of a giant
+            # among the options of a small club is excluded at once
+            own = sorted(s for s in use[club] if s not in (st, home_st))
+            small = sorted(s for s in league_stadiums[t.club_league.get(club)]
+                           if s not in (st, home_st) and not (usual_of_others.get(s, set()) & set(t.big)))
+            ds = [home_st] + list(dict.fromkeys(own + small))[:12]
             o = [home_st] + random.Random(g["gid"]).sample(ds[1:], min(2, len(ds) - 1))
             self.add("ts_stadio", g["gid"], f"In quale stadio {t.il(club)} ha giocato in casa {t.label(g)} del {date_it(g['date'])} ({t.ctx(g)})?",
                      st, o, year=g["date"].year, fame=60, comp=g["comp"], archetype=6, entities=[f"comp:{g['comp']}", t.cid(club)],
@@ -489,19 +517,25 @@ class Quiz:
     def never_scored(self) -> None:
         t = self.t
         for comp, min_apps in (("CL", 8), ("IT1", 40)):
-            scorers = sorted({p for p, lst in self.pgoals.items() if any(x[1] == comp for x in lst) and t.is_notable(p)
-                              and t.players[p]["dob"] and t.players[p]["dob"].year >= 1993}, key=lambda p: -t.fame(p))[:120]
+            # near misses: players of the same role who scored only a goal or three there (a defender among three forwards
+            # was the obvious answer)
+            total = Counter()
+            for p, lst in self.pgoals.items():
+                for x in lst:
+                    if x[1] == comp:
+                        total[p] += x[5]
+            scorers = [p for p, n in total.items() if 1 <= n <= 3 and t.is_notable(p) and t.players[p]["dob"] and t.players[p]["dob"].year >= 1993]
             for (pid, c), n in self.pres_count.items():
                 p = t.players.get(pid)
                 if c != comp or n < min_apps or not p or not p["dob"] or p["dob"].year < 1997 or p["line"] == "Goalkeeper" or not t.is_notable(pid):
                     continue
                 if any(x[1] == comp for x in self.pgoals.get(pid, [])) or not self.clean_history(pid, comp, END):
                     continue
-                r = random.Random(pid)
+                same = [q for q in scorers if t.players[q]["line"] == p["line"]]
                 note = "Champions League (qualificazioni escluse" if comp == "CL" else "Serie A ("
                 self.add("ts_mai_gol", (pid, comp), f"Quale di questi giocatori non ha mai segnato in {note}{', ' if comp == 'CL' else ''}dati al 6 luglio 2026)?",
-                         t.pname(pid), [t.pname(q) for q in r.sample(scorers, min(12, len(scorers)))], year=2026, fame=t.fame(pid), comp=comp,
-                         archetype=5, entities=[f"comp:{comp}", t.pid(pid)], sources=[t.src_player(pid), SRC_DATASET], active=[2026],
+                         t.pname(pid), [t.pname(q) for q in t.near_in_fame(t.fame(pid), same, seed=(pid, comp))[:12]], year=2026, fame=t.fame(pid), comp=comp,
+                         archetype=5, head=3, entities=[f"comp:{comp}", t.pid(pid)], sources=[t.src_player(pid), SRC_DATASET], active=[2026],
                          script=f"{t.pname(pid)} ha {n} presenze {IN_COMP[comp]} senza alcun gol (dati al 6 luglio 2026).")
 
     # ------------------------------------------------------------------ T19 referees of the big nights
