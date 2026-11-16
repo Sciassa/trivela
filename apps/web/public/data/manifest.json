@@ -1,10 +1,10 @@
 {
   "version": "2026-11-16",
-  "generatedAt": "2026-11-16T07:10:17+00:00",
+  "generatedAt": "2026-11-16T10:05:13+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 3600,
-    "mercato": 1300,
+    "mercato": 1857,
     "decina": 1400,
     "dischetto": 1336,
     "formazione": 1400,
@@ -14,7 +14,7 @@
   },
   "generators": {
     "tiro_secco": 71,
-    "mercato": 1,
+    "mercato": 2,
     "decina": 23,
     "dischetto": 67,
     "formazione": 4,
@@ -43,7 +43,7 @@
       "excluded_not_notable": 0
     },
     "mercato": {
-      "kept": 1311,
+      "kept": 1857,
       "excluded_show": 0,
       "excluded_not_notable": 0
     },

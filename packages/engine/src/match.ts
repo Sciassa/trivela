@@ -99,6 +99,13 @@ export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): G
 }
 
 /**
+ * Generators drawn with a weight instead of in turn (SPEC §4.3): in Il Mercato about four transfers in five are worth
+ * 20 million or more, the cheaper ones (of well-known players) are rarer. Keys are generator ids without "@…".
+ */
+export const GENERATOR_WEIGHTS: Record<string, number> = { mercato: 0.78, mercato_minore: 0.22 };
+const weightOf = (generator: string): number | null => GENERATOR_WEIGHTS[generator.split("@")[0]!] ?? null;
+
+/**
  * The people a question is about: its player entities, when there are at most two of them (a list or a ranking
  * names many people and is not "about" any of them).
  */
@@ -125,15 +132,32 @@ export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng:
   const picked: T[] = [];
   const taken = new Set(people);
   const free = (it: T) => !subjectsOf(it).some((p) => taken.has(p));
-  while (picked.length < n && order.some((k) => groups.get(k)!.some(free))) {
-    for (const k of order) {
-      const g = groups.get(k)!;
-      if (picked.length >= n) break;
-      while (g.length && !free(g[g.length - 1]!)) g.pop();
-      const it = g.pop();
-      if (!it) continue;
+  const take = (g: T[]) => {
+    while (g.length && !free(g[g.length - 1]!)) g.pop();
+    const it = g.pop();
+    if (it) {
       picked.push(it);
       subjectsOf(it).forEach((p) => taken.add(p));
+    }
+  };
+  if (order.some((k) => weightOf(k) !== null)) {
+    // weighted generators: each question is drawn from a generator with the probability of its weight
+    while (picked.length < n) {
+      const live = order.filter((k) => groups.get(k)!.some(free));
+      if (!live.length) break;
+      // a weight belongs to the generator: its variants ("…@estero") share it
+      const base = (k: string) => k.split("@")[0]!;
+      const share = (k: string) => (weightOf(k) ?? 1) / live.filter((x) => base(x) === base(k)).length;
+      const total = live.reduce((sum, k) => sum + share(k), 0);
+      let x = rng.next() * total;
+      const k = live.find((key) => (x -= share(key)) < 0) ?? live[live.length - 1]!;
+      take(groups.get(k)!);
+    }
+  }
+  while (picked.length < n && order.some((k) => groups.get(k)!.some(free))) {
+    for (const k of order) {
+      if (picked.length >= n) break;
+      take(groups.get(k)!);
     }
   }
   if (picked.length < n) return null;
