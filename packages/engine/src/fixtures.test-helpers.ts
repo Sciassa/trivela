@@ -37,13 +37,6 @@ export function makePacks(): Packs {
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
     items.giramondo.push({ ...meta({ activeYears: [2020] }), clues: ["c1", "c2", "c3", "c4", "c5"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
-    items.quotazione.push({
-      ...meta({ activeYears: [2020] }),
-      clues: ["q1", "q2", "q3", "q4", "q5", "q6"],
-      curve: Array.from({ length: 11 }, (_, y) => ({ t: 2010 + y, v: 5 + y * 3 })),
-      moves: [{ t: 2010, club: "Cedro FC" }, { t: 2016, club: "Juventus" }],
-      answer: { kind: "entity", ids: [P(k).id], display: P(k).name },
-    });
     items.testa_a_testa.push({
       ...meta(),
       title: "Gol in Serie A",

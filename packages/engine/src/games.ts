@@ -6,7 +6,6 @@ import type {
   MagliaItem,
   MercatoItem,
   PlayerIdx,
-  QuotazioneItem,
   Role,
   SetItem,
   TestaItem,
@@ -29,8 +28,9 @@ export const TIMERS = {
   formazione: 60_000,
   asta: 60_000,
   maglia: 30_000,
-  /** Testa a Testa: each choice (MORE/LESS, then CASH/GO ON). */
-  testa: 15_000,
+  /** Testa a Testa: each MORE/LESS choice, then the pause that shows the value that came out. */
+  testa: 12_000,
+  testaFeedback: 1_800,
 } as const;
 
 const clone = <T>(x: T): T => structuredClone(x);
@@ -210,8 +210,6 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
   id: GameId,
   count: number,
   points: number[],
-  /** What else of the current item the Screen and the phones may see after `revealed` clues (La Quotazione: the curve). */
-  mask: (item: I, revealed: number) => I = (it) => it,
 ): GameModule {
   const startItem = (s: GameStateAny, env: Env) => {
     s.stage = "ready";
@@ -340,7 +338,7 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
         if (idx < s.i) return it;
         if (idx > s.i) return null;
         if (s.stage === "reveal") return it;
-        return mask({ ...it, clues: it.clues.slice(0, s.revealed), answer: { kind: "text", accepted: [], display: "" }, script: "" }, s.revealed);
+        return { ...it, clues: it.clues.slice(0, s.revealed), answer: { kind: "text", accepted: [], display: "" }, script: "" };
       });
       return r;
     },
@@ -350,137 +348,100 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
 export const mercato = clueBuzzer<MercatoItem>("mercato", 2, [20, 15, 10, 5, 3, 2]);
 export const giramondo = clueBuzzer<GiramondoItem>("giramondo", 2, [12, 9, 6, 3, 1]);
 
-/**
- * La Quotazione (SPEC §4.11): the market value curve is uncovered a quarter at a time (clues 1–4), then the clubs on
- * the flags (5), then role and nationality (6). The Screen and the phones get only the part of the curve already shown.
- */
-export const QUOTAZIONE_SHOWN = [0, 0.25, 0.5, 0.75, 1, 1, 1];
-export function maskQuotazione(it: QuotazioneItem, revealed: number): QuotazioneItem {
-  const first = it.curve[0]?.t ?? 0;
-  const last = it.curve[it.curve.length - 1]?.t ?? first;
-  const shown = QUOTAZIONE_SHOWN[Math.min(revealed, QUOTAZIONE_SHOWN.length - 1)]!;
-  const until = first + (last - first) * shown;
-  return {
-    ...it,
-    span: [first, last],
-    curve: shown === 0 ? [] : it.curve.filter((p) => p.t <= until + 1e-9),
-    moves: shown === 0 ? [] : it.moves.filter((m) => m.t <= until + 1e-9).map((m) => ({ ...m, club: revealed >= 5 ? m.club : "" })),
-  };
-}
-export const quotazione = clueBuzzer<QuotazioneItem>("quotazione", 2, [15, 12, 9, 6, 3, 1], maskQuotazione);
-
 /* ------------------------------------------------------------------ */
 /* Testa a Testa                                                        */
 /* ------------------------------------------------------------------ */
 
-/** What the pot is worth after 1, 2… right guesses in a row (SPEC §4.12). */
-export const TESTA_POT = [1, 2, 3, 5, 8, 12];
+/** Testa a Testa (SPEC §4.11): +1 for each right guess, +3 to the opponent of whoever gets one wrong first. */
+export const TESTA_RIGHT = 1;
+export const TESTA_DUEL = 3;
 
 /**
- * Testa a Testa (SPEC §4.12): a chain of seven players on one statistic, one chain per player in turn. The player
- * says whether the next one has MORE (choice 1) or LESS (choice 0) than the last shown; after a right guess they
- * CASH the pot (choice 0) or GO ON (choice 1). A wrong guess loses the pot. Out of time: a guess is wrong, a
- * decision cashes.
+ * Testa a Testa (SPEC §4.11): a duel on one chain of players and one statistic. The two players take turns on the
+ * same chain: the one on turn says whether the next player has MORE (choice 1) or LESS (choice 0) than the last one
+ * shown. Right: +1, and the chain passes to the opponent, one step harder (the values get closer). Wrong, or out of
+ * time: the duel is over and the opponent wins it (+3). A chain guessed to the end is a draw. Alone (Allenamento):
+ * one point per right guess, until the first mistake.
  */
 export const testaATesta: GameModule = {
   id: "testa_a_testa",
-  count: 2,
+  count: 1,
   init(items, env) {
     env.setTimer(TIMERS.testa, "guess");
-    return { game: "testa_a_testa", stage: "guess", turn: env.starter, starter: env.starter, items, i: 0, k: 1, pot: 0, last: null, script: null };
+    return { game: "testa_a_testa", stage: "guess", turn: env.starter, starter: env.starter, items, i: 0, k: 1, results: [], winner: null, last: null, script: null };
   },
   reduce(s, intent, env) {
     const item = s.items[s.i] as TestaItem;
     const player = s.turn as PlayerIdx;
-    const choice = (): 0 | 1 | null | "ignore" => {
-      if (intent.type === "TIMEOUT") return null;
-      if (intent.type !== "ANSWER") return "ignore";
-      if (env.judging === "auto" && playerOf(intent, s) !== s.turn) return "ignore";
-      const c = intent.payload.choice;
-      return c === 0 || c === 1 ? c : "ignore";
-    };
-    const close = (points: number) => {
-      if (points) env.addPoints(player, points);
+    const end = () => {
       s.stage = "reveal";
       s.script = item.script;
       env.clearTimer();
       env.emit({ type: "reveal" });
     };
     if (s.stage === "guess") {
-      const c = choice();
-      if (c === "ignore") return;
+      let choice: 0 | 1 | null;
+      if (intent.type === "TIMEOUT") choice = null;
+      else if (intent.type === "ANSWER") {
+        if (env.judging === "auto" && playerOf(intent, s) !== s.turn) return;
+        const c = intent.payload.choice;
+        if (c !== 0 && c !== 1) return;
+        choice = c;
+      } else return;
       const before = item.chain[s.k - 1]!.value as number;
       const next = item.chain[s.k]!.value as number;
-      const ok = c !== null && (next > before) === (c === 1);
-      if (!ok) {
-        s.last = { player, points: 0, ok: false, said: c === null ? undefined : c === 1 ? "PIÙ" : "MENO", lost: s.pot };
-        env.emit({ type: "wrong", player, points: 0 });
-        if (c === null) env.emit({ type: "timeout" });
-        s.pot = 0;
-        close(0);
+      const up = next > before;
+      const ok = choice !== null && up === (choice === 1);
+      s.results.push({ player, ok, up, choice });
+      if (ok) {
+        env.addPoints(player, TESTA_RIGHT);
+        env.emit({ type: "correct", player, points: TESTA_RIGHT });
+        s.last = { player, points: TESTA_RIGHT, ok: true };
+        if (s.k >= item.chain.length - 1) {
+          s.last = { player, points: TESTA_RIGHT, ok: true, complete: true };
+          end(); // the whole chain: a draw, nobody wins the duel
+          return;
+        }
+        s.stage = "feedback";
+        env.setTimer(TIMERS.testaFeedback, "feedback");
         return;
       }
-      s.pot = TESTA_POT[s.k - 1]!;
-      s.last = { player, points: 0, ok: true };
-      if (s.k >= item.chain.length - 1) {
-        // the whole chain: the pot is cashed by itself
-        env.emit({ type: "correct", player, points: s.pot });
-        s.last = { player, points: s.pot, ok: true, cashed: true };
-        close(s.pot);
-        return;
+      const said = choice === null ? undefined : choice === 1 ? "PIÙ" : "MENO";
+      env.emit({ type: "wrong", player, points: 0 });
+      if (choice === null) env.emit({ type: "timeout" });
+      if (env.solo) {
+        s.last = { player, points: 0, ok: false, said };
+      } else {
+        const rival = other(player);
+        env.addPoints(rival, TESTA_DUEL);
+        env.emit({ type: "correct", player: rival, points: TESTA_DUEL });
+        s.winner = rival;
+        s.last = { player, points: 0, ok: false, said, winner: rival };
       }
-      env.emit({ type: "correct", player, points: 0 });
-      s.stage = "decide";
-      env.setTimer(TIMERS.testa, "decide");
+      end();
       return;
     }
-    if (s.stage === "decide") {
-      const c = choice();
-      if (c === "ignore") return;
-      if (c === 1) {
-        s.k += 1;
-        s.stage = "guess";
-        s.last = null;
-        env.setTimer(TIMERS.testa, "guess");
-        return;
-      }
-      env.emit({ type: "correct", player, points: s.pot });
-      s.last = { player, points: s.pot, ok: true, cashed: true };
-      close(s.pot);
-      return;
-    }
-    if (s.stage === "reveal" && intent.type === "NEXT") {
-      s.i += 1;
-      if (s.i >= s.items.length) {
-        s.stage = "done";
-        return;
-      }
-      s.turn = turnOf(s.i, s.starter, env.solo);
-      s.k = 1;
-      s.pot = 0;
+    if (s.stage === "feedback" && intent.type === "TIMEOUT") {
+      s.k += 1;
+      s.turn = env.solo ? 0 : other(player);
       s.last = null;
-      s.script = null;
       s.stage = "guess";
       env.setTimer(TIMERS.testa, "guess");
+      return;
     }
+    if (s.stage === "reveal" && intent.type === "NEXT") s.stage = "done";
   },
   done: (s) => s.stage === "done",
   redact(s, role) {
-    if (role === "host") return s;
+    if (role === "host" || s.stage === "reveal" || s.stage === "done") return s;
     const r = clone(s);
-    r.items = r.items.map((it: TestaItem, idx: number) => {
-      if (idx < s.i || (idx === s.i && s.stage === "reveal")) return it;
-      if (idx > s.i) return null;
-      // the values not shown yet are the solutions: only the players already compared, and the next name
-      const shown = s.stage === "decide" ? s.k + 1 : s.k;
-      return {
-        ...it,
-        script: "",
-        chain: it.chain.map((c, j) =>
-          j < shown ? c : j === shown ? { ...c, value: null, label: null } : { id: "", name: "", value: null, label: null },
-        ),
-      };
-    });
+    // values not compared yet are the solutions: the players already compared, the name of the next one, nothing else
+    const shown = s.stage === "feedback" ? s.k + 1 : s.k;
+    r.items = r.items.map((it: TestaItem) => ({
+      ...it,
+      script: "",
+      chain: it.chain.map((c, j) => (j < shown ? c : j === shown ? { ...c, value: null, label: null } : { id: "", name: "", value: null, label: null })),
+    }));
     return r;
   },
 };
@@ -905,7 +866,6 @@ export const MODULES: Record<GameId, GameModule> = {
   giramondo,
   asta,
   maglia,
-  quotazione,
   testa_a_testa: testaATesta,
 };
 

@@ -23,8 +23,6 @@ const MAPS = {
   dischetto: ["wwwwwwwwwwww", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "wd.d.d.d.d.w", "w.d.d.d.d.dw", "w..........w", "w....ww....w", "gggwkwwkwggg", "gggwwkkwwggg", "ggggwwwwgggg", "gggggggggggg"],
   formazione: ["gggggggggggg", "gwwwwwwwwwwg", "gw...ww...wg", "gw.y.ww.r.wg", "gw...ww...wg", "gwy..ww..rwg", "gw...ww...wg", "gw.y.ww.r.wg", "gw...ww...wg", "gwwwwwwwwwwg", "gggggggggggg", "............"],
   giramondo: ["....bbbb....", "..bbggbbbb..", ".bgggggbbbb.", ".bggggbbbgb.", "bbgggbbbgggb", "bbbggbbbgggb", "bbbbgbbbbggb", "bbbbggbbbbbb", ".bbbgggbbbb.", ".bbbbggbbbb.", "..bbbbgbbb..", "....bbbb...."],
-  // a rising market chart: axes and a stepped line with a peak
-  quotazione: ["d...........", "d........y..", "d.......yyy.", "d.......y.y.", "d...y..yy..y", "d..yyy.y...y", "d..y.yyy....", "d.yy........", "dyy.........", "dy..........", "dddddddddddd", "............"],
   // two heads facing each other, an up and a down arrow between them
   testa_a_testa: ["............", ".cc......cc.", "cfff....fffc", "cfkf.gg.fkfc", "cfff.gg.fffc", ".ff.gggg.ff.", "............", ".ff.rrrr.ff.", "cccc.rr.cccc", "cccc.rr.cccc", "cccc....cccc", "............"],
   clock: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],
@@ -69,6 +67,5 @@ export const GAME_COLORS: Record<GameId, string> = {
   giramondo: "#4aa3ff",
   asta: "#e0a060",
   maglia: "#00e5ff",
-  quotazione: "#c084fc",
   testa_a_testa: "#ff6fb5",
 };

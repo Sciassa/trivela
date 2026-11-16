@@ -10,7 +10,7 @@ const { chromium } = require("playwright");
 const PORT = 8798;
 const OUT = "test-results/shots";
 mkdirSync(OUT, { recursive: true });
-const ALL = ["tiro_secco", "maglia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo", "quotazione", "testa_a_testa"];
+const ALL = ["tiro_secco", "maglia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo", "testa_a_testa"];
 const games = (process.argv[2] ?? ALL.join(",")).split(",");
 const VIEWPORTS = { pc: { width: 1366, height: 768 }, phone: { width: 844, height: 390 }, tablet: { width: 1024, height: 768 } };
 
@@ -46,7 +46,7 @@ try {
         await p.waitForTimeout(1300);
         if (g === games[0]) await p.screenshot({ path: `${OUT}/${vp}-intro.png` });
         await p.getByText("VIA! ▶").click();
-        await p.waitForTimeout(["mercato", "giramondo", "quotazione"].includes(g) ? 12500 : 900);
+        await p.waitForTimeout(g === "mercato" || g === "giramondo" ? 12500 : 900);
         if (g === "formazione") {
           await p.locator(".btn.p1").click();
           await p.waitForTimeout(600);
@@ -77,13 +77,14 @@ try {
             continue;
           }
           if (await p.locator(".option:not(:disabled)").count()) await p.locator(".option").first().click();
-          else if (await p.locator(".duel-actions .btn").count()) {
-            // Testa a Testa: a shot of the decision, then MORE / CASH
-            if (games.includes(g) && (await p.locator(".duel-actions .cash").count()) && !(await p.locator(".shot-decide").count())) {
-              await p.screenshot({ path: `${OUT}/${vp}-${g}-decide.png` });
-              await p.evaluate(() => document.body.classList.add("shot-decide"));
+          else if (await p.locator(".tt-buttons .btn").count()) {
+            // Testa a Testa: MORE every time; a shot of the first «right» pause, if any
+            await p.locator(".tt-buttons .btn").first().click();
+            await p.waitForTimeout(500);
+            if (games.includes(g) && (await p.locator(".tt-banner.ok").count()) && !(await p.locator(".shot-ok").count())) {
+              await p.screenshot({ path: `${OUT}/${vp}-${g}-right.png` });
+              await p.evaluate(() => document.body.classList.add("shot-ok"));
             }
-            await p.locator(".duel-actions .btn").first().click();
           }
           else if (await p.getByText("CONFERMA IL RISULTATO").count()) await p.getByText("CONFERMA IL RISULTATO").click();
           else if (await p.locator(".numpad").count()) {

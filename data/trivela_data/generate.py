@@ -13,11 +13,11 @@ from .paths import PACKS_OUT
 from .postprocess import finalize
 from .tm_core import SNAPSHOT, TM, TM_DATASET, norm
 
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "quotazione", "testa_a_testa"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa"]
 MIN_ITEMS = 1000
 CAPS = {"tiro_secco": 3600, "mercato": 2400, "decina": 1400, "dischetto": 1350, "formazione": 1400,
         "giramondo": 1400, "asta": 1500, "maglia": 1500,
-        "quotazione": 1500, "testa_a_testa": 1500}
+        "testa_a_testa": 1500}
 
 
 def cap(items: list[dict], n: int) -> list[dict]:

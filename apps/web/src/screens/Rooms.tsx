@@ -277,8 +277,7 @@ function solutionOf(g: GameStateAny): string[] {
       return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "mercato":
-    case "giramondo":
-    case "quotazione": {
+    case "giramondo": {
       const it = g.items[g.i] as { answer: { display: string }; clues: string[] };
       return [`Risposta: ${it.answer.display}`, ...it.clues.map((c, k) => `${k + 1}. ${c}`)];
     }
@@ -299,7 +298,7 @@ function solutionOf(g: GameStateAny): string[] {
     }
     case "testa_a_testa": {
       const it = g.items[g.i] as TestaItem;
-      const k = g.stage === "decide" ? g.k + 1 : g.k;
+      const k = g.stage === "feedback" ? g.k + 1 : g.k;
       const now = it.chain[k];
       const before = it.chain[k - 1];
       return [
@@ -397,25 +396,16 @@ export function HostRoom({ code }: { code: string }) {
           break;
         }
         case "testa_a_testa":
-          controls = (
-            <div className="grid2">
-              {g.stage === "guess" ? (
-                <>
-                  <Btn label="▲ PIÙ" cls="ok" onClick={() => d({ type: "ANSWER", payload: { choice: 1 } })} />
-                  <Btn label="▼ MENO" cls="ko" onClick={() => d({ type: "ANSWER", payload: { choice: 0 } })} />
-                </>
-              ) : (
-                <>
-                  <Btn label={`INCASSA ${g.pot}`} onClick={() => d({ type: "ANSWER", payload: { choice: 0 } })} />
-                  <Btn label="CONTINUA ▶" cls="ghost" onClick={() => d({ type: "ANSWER", payload: { choice: 1 } })} />
-                </>
-              )}
-            </div>
-          );
+          controls =
+            g.stage === "guess" ? (
+              <div className="grid2">
+                <Btn label="▲ PIÙ" cls="ok" onClick={() => d({ type: "ANSWER", payload: { choice: 1 } })} />
+                <Btn label="▼ MENO" cls="ko" onClick={() => d({ type: "ANSWER", payload: { choice: 0 } })} />
+              </div>
+            ) : null;
           break;
         case "mercato":
         case "giramondo":
-        case "quotazione":
           controls =
             g.stage === "answering" ? (
               okKo
@@ -694,34 +684,23 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
   }
   const closed = g.stage === "reveal" || g.stage === "final";
   if (turn && s.config.judging !== "host" && g.game === "testa_a_testa") {
-    // the two choices under the thumb, the duel above them
-    const it = g.items[g.i] as TestaItem;
-    const k: number = g.stage === "decide" ? g.k + 1 : g.k;
+    // the duel: the two choices under the thumb, the two players above them
+    const it = g.items[0] as TestaItem;
+    const k: number = g.k;
     const pick = (choice: 0 | 1) => (navigator.vibrate?.(30), room.dispatch({ type: "ANSWER", payload: { choice } }));
     return (
       <PhoneFrame
         role={role}
         room={room}
         actions={
-          g.stage === "guess" ? (
-            <>
-              <button className="btn big duel-more" onClick={() => pick(1)}>
-                ▲ PIÙ
-              </button>
-              <button className="btn big duel-less" onClick={() => pick(0)}>
-                ▼ MENO
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="btn big duel-cash" onClick={() => pick(0)}>
-                INCASSA {g.pot}
-              </button>
-              <button className="btn big ghost" onClick={() => pick(1)}>
-                CONTINUA ▶
-              </button>
-            </>
-          )
+          <>
+            <button className="btn big duel-more" onClick={() => pick(1)}>
+              ▲ PIÙ
+            </button>
+            <button className="btn big duel-less" onClick={() => pick(0)}>
+              ▼ MENO
+            </button>
+          </>
         }
       >
         <TimerClockCtx.Provider value={room.timer}>
@@ -734,11 +713,11 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
               <div className="q small">
                 {it.chain[k - 1]?.name} <b className="c-ok">{it.chain[k - 1]?.label}</b>
                 <br />
-                {g.stage === "guess" ? "vs" : "prossimo:"} {it.chain[k]?.name} <b className="dim">???</b>
+                {it.chain[k]?.name} ne ha di più o di meno?
               </div>
             </div>
             <div className="px c-accent" style={{ fontSize: 12 }}>
-              PIATTO {g.pot}
+              LIVELLO {k}/{it.chain.length - 1} · SBAGLI E L'AVVERSARIO PRENDE +3
             </div>
           </div>
         </TimerClockCtx.Provider>

@@ -118,55 +118,6 @@ def giramondo(t: TM, limit: int = 2000) -> list[dict]:
     return out[:limit]
 
 
-def quotazione(t: TM, limit: int = 1500, min_points: int = 12, min_fame: int = 75) -> list[dict]:
-    """La Quotazione (SPEC §4.11): a known player's market value over time, with a flag at each change of club.
-
-    The curve is revealed a quarter at a time; then the names of the clubs on the flags, then role and nationality.
-    Values from `player_valuations` up to the snapshot (6 July 2026), in millions of euro.
-    """
-    rows = t.q("""select player_id, date, market_value_in_eur, current_club_id, current_club_name, player_club_domestic_competition_id
-                  from player_valuations where date <= date '2026-07-06' and market_value_in_eur > 0 order by player_id, date""")
-    per: dict[int, list] = defaultdict(list)
-    for pid, d, v, cid, cname, lg in rows:
-        if t.is_notable(pid):
-            per[int(pid)].append((d, float(v), cid, cname, lg))
-    out = []
-    for pid, pts in per.items():
-        p = t.players.get(pid)
-        if len(pts) < min_points or t.fame(pid) < min_fame or not p or not p["pos"] or not p["nat"]:
-            continue
-        leagues = {x[4] for x in pts} & set(L5)
-        if not leagues:
-            continue
-        moves: list[tuple] = []  # (date, club name): the club of the first value, then every change
-        for d, _v, cid, cname, _lg in pts:
-            name = t.club(cid, cname) if cid else clean_club(cname or "")
-            if not name or SKIP_CLUB.search(name) or (moves and moves[-1][1] == name):
-                continue
-            moves.append((d, name))
-        if len({m[1] for m in moves}) < 2:
-            continue
-        year = lambda d: round(d.year + (d.timetuple().tm_yday - 1) / 366, 2)  # noqa: E731
-        curve = [{"t": year(d), "v": max(0.01, round(v / 1e6, 2))} for d, v, *_ in pts]  # millions; a youth value of 25k is 0.03
-        peak_d, peak_v, *_ = max(pts, key=lambda x: (x[1], -x[0].toordinal()))
-        peak_club = next((m[1] for m in reversed(moves) if m[0] <= peak_d), moves[0][1])
-        last_d, last_v, *_ = pts[-1]
-        clues = ["Il primo quarto della curva", "Metà della curva", "Tre quarti della curva",
-                 f"La curva intera: picco di {fee_label(peak_v)} nel {peak_d.year}",
-                 "Squadre: " + " → ".join(m[1] for m in moves),
-                 f"{POS_IT.get(p['pos'], p['pos'])} · {nat_it(p['nat'])}"]
-        it = base("quotazione", pid, year=pts[0][0].year, year_max=last_d.year, fame=t.fame(pid),
-                  entities=[*(f"comp:{lg}" for lg in sorted(leagues)), t.pid(pid)], sources=[t.src_player(pid), SRC_DATASET],
-                  active=[last_d.year],
-                  script=f"La quotazione di {t.pname(pid)} secondo Transfermarkt: picco di {fee_label(peak_v)} nel {peak_d.year} "
-                         f"{articled('con', peak_club)}; {len(pts)} valutazioni dal {pts[0][0].year}, "
-                         f"l'ultima di {fee_label(last_v)} ({window_label(last_d).lower()}).")
-        it.update({"clues": clues, "curve": curve, "moves": [{"t": year(d), "club": c} for d, c in moves], "answer": t.answer(pid)})
-        out.append(it)
-    out.sort(key=lambda x: (-x["fame"], x["id"]))
-    return out[:limit]
-
-
 # Shirt numbers by the role that usually wears them: a number outside its role is an "anomaly".
 GROUP = {"Goalkeeper": "GK", "Centre-Back": "DEF", "Left-Back": "DEF", "Right-Back": "DEF", "Sweeper": "DEF", "Defender": "DEF",
          "Defensive Midfield": "MID", "Central Midfield": "MID", "midfield": "MID", "Midfield": "MID", "Right Midfield": "MID",
@@ -262,7 +213,7 @@ def _one_per_shirt(items: list[dict]) -> list[dict]:
 
 
 def generate(t: TM) -> dict[str, list[dict]]:
-    return {"mercato": mercato(t), "giramondo": giramondo(t), "maglia": maglia(t), "quotazione": quotazione(t)}
+    return {"mercato": mercato(t), "giramondo": giramondo(t), "maglia": maglia(t)}
 
 
 __all__ = ["generate", "IN_COMP"]

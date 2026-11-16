@@ -11,7 +11,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "quotazione", "testa_a_testa"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -206,38 +206,22 @@ def test_mercato_mostly_big_transfers_in_every_league():
         assert sum(1 for it in minor if f"comp:{lg}" in it["entities"]) >= 50, lg
 
 
-def test_quotazione_curves():
-    """SPEC §4.11: a known player's market value over time, at least two clubs, six clues, values from the dataset."""
-    for it in load("quotazione"):
-        ts = [p["t"] for p in it["curve"]]
-        assert len(ts) >= 12 and ts == sorted(ts) and all(p["v"] > 0 for p in it["curve"])
-        assert ts[-1] < 2026.52  # nothing after the snapshot (6 July 2026)
-        assert len({m["club"] for m in it["moves"]}) >= 2 and all(m["club"] for m in it["moves"])
-        assert len(it["clues"]) == 6 and it["clues"][4].startswith("Squadre: ")
-        assert it["answer"]["kind"] == "entity" and it["answer"]["display"] in it["script"]
-        assert it.get("activeYears") and any(e.startswith("comp:") for e in it["entities"])
-    assert len({it["answer"]["ids"][0] for it in load("quotazione")}) == len(load("quotazione"))  # one curve per player
-
-
 def test_testa_a_testa_chains():
-    """SPEC §4.12: seven players, one statistic, never a tie between neighbours, both ways, window declared."""
+    """SPEC §4.11: nine players, one statistic, eight comparisons closer and closer, both ways, never a tie, window declared."""
+    from trivela_data.gen_testa import Testa
+
     items = load("testa_a_testa")
     stats = {it["generator"].split("@")[0] for it in items}
     assert {"testa_gol", "testa_presenze", "testa_altezza", "testa_valore", "testa_cartellino", "testa_eta"} <= stats
     for it in items:
         ch = it["chain"]
-        assert len(ch) == 7 and len({c["id"] for c in ch}) == 7
+        assert len(ch) == 9 and len({c["id"] for c in ch}) == 9
         ups = [b["value"] > a["value"] for a, b in zip(ch, ch[1:])]
         assert any(ups) and not all(ups), it["title"]
         assert not any(ups[k] == ups[k + 1] == ups[k + 2] for k in range(len(ups) - 2)), it["title"]
-        for a, b in zip(ch, ch[1:]):
-            gap = abs(a["value"] - b["value"])
-            if it["unit"] == "cm":
-                assert gap >= 2
-            elif it["unit"] == "anni":
-                assert gap >= 2 * 365
-            else:
-                assert gap >= 0.1 * max(a["value"], b["value"]), (it["title"], a, b)
+        kind = {"cm": "cm", "anni": "years"}.get(it["unit"], "rel")
+        for step, (a, b) in enumerate(zip(ch, ch[1:])):
+            assert a["value"] != b["value"] and Testa.gap_ok(kind, step, a["value"], b["value"]), (it["title"], step, a, b)
         if it["unit"] in ("gol", "presenze"):
             assert re.search(r"\(dal \d{4}/\d{2} al \d{4}/\d{2}\)|\(stagione \d{4}/\d{2}\)", it["title"]), it["title"]
         assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
