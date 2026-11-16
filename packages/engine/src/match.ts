@@ -12,13 +12,13 @@ export const GAMES_PER_MATCH = 5;
 /* ------------------------------------------------------------------ */
 
 const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia"];
-const PERSON_GAMES: GameId[] = ["giramondo"];
+const PERSON_GAMES: GameId[] = ["giramondo", "quotazione"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
   if (yearFrom === null) return true;
   if (EVENT_GAMES.includes(game)) return item.yearMin >= yearFrom;
   if (PERSON_GAMES.includes(game)) return (item.activeYears ?? [item.yearMax]).every((y) => y >= yearFrom);
-  return true; // lists and rankings (decina, dischetto, asta) ignore the filter
+  return true; // lists, rankings and Testa a Testa chains (decina, dischetto, asta, testa_a_testa) ignore the filter
 }
 
 /**
@@ -49,7 +49,7 @@ export function itemsNeeded(game: GameId): number {
 const LIST_GAMES: GameId[] = ["decina", "dischetto", "formazione"];
 
 /** Questions of a solo session (Allenamento) when the game is made of questions or profiles. */
-const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3 };
+const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3, quotazione: 4, testa_a_testa: 3 };
 
 /**
  * Slots of a single-game format: which game is played, how many times, with how many instances each time.
@@ -67,7 +67,8 @@ const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== u
 /* Draw                                                                 */
 /* ------------------------------------------------------------------ */
 
-const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
+/** Guess the player from progressive clues: at most one per match. */
+const BUZZER_GROUP: GameId[] = ["mercato", "giramondo", "quotazione"];
 const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
 const OPENERS: GameId[] = ["tiro_secco", "maglia"];
 /** Decina and Asta are played on the same kind of set: never both in one match. */
@@ -281,6 +282,7 @@ const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
   giramondo: ["answer"],
   formazione: ["play"],
   asta: ["prove"],
+  quotazione: ["answer"],
 };
 export const GRACE_MS = TIMERS.grace;
 

@@ -1,6 +1,6 @@
 {
   "version": "2026-11-16",
-  "generatedAt": "2026-11-16T10:05:13+00:00",
+  "generatedAt": "2026-11-16T12:03:19+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 3600,
@@ -10,7 +10,9 @@
     "formazione": 1400,
     "giramondo": 1400,
     "asta": 1500,
-    "maglia": 1500
+    "maglia": 1500,
+    "quotazione": 1172,
+    "testa_a_testa": 1200
   },
   "generators": {
     "tiro_secco": 71,
@@ -20,7 +22,9 @@
     "formazione": 4,
     "giramondo": 1,
     "asta": 28,
-    "maglia": 6
+    "maglia": 6,
+    "quotazione": 1,
+    "testa_a_testa": 12
   },
   "sources": [
     {
@@ -48,7 +52,7 @@
       "excluded_not_notable": 0
     },
     "decina": {
-      "kept": 1406,
+      "kept": 1403,
       "excluded_show": 1,
       "excluded_not_notable": 0
     },
@@ -68,12 +72,22 @@
       "excluded_not_notable": 0
     },
     "asta": {
-      "kept": 3172,
+      "kept": 3168,
       "excluded_show": 5,
       "excluded_not_notable": 0
     },
     "maglia": {
       "kept": 4662,
+      "excluded_show": 0,
+      "excluded_not_notable": 0
+    },
+    "quotazione": {
+      "kept": 1172,
+      "excluded_show": 2,
+      "excluded_not_notable": 0
+    },
+    "testa_a_testa": {
+      "kept": 1200,
       "excluded_show": 0,
       "excluded_not_notable": 0
     }

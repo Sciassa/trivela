@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v11 — 8 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v12 — 10 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -176,6 +176,8 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v12** (novembre 2026): due giochi nuovi, scelti dal committente tra quattro proposte, entrambi calcolati sul dataset senza fonti nuove: **La Quotazione** (indovina il giocatore dalla curva del suo valore di mercato, §4.11) e **Testa a Testa** (catena di confronti PIÙ/MENO su una statistica, incassa o rilancia, §4.12). I giochi diventano **10**; se ne sorteggiano sempre 5 (§5.2).
+
 > **v11** (novembre 2026): *Il Mercato* pesca i trasferimenti di **tutti e cinque i campionati**, rispettando i campionati scelti (cedente o acquirente in quel campionato al momento del trasferimento), e circa **4 su 5 valgono almeno 20 milioni**; quelli più economici sono più rari e solo di giocatori noti (§4.3).
 
 > **v10** (novembre 2026): il **Tiro Secco** cambia il modo di scegliere le opzioni sbagliate, che si scartavano a colpo d'occhio: ora sono **famose quanto la risposta**, sono **«quasi riusciti»** dove i dati lo permettono, e **ogni fatto raro diventa una sola domanda** (§4.1, §4.2). *La Maglia*: una domanda per maglia e al massimo due per giocatore; il motore non chiede due volte della stessa persona nella stessa partita e la fa riposare per 6 partite su quel dispositivo (§4.10, §5.3). La **tastiera di gioco** dice se il nome appena inviato è giusto o sbagliato (§10.4), con una vibrazione (§12.9). Valutata la fonte *GOAL API* (`goal-api.com`, alternativa con licenza a SofaScore): **non adottata per ora**, decisione rimandata. Non ha i voti dei giocatori e la Serie A è coperta molto meno che dal dataset.
@@ -340,6 +342,8 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | La Decina | ❌ | Tutte le stagioni coperte |
 | Dal Dischetto | ❌ | Tutte le stagioni coperte |
 | L'Asta | ❌ | Tutte le stagioni coperte |
+| La Quotazione | ✅ | L'ultima valutazione del giocatore è ≥ ANNO (`activeYears`, come il Giramondo) |
+| Testa a Testa | ❌ | Statistiche su finestre complete o su dati anagrafici: come le classifiche |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
 
@@ -509,6 +513,30 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - **al massimo 2 domande per giocatore** nel pacchetto (prima le fuori ruolo); i giocatori diversi passano da 450 a circa 1070;
   - nel motore, mai due domande sulla **stessa persona** nella stessa partita e **riposo di 6 partite** per le persone già chieste su quel dispositivo (§5.3).
 
+### 4.11 `quotazione` — La Quotazione (v12)
+- **2 giocatori** da indovinare dalla **curva del loro valore di mercato** nel tempo (Transfermarkt, `player_valuations`), disegnata come un grafico a gradini in pixel art, con una **bandierina a ogni cambio di squadra**.
+- Gioco a prenotazione con le stesse regole del Mercato: un solo tentativo per giocatore e per profilo, chi sbaglia è fuori e l'altro scopre gli indizi con calma; tempo extra di §3.8 per finire di scrivere. Al massimo **un gioco a indizi per partita** tra Mercato, Giramondo e Quotazione (§5.2).
+- Sei passi, uno ogni 8 secondi, e i punti:
+  1. il primo quarto della curva, con assi (anni, milioni) e bandierine anonime: **15**;
+  2. metà curva: **12**;
+  3. tre quarti: **9**;
+  4. la curva intera, con il picco evidenziato: **6**;
+  5. i nomi delle squadre (sulle bandierine se sono al massimo 5, sempre nell'elenco sotto il grafico): **3**;
+  6. ruolo e nazionalità: **1**.
+- **Dati**: giocatori notevoli con fama ≥ 75, almeno 12 valutazioni fino al 6 luglio 2026 e almeno 2 squadre; tag `comp:` dei campionati top in cui ha giocato; una sola curva per giocatore. Pacchetto: 1172 giocatori (Premier 658, Serie A 414, Liga 379, Ligue 1 373, Bundesliga 342). Generatore: `quotazione()` in `data/trivela_data/gen_players.py`.
+- **Soluzioni** (invarianti 5 e 12): Schermo e pulsantiere ricevono solo la parte di curva già scoperta (`maskQuotazione` nel motore) e i nomi delle squadre solo dal passo 5; l'asse del tempo resta quello di tutta la carriera, così il grafico non si deforma. La risposta la vede solo la Regia.
+
+### 4.12 `testa_a_testa` — Testa a Testa (v12)
+- **Una catena a testa**, a turno. Una statistica (es. «Presenze in Serie A (dal 2013/14 al 2025/26)») e sette giocatori: si vede il primo con il suo valore e il secondo con «???».
+- Il giocatore di turno dice se il prossimo ne ha **PIÙ** o **MENO**. Se indovina, il **piatto** sale lungo la scala **1 → 2 → 3 → 5 → 8 → 12** e sceglie: **INCASSA** (i punti sono suoi, la catena finisce) o **CONTINUA** con il giocatore seguente. Se sbaglia, **perde il piatto** e la catena finisce. Tutta la catena indovinata: 12 punti, incassati da soli.
+- Tempo: 15 secondi per scelta. Scaduto su PIÙ/MENO conta come errore; scaduto su INCASSA/CONTINUA incassa. Con il timer spento (§3.8) non c'è conto alla rovescia: si va avanti con i pulsanti.
+- Con i telefoni: PIÙ/MENO e INCASSA/CONTINUA sono nella zona dei pollici del telefono di chi è di turno; la Regia ha gli stessi pulsanti e vede la catena intera.
+- **Statistiche** (`data/trivela_data/gen_testa.py`), per ciascun campionato top, tra giocatori notevoli con fama ≥ 75 scesi in campo in quel campionato:
+  - gol e presenze in campionato, sulla finestra di stagioni complete (dichiarata nel titolo);
+  - altezza, valore di mercato più alto in carriera, trasferimento più caro, età al 6 luglio 2026 (PIÙ = più anziano).
+- **Regole delle catene**: mai pareggi tra vicini (almeno il 10% di differenza; 2 cm per l'altezza, 2 anni per l'età); la catena sale e scende (mai tre passi nello stesso verso, mai tutta nello stesso verso), così «sempre PIÙ» non è una strategia; giocatori di fama simile al primo (`near_in_fame`); un giocatore in al massimo 4 catene della stessa statistica. Pacchetto: 1200 catene (40 per statistica e campionato).
+- **Soluzioni**: Schermo e pulsantiere vedono i valori già confrontati e il nome del prossimo, mai il suo valore né i giocatori successivi; alla fine si scopre la catena intera.
+
 ---
 
 ## 5. Bilanciamento e sorteggio
@@ -525,12 +553,14 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | giramondo | 24 | 2 profili × 12 |
 | asta | 20 | |
 | maglia | 6 | |
+| quotazione | 30 | 2 profili × 15 |
+| testa_a_testa | 12 | una catena intera |
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: gli 8 giochi.
+- Pool: i 10 giochi (8 fino alla v11).
 - Vincoli:
-  - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
+  - al massimo 1 tra {`mercato`, `giramondo`, `quotazione`} (pulsante a indizi progressivi: tutti e tre fanno indovinare un giocatore);
   - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
   - il primo gioco è pescato tra i rapidi {`tiro_secco`, `maglia`};
   - un gioco è escluso se non ha abbastanza istanze ammissibili con il filtro corrente.
@@ -913,13 +943,13 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 trivela/
 ├─ apps/web/               # PWA: schermo singolo, Schermo/Regia/pulsantiere, torneo
 │  ├─ src/components/      # palco adattivo, tabellone, sprite, campi di testo
-│  ├─ src/games/           # viste degli 8 giochi
+│  ├─ src/games/           # viste dei 10 giochi
 │  ├─ src/runtime/         # caricamento pacchetti, stanza (roomCore), trasporto MQTT
 │  ├─ src/screens/         # nuova sfida, partita, sala d'attesa, telefoni, torneo
 │  └─ public/data/         # manifest, indice dei nomi, un pacchetto per gioco (versionati)
 ├─ packages/
 │  ├─ protocol/            # tipi condivisi
-│  ├─ engine/              # 8 giochi, sorteggio, torneo
+│  ├─ engine/              # 10 giochi, sorteggio, torneo
 │  ├─ matcher/             # normalizzazione, accettazione, correttore a zero informazione
 │  └─ audio/               # musica ed effetti sintetizzati
 ├─ data/

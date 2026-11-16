@@ -508,6 +508,46 @@ try {
     await p1.context().close();
     await p2.context().close();
   }
+  // ---------------- Testa a Testa in a room: played from the controller, no value reaches Screen or phones before its turn
+  {
+    const { screen, code } = await lobby();
+    const p1 = await join(code, "p1");
+    const p2 = await join(code, "p2");
+    await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
+    await screen.getByRole("button", { name: "SFIDA RAPIDA" }).click();
+    await screen.locator(".game-pick button", { hasText: "TESTA A TESTA" }).click();
+    await screen.getByPlaceholder("Nome").first().fill("Anna");
+    await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.getByText("INIZIA LA PARTITA ▶").click();
+    await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
+    await screen.locator(".duel-card.next").waitFor({ timeout: 15000 });
+    await Promise.race([p1.locator(".duel-more").waitFor(), p2.locator(".duel-more").waitFor()]);
+    const active = (await p1.locator(".duel-more").count()) ? p1 : p2;
+    const idle = active === p1 ? p2 : p1;
+    check((await idle.locator(".duel-more").count()) === 0, "Testa a Testa: only the player on turn gets PIÙ / MENO");
+    const more = await boxOf(active.locator(".duel-more"));
+    check(more.height >= 48, `PIÙ / MENO are big enough to tap (${Math.round(more.height)} px)`);
+    check((await screen.locator(".duel-card.next .value").innerText()).includes("???"), "the Screen shows ??? for the next value");
+    const before = (await screen.content()) + (await p1.content()) + (await p2.content());
+    await active.screenshot({ path: "test-results/pad-testa.png" });
+    await active.locator(".duel-more").click();
+    // right: cash at once; wrong: the chain is over
+    await Promise.race([active.locator(".duel-cash").waitFor({ timeout: 8000 }), screen.locator(".chain-reveal").waitFor({ timeout: 8000 })]);
+    if (await active.locator(".duel-cash").count()) await active.locator(".duel-cash").click();
+    await screen.locator(".chain-reveal").waitFor({ timeout: 8000 });
+    const labels = await screen.locator(".chain-reveal span").allInnerTexts();
+    const shown = labels[0].split(" ").slice(-2).join(" ");
+    const hidden = labels.slice(1).map((l) => l.split(" ").slice(-2).join(" ")).filter((l) => l !== shown);
+    const leaked = hidden.filter((l) => before.includes(`>${l}<`));
+    check(labels.length === 7 && leaked.length === 0, `Screen and phones got no value before it was compared (${leaked.join(", ") || "none"})`);
+    await screen.screenshot({ path: "test-results/room-testa-reveal.png" });
+    await screen.context().close();
+    await p1.context().close();
+    await p2.context().close();
+  }
   {
     const v = await open();
     await v.goto(`${BASE}/?voxel`);
