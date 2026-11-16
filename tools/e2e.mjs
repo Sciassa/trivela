@@ -523,26 +523,35 @@ try {
     await p2.getByText(/SI PARTE ▶/).click();
     await p1.getByText("VIA! ▶").click({ timeout: 15000 });
     await p2.getByText(/VIA! ▶/).click();
-    await screen.locator(".duel-card.next").waitFor({ timeout: 15000 });
+    await screen.locator(".tt-card.challenger").waitFor({ timeout: 15000 });
     await Promise.race([p1.locator(".duel-more").waitFor(), p2.locator(".duel-more").waitFor()]);
     const active = (await p1.locator(".duel-more").count()) ? p1 : p2;
     const idle = active === p1 ? p2 : p1;
     check((await idle.locator(".duel-more").count()) === 0, "Testa a Testa: only the player on turn gets PIÙ / MENO");
     const more = await boxOf(active.locator(".duel-more"));
     check(more.height >= 48, `PIÙ / MENO are big enough to tap (${Math.round(more.height)} px)`);
-    check((await screen.locator(".duel-card.next .value").innerText()).includes("???"), "the Screen shows ??? for the next value");
+    check((await screen.locator(".tt-card.challenger .tt-value").innerText()).includes("???"), "the Screen shows ??? for the challenger's value");
     const before = (await screen.content()) + (await p1.content()) + (await p2.content());
     await active.screenshot({ path: "test-results/pad-testa.png" });
-    await active.locator(".duel-more").click();
-    // right: cash at once; wrong: the chain is over
-    await Promise.race([active.locator(".duel-cash").waitFor({ timeout: 8000 }), screen.locator(".chain-reveal").waitFor({ timeout: 8000 })]);
-    if (await active.locator(".duel-cash").count()) await active.locator(".duel-cash").click();
-    await screen.locator(".chain-reveal").waitFor({ timeout: 8000 });
-    const labels = await screen.locator(".chain-reveal span").allInnerTexts();
+    // the duel: MORE every time, from whichever phone is on turn, until somebody is wrong or the chain ends
+    let passed = false;
+    for (let n = 0; n < 12 && !(await screen.locator(".tt-ladder").count()); n++) {
+      const who = (await p1.locator(".duel-more").count()) ? p1 : (await p2.locator(".duel-more").count()) ? p2 : null;
+      if (who) {
+        if (n > 0 && who !== active) passed = true;
+        await who.locator(".duel-more").click();
+      }
+      await screen.waitForTimeout(2300);
+    }
+    await screen.locator(".tt-ladder").waitFor({ timeout: 8000 });
+    const labels = await screen.locator(".tt-ladder span").allInnerTexts();
     const shown = labels[0].split(" ").slice(-2).join(" ");
     const hidden = labels.slice(1).map((l) => l.split(" ").slice(-2).join(" ")).filter((l) => l !== shown);
     const leaked = hidden.filter((l) => before.includes(`>${l}<`));
-    check(labels.length === 7 && leaked.length === 0, `Screen and phones got no value before it was compared (${leaked.join(", ") || "none"})`);
+    check(labels.length === 9 && leaked.length === 0, `Screen and phones got no value before it was compared (${leaked.join(", ") || "none"})`);
+    const banner = await screen.locator(".tt-banner").innerText();
+    check(/VINCE IL DUELLO \+3|CATENA COMPLETA/.test(banner), `the duel ends with a winner (+3) or a full chain (${banner})`);
+    check(passed || /VINCE/.test(banner), "after a right guess the chain passes to the other phone");
     await screen.screenshot({ path: "test-results/room-testa-reveal.png" });
     await screen.context().close();
     await p1.context().close();

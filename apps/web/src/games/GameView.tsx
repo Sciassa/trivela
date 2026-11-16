@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, QuotazioneItem, SetItem, SourceRef, TestaItem, TiroSeccoItem } from "@trivela/protocol";
-import { isTimed, TESTA_POT, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
+import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TestaItem, TiroSeccoItem } from "@trivela/protocol";
+import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
 import { HAPTIC, vibrate } from "../runtime/haptics";
@@ -181,7 +181,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           <div className="turnbar">
             <span className="who c-accent">
               <span>
-                {g.game === "mercato" ? "TRASFERIMENTO" : g.game === "quotazione" ? "QUOTAZIONE" : "CARRIERA"} {g.i + 1}/{g.items.length}
+                {g.game === "mercato" ? "TRASFERIMENTO" : "CARRIERA"} {g.i + 1}/{g.items.length}
               </span>
             </span>
             <span className="grow" />
@@ -195,9 +195,6 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           </div>
           <StateTimer state={state} start={start} />
           {g.game === "giramondo" && <div className="sub">Le squadre in ordine di primo arrivo, con l'anno.</div>}
-          {g.game === "quotazione" ? (
-            <QuotazioneBoard key={g.i} item={item as unknown as QuotazioneItem} revealed={g.stage === "reveal" ? total : g.revealed} points={points} />
-          ) : (
           <div className="clues" key={g.i}>
             {Array.from({ length: total }, (_, k) => (
               <div key={k} className={`clue ${k < g.revealed ? "shown" : "hidden"} ${k === g.revealed - 1 && g.stage !== "reveal" ? "current" : ""}`}>
@@ -206,7 +203,6 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
               </div>
             ))}
           </div>
-          )}
           {g.stage === "clues" && g.last && !g.last.ok && (
             <WrongSaid text={g.last.said} who={namesOf(state)[g.last.player as PlayerIdx]} />
           )}
@@ -230,124 +226,71 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
   );
 }
 
-/* ------------------------------------------------------------ La Quotazione */
+/* ------------------------------------------------------------ Testa a Testa */
 
-const W = 800;
-const H = 300;
-const PAD = { l: 64, r: 16, t: 34, b: 30 };
-
-/**
- * The market value of a player over time, as a stepped pixel line (SPEC §4.11). The view gets only the part of the
- * curve already uncovered; the rest of the time span is a hatched curtain that slides away (transform only).
- */
-export function ValueChart({ item, revealed }: { item: QuotazioneItem; revealed: number }) {
-  const pts = item.curve;
-  const first = item.span?.[0] ?? pts[0]?.t ?? 2010;
-  const last = item.span?.[1] ?? pts[pts.length - 1]?.t ?? first + 1;
-  const t0 = Math.floor(first);
-  const t1 = Math.max(t0 + 1, Math.ceil(last));
-  const top = Math.max(1, ...pts.map((p) => p.v));
-  const step = top > 100 ? 50 : top > 40 ? 20 : top > 10 ? 5 : top > 4 ? 2 : 1;
-  const vmax = Math.ceil(top / step) * step;
-  const x = (t: number) => PAD.l + ((t - t0) / (t1 - t0)) * (W - PAD.l - PAD.r);
-  const y = (v: number) => H - PAD.b - (v / vmax) * (H - PAD.t - PAD.b);
-  // the whole curve is out from the fourth clue: no curtain left, not even a sliver after the last value
-  const shownUntil = revealed >= 4 ? W : pts.length ? x(pts[pts.length - 1]!.t) : PAD.l;
-  // names on the flags only when they fit; a long loan career is read in the list of clubs under the chart
-  const labels = item.moves.length <= 5;
-  let d = "";
-  pts.forEach((p, k) => {
-    d += k === 0 ? `M${x(p.t)},${y(p.v)}` : `H${x(p.t)}V${y(p.v)}`;
-  });
-  const peak = revealed >= 4 && pts.length ? pts.reduce((a, b) => (b.v > a.v ? b : a)) : null;
-  const years = Array.from({ length: t1 - t0 + 1 }, (_, k) => t0 + k).filter((yr, _k, all) => all.length <= 12 || (yr - t0) % 2 === 0);
-  return (
-    <svg className="value-chart" viewBox={`0 0 ${W} ${H}`} shapeRendering="crispEdges" role="img" aria-label="Curva del valore di mercato">
-      {Array.from({ length: vmax / step + 1 }, (_, k) => (
-        <g key={k}>
-          <line x1={PAD.l} x2={W - PAD.r} y1={y(k * step)} y2={y(k * step)} className="grid" />
-          <text x={PAD.l - 8} y={y(k * step) + 5} className="axis" textAnchor="end">
-            {k * step}
-          </text>
-        </g>
-      ))}
-      <text x={6} y={18} className="axis unit">
-        MLN €
-      </text>
-      {years.map((yr) => (
-        <text key={yr} x={x(yr)} y={H - 8} className="axis" textAnchor="middle">
-          {String(yr).slice(2)}
-        </text>
-      ))}
-      {item.moves.map((m, k) => (
-        <g key={k} className="move">
-          <line x1={x(m.t)} x2={x(m.t)} y1={PAD.t - 6} y2={H - PAD.b} />
-          <rect x={x(m.t)} y={PAD.t - 14} width={14} height={10} />
-          {m.club && labels && (
-            <text x={Math.min(x(m.t) + 18, W - 150)} y={PAD.t - 5 + (k % 3) * 20} className="club">
-              {m.club}
-            </text>
-          )}
-        </g>
-      ))}
-      <path d={d} className="curve" />
-      {peak && (
-        <g className="peak">
-          <rect x={x(peak.t) - 7} y={y(peak.v) - 7} width={14} height={14} />
-          <text x={Math.min(x(peak.t), W - 120)} y={y(peak.v) < PAD.t + 50 ? y(peak.v) + 30 : y(peak.v) - 14} textAnchor="middle">
-            {peak.v} MLN
-          </text>
-        </g>
-      )}
-      <g className="curtain" style={{ transform: `translateX(${shownUntil}px)` }}>
-        <rect x={0} y={PAD.t - 18} width={W} height={H - PAD.t - PAD.b + 18} />
-        {revealed < 4 && (
-          <text x={(W - PAD.r - shownUntil) / 2} y={H / 2} textAnchor="middle">
-            ? ? ?
-          </text>
-        )}
-      </g>
-    </svg>
-  );
+/** "64,3 mln €" -> [64.3, 1 decimal, " mln €"]: the number of a value label, to roll it up when it comes out. */
+function splitLabel(label: string): { n: number; dec: number; rest: string; head: string } | null {
+  const m = label.match(/^(\D*?)(\d+(?:,\d+)?)(.*)$/);
+  if (!m) return null;
+  const dec = m[2]!.includes(",") ? m[2]!.split(",")[1]!.length : 0;
+  return { head: m[1]!, n: Number(m[2]!.replace(",", ".")), dec, rest: m[3]! };
 }
 
-function QuotazioneBoard({ item, revealed, points }: { item: QuotazioneItem; revealed: number; points: number[] }) {
-  const facts = item.clues.slice(3, Math.max(3, revealed));
+/** The value of the challenger rolls up from zero when it is revealed, like an arcade counter (off with reduced motion). */
+function RollingValue({ label }: { label: string }) {
+  const [shown, setShown] = useState(label);
+  useEffect(() => {
+    const parts = splitLabel(label);
+    if (!parts || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setShown(label);
+      return;
+    }
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const t = Math.min(1, (now - t0) / 650);
+      const v = parts.n * (1 - Math.pow(1 - t, 3));
+      setShown(`${parts.head}${v.toFixed(parts.dec).replace(".", ",")}${parts.rest}`);
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [label]);
+  return <>{shown}</>;
+}
+
+function TtCard({ who, role, value, stamp, color }: { who: TestaItem["chain"][0]; role: "champion" | "challenger"; value: ReactNode; stamp?: "ok" | "ko"; color?: string }) {
   return (
-    <div className="quotazione">
-      <div className="q-steps">
-        {points.map((pt, k) => (
-          <span key={k} className={k < revealed ? "on" : ""}>
-            {pt}
-          </span>
-        ))}
-      </div>
-      <ValueChart item={item} revealed={revealed} />
-      {facts.length > 0 && (
-        <div className="q-facts">
-          {facts.map((f, k) => (
-            <span key={k}>{f}</span>
-          ))}
-        </div>
-      )}
+    <div className={`tt-card ${role}`} key={`${role}-${who.id}`} style={color ? ({ "--tt-active": color } as CSSProperties) : undefined}>
+      <span className="tt-tag">{role === "champion" ? "IN CAMPO" : "SFIDANTE"}</span>
+      <Sprite name="face" size={72} className="tt-face" />
+      <span className="tt-name">{who.name}</span>
+      <span className={`tt-value ${who.label === null ? "q" : ""}`}>{value}</span>
+      {stamp && <span className={`tt-stamp ${stamp}`}>{stamp === "ok" ? "✓" : "✗"}</span>}
     </div>
   );
 }
 
-/* ------------------------------------------------------------ Testa a Testa */
-
+/**
+ * Testa a Testa (SPEC §4.11): the arena of a duel. The player IN CAMPO holds his value, the SFIDANTE hides his; the one
+ * on turn says MORE or LESS. Below, the eight steps of the chain, closer and closer, coloured by who answered them.
+ */
 function TestaATesta({ state, g, dispatch, start }: GameProps) {
   const { readonly } = usePlay();
-  const item = g.items[g.i] as TestaItem;
+  const item = g.items[0] as TestaItem;
   const k: number = g.k;
-  const reveal = g.stage === "reveal";
-  const deciding = g.stage === "decide";
-  const known = item.chain[deciding ? k : k - 1]!;
-  const next = item.chain[deciding ? k + 1 : k];
-  const nextPot = TESTA_POT[k];
+  const steps = item.chain.length - 1;
+  const results = g.results as { player: PlayerIdx; ok: boolean; up: boolean }[];
+  const guessing = g.stage === "guess";
+  const lastResult = results[results.length - 1];
+  const champion = item.chain[k - 1]!;
+  const challenger = item.chain[k]!;
+  const turn = g.turn as PlayerIdx;
+  const color = turn === 0 ? "var(--p1)" : "var(--p2)";
+  const names = namesOf(state);
   const choose = (choice: 0 | 1) => dispatch({ type: "ANSWER", payload: { choice } });
   useEffect(() => {
-    if (readonly || reveal) return;
+    if (readonly || !guessing) return;
     const h = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement) return;
       if (e.key === "ArrowUp" || e.key === "+") choose(1);
@@ -356,75 +299,83 @@ function TestaATesta({ state, g, dispatch, start }: GameProps) {
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   });
+  const stamp = guessing ? undefined : lastResult?.ok ? "ok" : "ko";
   return (
-    <>
-      <TurnBar state={state} p={g.turn} info={`CATENA ${g.i + 1}/${g.items.length}`} />
+    <div className="tt-arena" style={{ "--tt-active": color } as CSSProperties}>
+      <div className="tt-marquee">
+        <span className="tt-title">{item.title}</span>
+        <span className="tt-def">{item.definition}</span>
+      </div>
+      <TurnBar state={state} p={g.stage === "reveal" ? null : turn} info={`LIVELLO ${Math.min(k, steps)}/${steps}`} />
       <StateTimer state={state} start={start} />
-      <div className="q-card">
-        <div className="q small">{item.title}</div>
-        <div className="sub">{item.definition}</div>
-      </div>
-      <div className="pot-ladder" aria-label="Piatto">
-        {TESTA_POT.map((v, j) => (
-          <span key={j} className={`${g.pot === v && !reveal ? "now" : ""} ${j < (deciding ? k : k - 1) ? "done" : ""}`}>
-            {v}
-          </span>
-        ))}
-        <b className={`pot-now ${deciding ? "c-ok" : ""}`}>{deciding ? `GIUSTO! PIATTO ${g.pot} · RISCHI PER ${nextPot}?` : `PIATTO ${reveal ? g.last?.points ?? 0 : g.pot}`}</b>
-      </div>
-      {!reveal ? (
-        <div className="duel" key={`${g.i}-${k}-${g.stage}`}>
-          <div className="duel-card known">
-            <span className="name">{known.name}</span>
-            <span className="value">{known.label}</span>
-          </div>
-          <span className="vs">VS</span>
-          <div className="duel-card next">
-            <span className="name">{next?.name}</span>
-            <span className="value q">???</span>
-          </div>
+      <div className="tt-ring">
+        <TtCard who={champion} role="champion" value={champion.label} />
+        <div className="tt-vs" aria-hidden>
+          <i className="spark a" />
+          <span>VS</span>
+          <i className="spark b" />
         </div>
-      ) : (
-        <div className="chain-reveal">
-          {item.chain.map((c, j) => (
-            <span key={j} className={j <= k ? "played" : ""}>
-              <b>{c.name}</b> {c.label}
+        <TtCard
+          who={challenger}
+          role="challenger"
+          color={g.stage === "reveal" ? undefined : color}
+          value={challenger.label === null ? "???" : <RollingValue label={challenger.label} />}
+          stamp={stamp}
+        />
+      </div>
+      <div className="tt-track" aria-label="La catena">
+        {Array.from({ length: steps }, (_, j) => {
+          const r = results[j];
+          const now = guessing && j === k - 1;
+          return (
+            <span
+              key={j}
+              className={`tt-bead ${r ? `done ${r.player === 0 ? "p1" : "p2"} ${r.ok ? "" : "ko"}` : ""} ${now ? "now" : ""}`}
+              style={{ "--heat": `hsl(${130 - j * 17} 90% 55%)` } as CSSProperties}
+            >
+              {r ? (r.ok ? (r.up ? "▲" : "▼") : "✗") : j + 1}
             </span>
-          ))}
-        </div>
-      )}
-      {!reveal &&
+          );
+        })}
+      </div>
+      {guessing &&
         (readonly ? (
           <PhoneHint />
-        ) : g.stage === "guess" ? (
-          <div className="duel-actions">
-            <button className="btn big more" onClick={() => choose(1)}>
+        ) : (
+          <div className="tt-buttons">
+            <button className="btn tt-more" onClick={() => choose(1)}>
               ▲ PIÙ
             </button>
-            <button className="btn big less" onClick={() => choose(0)}>
+            <button className="btn tt-less" onClick={() => choose(0)}>
               ▼ MENO
             </button>
           </div>
-        ) : (
-          <div className="duel-actions">
-            <button className="btn big cash" onClick={() => choose(0)}>
-              INCASSA {g.pot}
-            </button>
-            <button className="btn big ghost" onClick={() => choose(1)}>
-              CONTINUA ▶ {nextPot}
-            </button>
-          </div>
         ))}
-      {reveal && (
-        <RevealFooter
-          g={g}
-          state={state}
-          dispatch={dispatch}
-          sources={item.sources}
-          solution={g.last?.ok ? <>+{g.last.points} INCASSATI</> : <>{item.chain[k]?.name}: {item.chain[k]?.label} · PIATTO PERSO</>}
-        />
+      {g.stage === "feedback" && (
+        <div className="tt-banner ok">
+          GIUSTO! +1 · ORA TOCCA A {state.config.solo ? names[0] || "TE" : names[turn === 0 ? 1 : 0]}
+        </div>
       )}
-    </>
+      {g.stage === "reveal" && (
+        <>
+          <div className={`tt-banner ${g.last?.ok ? "draw" : "win"}`}>
+            {g.last?.complete
+              ? "CATENA COMPLETA! NESSUNO SBAGLIA"
+              : g.last?.winner !== undefined
+                ? `${names[g.last.winner as PlayerIdx] || "L'AVVERSARIO"} VINCE IL DUELLO +3`
+                : `${results.filter((r) => r.ok).length} DI FILA`}
+          </div>
+          <div className="tt-ladder">
+            {item.chain.map((c, j) => (
+              <span key={j} className={j <= k ? "played" : ""}>
+                <b>{c.name}</b> {c.label}
+              </span>
+            ))}
+          </div>
+          <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />
+        </>
+      )}
+    </div>
   );
 }
 
@@ -777,4 +728,4 @@ export function GameView(props: GameProps) {
   }
 }
 
-export const isBuzzerGame = (g: string) => g === "mercato" || g === "giramondo" || g === "quotazione";
+export const isBuzzerGame = (g: string) => g === "mercato" || g === "giramondo";

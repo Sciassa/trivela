@@ -1,8 +1,10 @@
-"""Testa a Testa (SPEC §4.12): a chain of «more or less?» comparisons on one statistic, inside one league.
+"""Testa a Testa (SPEC §4.11): a duel on one chain of «more or less?» comparisons on one statistic, inside one league.
 
-Every chain holds seven known players of similar fame who played in that league. Consecutive values are never tied
-(at least 10% apart; 2 cm for height) and the chain goes both up and down, so that «always MORE» is not a strategy.
-Statistics on games (goals, appearances) use only the league's complete window, declared in the title.
+Every chain holds nine known players of similar fame who played in that league: eight comparisons, taken in turns by
+the two players. The chain gets harder step by step: the first two values are far apart, the last ones close (never
+tied: at least 10% apart; 2 cm for height, 2 years for age). It goes both up and down, never three steps the same way,
+so that «always MORE» is not a strategy. Statistics on games (goals, appearances) use only the league's complete
+window, declared in the title.
 """
 
 from __future__ import annotations
@@ -14,7 +16,12 @@ from collections import defaultdict
 from .gen_lists import scope
 from .tm_core import IN_COMP, L5, SNAPSHOT, SRC_DATASET, TM, base, fee_label
 
-CHAIN = 7  # the first player is shown with his value, then six comparisons
+CHAIN = 9  # the first player is shown with his value, then eight comparisons
+# how far apart two neighbours are at each step, from easy to hard: (at least, less than) the share of the larger value
+STEPS = [(0.45, 9.0), (0.35, 0.6), (0.28, 0.45), (0.22, 0.36), (0.17, 0.3), (0.13, 0.24), (0.11, 0.19), (0.1, 0.15)]
+# the same steps in centimetres (height) and in years (age)
+STEPS_CM = [(10, 99), (8, 14), (6, 11), (5, 9), (4, 7), (3, 6), (2, 5), (2, 4)]
+STEPS_YEARS = [(8, 99), (6, 10), (5, 8), (4, 7), (3, 6), (2, 5), (2, 4), (2, 3)]
 CHAINS_PER_STAT = 40
 MAX_CHAINS_PER_PLAYER = 4
 MIN_FAME = 75
@@ -48,7 +55,7 @@ class Testa:
         t = self.t
         known = {p for p in self.played[comp] if t.is_notable(p) and t.fame(p) >= MIN_FAME}
         lg = IN_COMP[comp]
-        rel = lambda a, b: abs(a - b) >= 0.1 * max(a, b)  # noqa: E731
+        rel = "rel"
         wg = t.window(comp, None, "goal")
         if wg:
             v = {p: sum(n for s, n in self.goals_s[comp][p].items() if wg[0] <= s <= wg[1]) for p in known}
@@ -61,7 +68,7 @@ class Testa:
                    "presenze", {p: n for p, n in v.items() if n >= 20}, lambda n: f"{n} presenze", rel)
         h = {p: t.players[p]["height"] for p in known if t.players[p]["height"]}
         yield ("altezza", f"Altezza dei giocatori scesi in campo {lg}", "Altezza in centimetri secondo Transfermarkt (dati al 6 luglio 2026).",
-               "cm", h, lambda n: f"{n} cm", lambda a, b: abs(a - b) >= 2)
+               "cm", h, lambda n: f"{n} cm", "cm")
         mv = {p: t.players[p]["mv"] for p in known if t.players[p]["mv"] >= 1_000_000}
         yield ("valore", f"Valore di mercato più alto in carriera, giocatori scesi in campo {lg}",
                "Il valore più alto mai stimato da Transfermarkt per il giocatore (dati al 6 luglio 2026).", "€", mv, fee_label, rel)
@@ -70,10 +77,23 @@ class Testa:
                "La cifra più alta pagata per il suo cartellino, secondo Transfermarkt (trasferimenti fino al 6 luglio 2026).", "€", fee, fee_label, rel)
         age = {p: (self.snapshot - t.players[p]["dob"]).days for p in known if t.players[p]["dob"]}
         yield ("eta", f"Età al 6 luglio 2026, giocatori scesi in campo {lg}", "Età in anni compiuti al 6 luglio 2026 (data di nascita Transfermarkt). PIÙ vuol dire più anziano.",
-               "anni", age, lambda n: f"{n // 365} anni", lambda a, b: abs(a - b) >= 2 * 365)
+               "anni", age, lambda n: f"{n // 365} anni", "years")
 
     # ------------------------------------------------------------------ chains
-    def chain(self, values: dict[int, float], close, r: random.Random, used: dict[int, int]) -> list[int] | None:
+    @staticmethod
+    def gap_ok(kind: str, step: int, a: float, b: float) -> bool:
+        """Step `step` (0 = the first comparison) wants two values this far apart: closer and closer along the chain."""
+        if kind == "cm":
+            lo, hi = STEPS_CM[step]
+            return lo <= abs(a - b) < hi
+        if kind == "years":
+            lo, hi = STEPS_YEARS[step]
+            return lo * 365 <= abs(a - b) < hi * 365
+        lo, hi = STEPS[step]
+        gap = abs(a - b) / max(a, b)
+        return lo <= gap < hi
+
+    def chain(self, values: dict[int, float], kind: str, r: random.Random, used: dict[int, int]) -> list[int] | None:
         t = self.t
         free = [p for p in values if used[p] < MAX_CHAINS_PER_PLAYER]
         if len(free) < CHAIN * 3:
@@ -88,7 +108,8 @@ class Testa:
                 want = -dirs[-1]
             if len(dirs) == CHAIN - 2 and len(set(dirs)) == 1:
                 want = -dirs[0]
-            cands = [p for p in free if p not in out and close(values[p], values[cur]) and (values[p] > values[cur]) == (want > 0)]
+            step = len(dirs)
+            cands = [p for p in free if p not in out and self.gap_ok(kind, step, values[p], values[cur]) and (values[p] > values[cur]) == (want > 0)]
             if not cands:
                 return None
             cands = t.near_in_fame(t.fame(start), cands)[:6]
@@ -100,13 +121,13 @@ class Testa:
     def run(self) -> list[dict]:
         t = self.t
         for comp in L5:
-            for stat, title, definition, unit, values, label, close in self.stats(comp):
+            for stat, title, definition, unit, values, label, kind in self.stats(comp):
                 used: dict[int, int] = defaultdict(int)
                 made, tries = 0, 0
                 r = random.Random(f"testa-{comp}-{stat}")
                 while made < CHAINS_PER_STAT and tries < CHAINS_PER_STAT * 20:
                     tries += 1
-                    ch = self.chain(values, close, r, used)
+                    ch = self.chain(values, kind, r, used)
                     if not ch:
                         continue
                     for p in ch:

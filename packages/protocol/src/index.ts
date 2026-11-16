@@ -12,7 +12,6 @@ export const GAME_IDS = [
   "giramondo",
   "asta",
   "maglia",
-  "quotazione",
   "testa_a_testa",
 ] as const;
 
@@ -163,19 +162,6 @@ export interface MagliaItem extends InstanceMeta {
   answer: AnswerKey;
 }
 
-/** La Quotazione (SPEC §4.11): a player's market value over time; the clues reveal the curve a quarter at a time. */
-export interface QuotazioneItem extends InstanceMeta {
-  /** Six steps: three partial curves, the whole curve with its peak, the clubs, role and nationality. */
-  clues: string[];
-  /** Market value in millions of euro; `t` is the date as a fractional year (2019.5 = early July 2019). */
-  curve: { t: number; v: number }[];
-  /** A flag at each change of club; `club` is empty until the clubs are revealed. */
-  moves: { t: number; club: string }[];
-  /** First and last date of the whole curve, kept when the view only gets part of it (the time axis does not move). */
-  span?: [number, number];
-  answer: AnswerKey;
-}
-
 /** Testa a Testa (SPEC §4.12): seven players and one statistic; each one is compared with the previous. */
 export interface TestaItem extends InstanceMeta {
   title: string;
@@ -194,7 +180,6 @@ export interface PackItems {
   giramondo: GiramondoItem[];
   asta: SetItem[];
   maglia: MagliaItem[];
-  quotazione: QuotazioneItem[];
   testa_a_testa: TestaItem[];
 }
 
@@ -213,5 +198,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], quotazione: [], testa_a_testa: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [] };
 }

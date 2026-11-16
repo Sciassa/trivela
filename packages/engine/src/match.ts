@@ -12,7 +12,7 @@ export const GAMES_PER_MATCH = 5;
 /* ------------------------------------------------------------------ */
 
 const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia"];
-const PERSON_GAMES: GameId[] = ["giramondo", "quotazione"];
+const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
   if (yearFrom === null) return true;
@@ -46,10 +46,10 @@ export function itemsNeeded(game: GameId): number {
 }
 
 /** Games made of one list: a longer format plays them again, with a new list, instead of asking more questions. */
-const LIST_GAMES: GameId[] = ["decina", "dischetto", "formazione"];
+const LIST_GAMES: GameId[] = ["decina", "dischetto", "formazione", "testa_a_testa"];
 
 /** Questions of a solo session (Allenamento) when the game is made of questions or profiles. */
-const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3, quotazione: 4, testa_a_testa: 3 };
+const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3 };
 
 /**
  * Slots of a single-game format: which game is played, how many times, with how many instances each time.
@@ -67,8 +67,7 @@ const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== u
 /* Draw                                                                 */
 /* ------------------------------------------------------------------ */
 
-/** Guess the player from progressive clues: at most one per match. */
-const BUZZER_GROUP: GameId[] = ["mercato", "giramondo", "quotazione"];
+const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
 const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
 const OPENERS: GameId[] = ["tiro_secco", "maglia"];
 /** Decina and Asta are played on the same kind of set: never both in one match. */
@@ -282,7 +281,6 @@ const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
   giramondo: ["answer"],
   formazione: ["play"],
   asta: ["prove"],
-  quotazione: ["answer"],
 };
 export const GRACE_MS = TIMERS.grace;
 

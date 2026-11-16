@@ -1,6 +1,6 @@
 {
   "version": "2026-11-16",
-  "generatedAt": "2026-11-16T12:03:19+00:00",
+  "generatedAt": "2026-11-16T12:32:18+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 3600,
@@ -11,7 +11,6 @@
     "giramondo": 1400,
     "asta": 1500,
     "maglia": 1500,
-    "quotazione": 1172,
     "testa_a_testa": 1200
   },
   "generators": {
@@ -23,7 +22,6 @@
     "giramondo": 1,
     "asta": 28,
     "maglia": 6,
-    "quotazione": 1,
     "testa_a_testa": 12
   },
   "sources": [
@@ -79,11 +77,6 @@
     "maglia": {
       "kept": 4662,
       "excluded_show": 0,
-      "excluded_not_notable": 0
-    },
-    "quotazione": {
-      "kept": 1172,
-      "excluded_show": 2,
       "excluded_not_notable": 0
     },
     "testa_a_testa": {
