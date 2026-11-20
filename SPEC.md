@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v13 — 9 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v14 — 12 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -176,6 +176,12 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v14** (novembre 2026), Fase 1 dell'espansione dei minigiochi, tutto sul dataset esistente:
+> - tre giochi nuovi: **Le Statistiche** (indovina il calciatore dalla scheda di una sua stagione di campionato, §4.12), **La Stagione dei Campioni** (una competizione, una stagione: campioni, capocannonieri, assist, porte inviolate, club, §4.13) e **Le Bandiere** (la squadra dalle bandiere degli undici titolari, viste per 5 secondi, §4.14). I giochi sono **12**; la Partita Classica ne sorteggia sempre 5 (§5.2); Sfida Rapida e Allenamento li offrono tutti;
+> - Tiro Secco: nuova categoria **Trasferimento vero o falso** (§4.1); *Il Mercato* non cambia;
+> - **catalogo dei giochi estendibile** in `apps/web/src/rules.ts` (`GAME_CATALOG`: nome, nome breve, colore, regole): menu, selettori, schede di presentazione e barra dei punti leggono da lì; gli id restano quelli di `GAME_IDS` (`packages/protocol`). `tools/shots.mjs` legge gli id dal protocollo;
+> - bandiere SVG dal pacchetto open source `flag-icons` (MIT): è un asset grafico, non una fonte di fatti; si copiano solo quelle usate (`tools/flags.mjs`) e non entrano nella precache (§12.7).
+
 > **v13** (novembre 2026): nuovo gioco **Testa a Testa** (§4.11): un duello su una catena di giocatori e una statistica. A turno si dice se lo sfidante ne ha PIÙ o MENO, +1 per risposta giusta; chi sbaglia per primo regala +3 all'avversario. La catena diventa sempre più difficile. I giochi sono **9**; se ne sorteggiano sempre 5 (§5.2).
 
 > **v11** (novembre 2026): *Il Mercato* pesca i trasferimenti di **tutti e cinque i campionati**, rispettando i campionati scelti (cedente o acquirente in quel campionato al momento del trasferimento), e circa **4 su 5 valgono almeno 20 milioni**; quelli più economici sono più rari e solo di giocatori noti (§4.3).
@@ -343,6 +349,9 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | Dal Dischetto | ❌ | Tutte le stagioni coperte |
 | L'Asta | ❌ | Tutte le stagioni coperte |
 | Testa a Testa | ❌ | Statistiche su finestre complete o su dati anagrafici: come le classifiche |
+| Le Statistiche | ✅ | Stagione della scheda ≥ ANNO |
+| La Stagione dei Campioni | ✅ | Stagione della domanda ≥ ANNO |
+| Le Bandiere | ✅ | Stagione della partita ≥ ANNO |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
 
@@ -398,6 +407,12 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   1. **Curiosità** "da maniaco" calcolate sui dati (compleanni, rimonte, omonimi, gol dalla panchina…).
   2. **Record rarissimi** (`tag: "record"`, generatori `an_*`): erano il gioco *L'Anomalia Statistica*, vedi §4.2.
   3. **Giochi di nomi** (`tag: "nomi"`, generatori `nomi_*`, `data/trivela_data/gen_nomi.py`): che cosa vuol dire un cognome, **incrociato con statistiche vere**.
+  4. **Trasferimento vero o falso** (v14, `tag: "vf"`, generatore `ts_vero_falso`, `data/trivela_data/gen_vf.py`): la scheda mostra `GIOCATORE`, `DA` → `A`, `STAGIONE`; due pulsanti grandi **VERO** / **FALSO** (anche sulle pulsantiere e per la Regia), +2 se esatta.
+     - **Veri**: trasferimenti reali del dataset, di giocatori noti (fama ≥ 75), con almeno una delle due squadre in un campionato top in quel momento.
+     - **Falsi**: lo stesso trasferimento reale con la squadra di arrivo sostituita da una squadra dello stesso campionato e della stessa stagione, di peso simile, che il giocatore **non ha mai avuto** in tutta la sua storia: nessun trasferimento da o verso di lei, nessuna presenza, nessuna formazione. Un trasferimento non è mai dichiarato falso solo perché manca nei dati. Il Copione dice il trasferimento vero.
+     - **Tanti veri quanti falsi** (937 + 937), così «sempre VERO» non paga. Nel sorteggio valgono come una dozzina degli altri tipi (`GENERATOR_WEIGHTS`): circa una domanda su cinque.
+     - **Variante Prestito / Definitivo: non fatta.** Il dataset non ha un campo esplicito sul tipo di operazione e l'importo non lo prova (un parametro zero non è un prestito).
+     - Le 3600 domande della v10 restano identiche; le nuove si aggiungono (Tiro Secco: 5474).
 - **Giochi di nomi (v7.1)**. Le quattro opzioni sono **solo cognomi** della stessa famiglia di parole, e uno solo appartiene davvero a un giocatore che ha fatto la cosa chiesta:
   - «Quale di questi cognomi (tutti nomi di animali) appartiene a un giocatore che ha giocato in Serie A (dal 2013/14 al 2025/26)?» Gatti · Cani · Topi · Salmoni;
   - «Quale di questi cognomi (tutti nomi di mestieri in tedesco) appartiene a un giocatore che ha segnato almeno 30 gol in Bundesliga?» Schmid · Bauer · Klempner · Bergmann.
@@ -534,6 +549,42 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - Pacchetto: 1200 catene (40 per statistica e campionato).
 - **Soluzioni**: Schermo e pulsantiere vedono i valori già confrontati e il nome dello sfidante, mai il suo valore né i giocatori successivi; alla fine si scopre la catena intera.
 
+### 4.12 `statistiche` — Le Statistiche (v14)
+- **2 schede a testa**, a turno: la stagione di campionato di un calciatore come un **tabellone arcade** (STAGIONE · COMPETIZIONE · «SOLO SERIE A»; PARTITE · GOL · ASSIST; RUOLO). Domanda: **CHI È IL CALCIATORE?** Si risponde **scrivendo** (tastiera di gioco e correttore, §10), 35 secondi più il tempo extra (§3.8); **+3** se esatto. Con il timer spento c'è «NON LO SO».
+- **Perimetro sempre dichiarato**: solo campionato, mai mescolato con coppe o nazionale.
+- **Dati** (`data/trivela_data/gen_seasons.py`, `statistiche()`):
+  - solo stagioni in cui **ogni partita** del campionato è nel dataset (ogni squadra gioca 2 volte con ogni altra) e ha le righe di presenza di entrambe le squadre, con i gol che tornano col risultato;
+  - presenze, gol e assist dalle righe di presenza; i gol sono confermati anche dai gol verificati (eventi);
+  - il ruolo è quello giocato quella stagione (la posizione più frequente da titolare);
+  - una sola squadra nel campionato quella stagione; almeno 20 presenze; giocatore noto (fama ≥ 70); al massimo 2 schede per giocatore;
+  - **univocità**: nessun altro giocatore di quel campionato e di quella stagione (noto o no) ha la stessa scheda. Se c'è un gemello, si aggiunge la nazionalità; se resta ambigua, la scheda non esce;
+  - niente livelli di difficoltà: un solo pool di 1500 schede.
+- **Soluzioni**: la squadra e il nome escono solo alla rivelazione.
+
+### 4.13 `stagione` — La Stagione dei Campioni (v14)
+- **2 domande a testa**, a turno, quattro risposte, 25 secondi, **+2**. Ogni domanda è su **un campionato e una stagione** (diversa da Decina e Dischetto: una domanda secca, non un elenco).
+- **Tipi**, solo dove la stagione è completa per quel dato:
+  - **campione**: primo per punti calcolati dai risultati **e** primo nella classifica registrata da Transfermarkt all'ultima giornata (penalizzazioni comprese); se non coincidono, la domanda non esce;
+  - **capocannoniere** (gol verificati, stagione con tutti i gol); **miglior assistman** (stagione con tutte le righe di presenza);
+  - **portiere con più porte inviolate**: definizione esplicita nel Copione, «partita giocata per intero da titolare senza subire gol»; servono formazioni e minuti completi;
+  - **miglior attacco / miglior difesa** (gol fatti e subiti dai risultati);
+  - **un club**: miglior marcatore, più presenze, più assist, **posizione finale** (dal registro dell'ultima giornata, solo se coincide con i punti e il club non è a pari punti con altri).
+- **Pari merito**: un pari merito al primo posto non viene mai chiesto. Le risposte sbagliate sono i piazzati subito dopo (o posizioni vicine per la classifica finale).
+- La Ligue 1 2019/20, interrotta, non ha domande sul campione né sulle classifiche.
+- Pacchetto: 1500 domande su 20 tipi (generatori `stg_*`, `gen_seasons.py`, `stagione()`).
+
+### 4.14 `bandiere` — Le Bandiere (v14)
+- **2 formazioni a testa**, a turno. Sul campo in pixel art compaiono le **11 bandiere dei titolari** di una squadra in una partita vera, disposte come hanno giocato (la posizione registrata per ognuno; il modulo, quando è registrato, si vede alla fine). Mai nomi o stemmi in questa fase.
+- Le bandiere restano **5 secondi esatti**, poi spariscono; il giocatore di turno sceglie la squadra tra quattro (20 secondi, +2). Alla rivelazione tornano bandiere e nomi, con partita, competizione e data.
+- **Timer dei 5 secondi**: è un timer di pausa (`memo`) del motore, separato da quello della risposta. Gira anche con il **timer spento** (§3.8), come «PRONTI…». Il motore resta deterministico: lo Schermo che ospita la partita fa scattare la fine dei 5 secondi con il normale evento `TIMEOUT`, e Regia e pulsantiere seguono lo stato via relay. Durante i 5 secondi i telefoni dicono «GUARDA LO SCHERMO».
+- **Dati** (`data/trivela_data/gen_bandiere.py`):
+  - partite dei campionati top con le **formazioni complete** (11 + 11), un solo portiere, posizione registrata per tutti e 11, **nazionalità per tutti e 11** con la sua bandiera;
+  - squadre note; al massimo 2 formazioni per squadra e stagione, con bandiere diverse;
+  - le risposte sbagliate sono squadre dello stesso campionato e della stessa stagione con il **mix di nazionalità più simile**.
+  - Pacchetto: 1336 formazioni.
+- **Bandiere**: SVG del pacchetto `flag-icons` (MIT), 4:3, nitide su ogni schermo; `tools/flags.mjs` copia in `apps/web/public/flags/` solo le 106 usate (circa 1 MB in tutto). Si scaricano solo quando il gioco è sorteggiato.
+- **Soluzioni**: Schermo e telefoni ricevono le bandiere solo durante i 5 secondi, le opzioni solo dopo, nomi e squadra solo alla rivelazione; la Regia vede tutto.
+
 ---
 
 ## 5. Bilanciamento e sorteggio
@@ -551,10 +602,13 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | asta | 20 | |
 | maglia | 6 | |
 | testa_a_testa | 7 | 4 confronti giusti + 3 del duello; in pratica 3–6 |
+| statistiche | 6 | 2 schede × 3 |
+| stagione | 4 | 2 domande × 2 |
+| bandiere | 4 | 2 formazioni × 2 |
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: i 9 giochi.
+- Pool: i 12 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
 - Vincoli:
   - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
   - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
@@ -854,6 +908,7 @@ La Regia mostra risposta ufficiale, varianti accettate e fonti; il conduttore va
 - `vite-plugin-pwa` genera il manifest e il service worker. Aggiunta alla schermata Home, TRIVELA si apre **a tutto schermo** (`display: "fullscreen"`, con `standalone` come ripiego), senza barra degli indirizzi né gesti del browser. Orientamento libero: lo Schermo si usa in orizzontale, Regia e pulsantiere in verticale.
 - Icone PNG 192/512, una «maskable» per Android e una per iOS (`tools/icons.mjs` le ridisegna da `icon.svg`); meta tag per iOS (`apple-mobile-web-app-capable`, barra di stato traslucida).
 - Il service worker si **aggiorna da solo** (`autoUpdate`): non serve più ricaricare due volte. Mette in cache l'app; i pacchetti delle domande restano a richiesta (§0.4) e vengono conservati solo dopo essere stati usati (rete prima, cache senza rete). I telefoni continuano a non scaricarli.
+- (v14) Le bandiere di *Le Bandiere* (`flags/`) non entrano nella precache: si scaricano quando il gioco è sorteggiato e restano in cache (`trivela-flags`, prima la cache).
 - Niente pull-to-refresh, rimbalzo, zoom al doppio tocco né menu del tocco lungo (`overscroll-behavior: none`, `touch-action: manipulation`).
 - Su Android il menu mostra «▼ INSTALLA L'APP» quando il browser lo permette; le Impostazioni spiegano come aggiungerla alla Home su iPhone (Condividi → Aggiungi alla schermata Home) e su Android.
 - Dal browser di un telefono, senza installare, il primo tocco su «PREMI START» chiede lo schermo intero (non su iPhone, dove il browser non lo consente: lì serve l'installazione).

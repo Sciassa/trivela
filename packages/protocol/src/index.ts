@@ -13,6 +13,9 @@ export const GAME_IDS = [
   "asta",
   "maglia",
   "testa_a_testa",
+  "statistiche",
+  "stagione",
+  "bandiere",
 ] as const;
 
 export type GameId = (typeof GAME_IDS)[number];
@@ -95,11 +98,14 @@ export type AnswerKey =
 
 export interface TiroSeccoItem extends InstanceMeta {
   question: string;
-  options: [string, string, string, string];
-  correct: 0 | 1 | 2 | 3;
+  /** Four options, or two (VERO / FALSO) for the true-or-false transfers. */
+  options: string[];
+  correct: number;
   archetype: 1 | 2 | 3 | 4 | 5 | 6;
-  /** Family of the question, shown as a small label: "record" (rare records) or "nomi" (word games on names). */
-  tag?: "record" | "nomi";
+  /** Family of the question, shown as a small label: "record" (rare records), "nomi" (word games on names), "vf" (true or false). */
+  tag?: "record" | "nomi" | "vf";
+  /** True-or-false transfers: the move as shown on the card. */
+  transfer?: { player: string; from: string; to: string; season: string };
 }
 
 export interface MercatoItem extends InstanceMeta {
@@ -171,6 +177,46 @@ export interface TestaItem extends InstanceMeta {
   chain: { id: string; name: string; value: number | null; label: string | null }[];
 }
 
+/** Le Statistiche (SPEC §4.12): one league season of a player as a card; the answer is the player. */
+export interface StatisticheItem extends InstanceMeta {
+  season: string;
+  competition: string;
+  /** The perimeter of the numbers, always one competition: «Solo Serie A». */
+  scope: string;
+  stats: { presenze: number; gol: number; assist: number };
+  role: string;
+  /** Nationality, only when it is needed to tell two identical cards apart. */
+  nat: string | null;
+  /** His club, shown at the reveal. */
+  team: string;
+  answer: AnswerKey;
+}
+
+/** La Stagione dei Campioni (SPEC §4.13): one question on one league season, four options. */
+export interface StagioneItem extends InstanceMeta {
+  season: string;
+  competition: string;
+  question: string;
+  options: string[];
+  correct: number;
+}
+
+/** Le Bandiere (SPEC §4.14): the eleven starters of one side of a real game, as flags; the answer is the team. */
+export interface BandiereItem extends InstanceMeta {
+  title: string;
+  date: string;
+  competition: string;
+  season: string;
+  league: string;
+  /** The module recorded for that game, when there is one («4-3-3»). */
+  formation: string | null;
+  team: string;
+  /** x across the pitch (0 left, 1 right), y from the own goal (0) to the opponents' (1). */
+  players: { id: string; name: string; nat: string; flag: string; x: number; y: number }[];
+  options: string[];
+  correct: number;
+}
+
 export interface PackItems {
   tiro_secco: TiroSeccoItem[];
   mercato: MercatoItem[];
@@ -181,6 +227,9 @@ export interface PackItems {
   asta: SetItem[];
   maglia: MagliaItem[];
   testa_a_testa: TestaItem[];
+  statistiche: StatisticheItem[];
+  stagione: StagioneItem[];
+  bandiere: BandiereItem[];
 }
 
 export interface PackManifest {
@@ -198,5 +247,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], statistiche: [], stagione: [], bandiere: [] };
 }

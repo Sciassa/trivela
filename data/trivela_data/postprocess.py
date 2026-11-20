@@ -35,7 +35,7 @@ def finalize(packs: dict[str, list[dict]], notable_ids: set[str]) -> tuple[dict[
             if is_show_case(it):
                 show += 1
                 continue
-            if game in ("maglia", "giramondo", "mercato") and not all(i in notable_ids for i in it["answer"].get("ids", [])):
+            if game in ("maglia", "giramondo", "mercato", "statistiche") and not all(i in notable_ids for i in it["answer"].get("ids", [])):
                 obscure += 1
                 continue
             keep.append(it)

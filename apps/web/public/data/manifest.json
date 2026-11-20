@@ -1,9 +1,9 @@
 {
-  "version": "2026-11-16",
-  "generatedAt": "2026-11-16T12:32:18+00:00",
+  "version": "2026-11-20",
+  "generatedAt": "2026-11-20T13:46:38+00:00",
   "snapshot": "2026-07-06",
   "counts": {
-    "tiro_secco": 3600,
+    "tiro_secco": 5474,
     "mercato": 1857,
     "decina": 1400,
     "dischetto": 1336,
@@ -11,10 +11,13 @@
     "giramondo": 1400,
     "asta": 1500,
     "maglia": 1500,
-    "testa_a_testa": 1200
+    "testa_a_testa": 1200,
+    "statistiche": 1500,
+    "stagione": 1500,
+    "bandiere": 1336
   },
   "generators": {
-    "tiro_secco": 71,
+    "tiro_secco": 73,
     "mercato": 2,
     "decina": 23,
     "dischetto": 67,
@@ -22,7 +25,10 @@
     "giramondo": 1,
     "asta": 28,
     "maglia": 6,
-    "testa_a_testa": 12
+    "testa_a_testa": 12,
+    "statistiche": 2,
+    "stagione": 20,
+    "bandiere": 2
   },
   "sources": [
     {
@@ -40,8 +46,8 @@
   ],
   "filters": {
     "tiro_secco": {
-      "kept": 6303,
-      "excluded_show": 214,
+      "kept": 8178,
+      "excluded_show": 215,
       "excluded_not_notable": 0
     },
     "mercato": {
@@ -82,6 +88,21 @@
     "testa_a_testa": {
       "kept": 1200,
       "excluded_show": 0,
+      "excluded_not_notable": 0
+    },
+    "statistiche": {
+      "kept": 3339,
+      "excluded_show": 0,
+      "excluded_not_notable": 0
+    },
+    "stagione": {
+      "kept": 2130,
+      "excluded_show": 0,
+      "excluded_not_notable": 0
+    },
+    "bandiere": {
+      "kept": 1336,
+      "excluded_show": 1,
       "excluded_not_notable": 0
     }
   }

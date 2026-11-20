@@ -11,7 +11,7 @@ export const GAMES_PER_MATCH = 5;
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia", "statistiche", "stagione", "bandiere"];
 const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
@@ -102,7 +102,13 @@ export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): G
  * Generators drawn with a weight instead of in turn (SPEC §4.3): in Il Mercato about four transfers in five are worth
  * 20 million or more, the cheaper ones (of well-known players) are rarer. Keys are generator ids without "@…".
  */
-export const GENERATOR_WEIGHTS: Record<string, number> = { mercato: 0.78, mercato_minore: 0.22 };
+export const GENERATOR_WEIGHTS: Record<string, number> = {
+  mercato: 0.78,
+  mercato_minore: 0.22,
+  // Tiro Secco (SPEC §4.1, v14): the true-or-false transfers weigh as a dozen of the other kinds, about one question in five;
+  // the other Tiro Secco generators keep weight 1 each
+  ts_vero_falso: 12,
+};
 const weightOf = (generator: string): number | null => GENERATOR_WEIGHTS[generator.split("@")[0]!] ?? null;
 
 /**
@@ -268,7 +274,8 @@ function makeEnv(s: MatchState, ctx: EngineCtx, events: EngineEvent[]): Env {
 /** Countdowns are on unless the match was set up without them (SPEC §3.8). */
 export const isTimed = (c: Pick<MatchConfig, "timer">): boolean => c.timer !== false;
 
-const PAUSE_KINDS = ["ready", "feedback"];
+/** Pauses that run with the countdowns switched off too: «PRONTI…», the feedback, and the 5 seconds of Le Bandiere. */
+const PAUSE_KINDS = ["ready", "feedback", "memo"];
 
 /**
  * Countdowns that end with a typed answer: when one runs out the player gets a grace period to finish typing
@@ -281,6 +288,7 @@ const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
   giramondo: ["answer"],
   formazione: ["play"],
   asta: ["prove"],
+  statistiche: ["ask"],
 };
 export const GRACE_MS = TIMERS.grace;
 
