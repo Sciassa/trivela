@@ -307,18 +307,26 @@ function PlayerCard({ state, p }: { state: MatchState; p: PlayerIdx }) {
       <Sprite name="face" size={64} className="hud-face" />
       <div className="hud-id">
         <span className={`hud-name ${state.config.players[p].length > 10 ? "long" : ""}`}>{state.config.players[p]}</span>
-        <span className="hud-tag">{state.config.solo ? "ALLENAMENTO" : turn ? "▶ IN GIOCO" : `GIOCATORE ${p + 1}`}</span>
+        <span className="hud-tag">{state.config.solo ? "ALLENAMENTO" : turn ? "★ TOCCA A TE" : `GIOCATORE ${p + 1}`}</span>
       </div>
       <span key={`score${coin}`} className={`hud-score ${shown !== score ? "rolling" : ""} ${coin ? "coin" : ""}`}>{shown}</span>
     </div>
   );
 }
 
+/** The player on turn while a game is being played, or null (buzzer games, pauses between games, training). */
+export function turnOf(state: MatchState): PlayerIdx | null {
+  if (state.config.solo || state.phase !== "playing") return null;
+  const t = state.game?.turn;
+  return t === 0 || t === 1 ? t : null;
+}
+
 export function Scoreboard({ state }: { state: MatchState }) {
   const g = state.order[state.gameIdx];
   const solo = state.config.solo === true;
+  const turn = turnOf(state);
   return (
-    <header className={`hud ${solo ? "solo" : ""}`}>
+    <header className={`hud ${solo ? "solo" : ""} ${turn !== null ? `turn-p${turn + 1}` : ""}`}>
       <PlayerCard state={state} p={0} />
       <div className="hud-mid" style={{ "--game": g ? GAME_COLORS[g] : "var(--accent)" } as CSSProperties}>
         <div className="hud-game">

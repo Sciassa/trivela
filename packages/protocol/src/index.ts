@@ -13,8 +13,6 @@ export const GAME_IDS = [
   "asta",
   "maglia",
   "testa_a_testa",
-  "statistiche",
-  "stagione",
   "bandiere",
 ] as const;
 
@@ -96,16 +94,33 @@ export type AnswerKey =
   | { kind: "text"; accepted: string[]; display: string }
   | { kind: "number"; value: number; display: string };
 
+export type TiroSeccoTag = "record" | "nomi" | "vf" | "scheda" | "campioni" | "confronto";
+
 export interface TiroSeccoItem extends InstanceMeta {
   question: string;
   /** Four options, or two (VERO / FALSO) for the true-or-false transfers. */
   options: string[];
   correct: number;
   archetype: 1 | 2 | 3 | 4 | 5 | 6;
-  /** Family of the question, shown as a small label: "record" (rare records), "nomi" (word games on names), "vf" (true or false). */
-  tag?: "record" | "nomi" | "vf";
+  /**
+   * Family of the question, shown as a small label; no tag = a curiosity. "record" (rare records), "nomi" (word games
+   * on names), "vf" (true or false), "scheda" (whose season is this?), "campioni" (the champions of a season),
+   * "confronto" (which of four did more). The draw takes the four questions of a match from different families.
+   */
+  tag?: TiroSeccoTag;
   /** True-or-false transfers: the move as shown on the card. */
   transfer?: { player: string; from: string; to: string; season: string };
+  /** «Di chi è questa stagione?»: the league season of the answer, as a card. */
+  card?: {
+    season: string;
+    competition: string;
+    /** The perimeter of the numbers, always one competition: «Solo Serie A». */
+    scope: string;
+    stats: { presenze: number; gol: number; assist: number };
+    role: string;
+    /** Nationality, only when it is needed to tell two identical cards apart. */
+    nat: string | null;
+  };
 }
 
 export interface MercatoItem extends InstanceMeta {
@@ -177,30 +192,6 @@ export interface TestaItem extends InstanceMeta {
   chain: { id: string; name: string; value: number | null; label: string | null }[];
 }
 
-/** Le Statistiche (SPEC §4.12): one league season of a player as a card; the answer is the player. */
-export interface StatisticheItem extends InstanceMeta {
-  season: string;
-  competition: string;
-  /** The perimeter of the numbers, always one competition: «Solo Serie A». */
-  scope: string;
-  stats: { presenze: number; gol: number; assist: number };
-  role: string;
-  /** Nationality, only when it is needed to tell two identical cards apart. */
-  nat: string | null;
-  /** His club, shown at the reveal. */
-  team: string;
-  answer: AnswerKey;
-}
-
-/** La Stagione dei Campioni (SPEC §4.13): one question on one league season, four options. */
-export interface StagioneItem extends InstanceMeta {
-  season: string;
-  competition: string;
-  question: string;
-  options: string[];
-  correct: number;
-}
-
 /** Le Bandiere (SPEC §4.14): the eleven starters of one side of a real game, as flags; the answer is the team. */
 export interface BandiereItem extends InstanceMeta {
   title: string;
@@ -227,8 +218,6 @@ export interface PackItems {
   asta: SetItem[];
   maglia: MagliaItem[];
   testa_a_testa: TestaItem[];
-  statistiche: StatisticheItem[];
-  stagione: StagioneItem[];
   bandiere: BandiereItem[];
 }
 
@@ -247,5 +236,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], statistiche: [], stagione: [], bandiere: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], bandiere: [] };
 }

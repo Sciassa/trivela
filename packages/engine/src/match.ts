@@ -11,7 +11,7 @@ export const GAMES_PER_MATCH = 5;
 /* Year filter (SPEC §3.3)                                              */
 /* ------------------------------------------------------------------ */
 
-const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia", "statistiche", "stagione", "bandiere"];
+const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia", "bandiere"];
 const PERSON_GAMES: GameId[] = ["giramondo"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
@@ -105,9 +105,16 @@ export function drawGames(rng: Rng, available: GameId[], n = GAMES_PER_MATCH): G
 export const GENERATOR_WEIGHTS: Record<string, number> = {
   mercato: 0.78,
   mercato_minore: 0.22,
-  // Tiro Secco (SPEC §4.1, v14): the true-or-false transfers weigh as a dozen of the other kinds, about one question in five;
-  // the other Tiro Secco generators keep weight 1 each
-  ts_vero_falso: 12,
+};
+
+/**
+ * Families of questions (SPEC §4.1, v15): the Tiro Secco mixes kinds that have little in common (records, word games
+ * on names, true or false, season cards, champions, comparisons, curiosities). Its questions are drawn one family at
+ * a time, so the four questions of a match come from four different families; inside a family the generators take
+ * turns. Games that are not listed here are drawn by generator only.
+ */
+export const FAMILY_OF: Partial<Record<GameId, (item: InstanceMeta) => string>> = {
+  tiro_secco: (item) => (item as InstanceMeta & { tag?: string }).tag ?? "curiosita",
 };
 const weightOf = (generator: string): number | null => GENERATOR_WEIGHTS[generator.split("@")[0]!] ?? null;
 
@@ -126,7 +133,14 @@ export function subjectsOf(item: InstanceMeta): string[] {
  * never about the same person, nor about one in `people` (the people already met
  * in this match); the people of the picked items are added to it.
  */
-export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng: Rng, used: Set<string>, people: Set<string> = new Set()): T[] | null {
+export function sampleVaried<T extends InstanceMeta>(
+  items: T[],
+  n: number,
+  rng: Rng,
+  used: Set<string>,
+  people: Set<string> = new Set(),
+  family?: (item: T) => string,
+): T[] | null {
   const groups = new Map<string, T[]>();
   for (const it of rng.shuffle(items)) {
     if (used.has(it.id)) continue;
@@ -146,7 +160,24 @@ export function sampleVaried<T extends InstanceMeta>(items: T[], n: number, rng:
       subjectsOf(it).forEach((p) => taken.add(p));
     }
   };
-  if (order.some((k) => weightOf(k) !== null)) {
+  if (family) {
+    // one family after the other, in a random order: n distinct families whenever there are n of them
+    const fams = new Map<string, string[]>();
+    for (const k of order) {
+      const f = family(groups.get(k)![0]!);
+      fams.set(f, [...(fams.get(f) ?? []), k]);
+    }
+    const famOrder = rng.shuffle([...fams.keys()]);
+    while (picked.length < n) {
+      const before = picked.length;
+      for (const f of famOrder) {
+        if (picked.length >= n) break;
+        const live = fams.get(f)!.filter((k) => groups.get(k)!.some(free));
+        if (live.length) take(groups.get(live[rng.int(live.length)]!)!);
+      }
+      if (picked.length === before) break;
+    }
+  } else if (order.some((k) => weightOf(k) !== null)) {
     // weighted generators: each question is drawn from a generator with the probability of its weight
     while (picked.length < n) {
       const live = order.filter((k) => groups.get(k)!.some(free));
@@ -205,7 +236,8 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
     // people met in the last matches on this device come back only when there is nobody else to ask about
     const pool = eligibleItems(g, packs, config);
     const fresh = pool.filter((it) => !subjectsOf(it).some((p) => recent.has(p)));
-    const items = sampleVaried(fresh, needs[k]!, rng, used, people) ?? sampleVaried(pool, needs[k]!, rng, used, people);
+    const fam = FAMILY_OF[g];
+    const items = sampleVaried(fresh, needs[k]!, rng, used, people, fam) ?? sampleVaried(pool, needs[k]!, rng, used, people, fam);
     if (!items) return { ok: false, reason: `Contenuti insufficienti per ${g}.` };
     content.push(items);
   }
@@ -288,7 +320,6 @@ const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
   giramondo: ["answer"],
   formazione: ["play"],
   asta: ["prove"],
-  statistiche: ["ask"],
 };
 export const GRACE_MS = TIMERS.grace;
 

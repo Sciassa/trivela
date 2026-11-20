@@ -25,10 +25,6 @@ const MAPS = {
   giramondo: ["....bbbb....", "..bbggbbbb..", ".bgggggbbbb.", ".bggggbbbgb.", "bbgggbbbgggb", "bbbggbbbgggb", "bbbbgbbbbggb", "bbbbggbbbbbb", ".bbbgggbbbb.", ".bbbbggbbbb.", "..bbbbgbbb..", "....bbbb...."],
   // two heads facing each other, an up and a down arrow between them
   testa_a_testa: ["............", ".cc......cc.", "cfff....fffc", "cfkf.gg.fkfc", "cfff.gg.fffc", ".ff.gggg.ff.", "............", ".ff.rrrr.ff.", "cccc.rr.cccc", "cccc.rr.cccc", "cccc....cccc", "............"],
-  // a scoreboard with two digits
-  statistiche: ["dddddddddddd", "dkkkkkkkkkkd", "dkyyykkyyykd", "dkkkykkykkkd", "dkyyykkyyykd", "dkykkkkkkykd", "dkyyykkyyykd", "dkkkkkkkkkkd", "dddddddddddd", "....dddd....", "...dddddd...", "............"],
-  // a cup with a star above
-  stagione: [".....yy.....", "....yyyy....", ".....yy.....", "............", ".yyyyyyyyyy.", "yyyywyyyyyyy", "y.yywyyyyy.y", ".yyyyyyyyyy.", "...yyyyyy...", ".....yy.....", "...yyyyyy...", "..oooooooo.."],
   // a flag on a pole, two bands
   bandiere: ["w...........", "wbbbbbbbbb..", "wbbbbbbbbb..", "wbbbbbbbbb..", "wwwwwwwwww..", "wrrrrrrrrr..", "wrrrrrrrrr..", "wrrrrrrrrr..", "w...........", "w...........", "w...........", "ww.........."],
   clock: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],

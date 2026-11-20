@@ -9,8 +9,6 @@ import type {
   Role,
   SetItem,
   BandiereItem,
-  StagioneItem,
-  StatisticheItem,
   TestaItem,
   TiroSeccoItem,
 } from "@trivela/protocol";
@@ -31,9 +29,6 @@ export const TIMERS = {
   formazione: 60_000,
   asta: 60_000,
   maglia: 30_000,
-  /** Le Statistiche: a typed name, like the other «who is it?» answers. */
-  statistiche: 35_000,
-  stagione: 25_000,
   /** Le Bandiere: the flags stay up for exactly 5 seconds, then the question has its own time. */
   memo: 5_000,
   bandiere: 20_000,
@@ -209,37 +204,6 @@ export const maglia = turnQuiz<MagliaItem>({
     },
   ],
   mask: (it) => ({ ...it, answer: { kind: "text", accepted: [], display: "" }, script: "" }),
-});
-
-/** Le Statistiche (SPEC §4.12): the card of one league season of a player; who is he? +3, two cards each. */
-export const statistiche = turnQuiz<StatisticheItem>({
-  id: "statistiche",
-  count: 4,
-  phases: [
-    {
-      ms: TIMERS.statistiche,
-      judge(item, intent, env) {
-        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
-        const v = verdictOf(intent);
-        const a = answerOf(intent);
-        let ok: boolean;
-        if (v?.correct !== undefined) ok = v.correct;
-        else if (a?.text !== undefined) ok = judgeText(a.text, item.answer, env.ctx.index);
-        else return "ignore";
-        return { points: ok ? 3 : 0, ok, said: a?.text };
-      },
-    },
-  ],
-  // the club would give him away: it comes out with the answer
-  mask: (it) => ({ ...it, team: "", answer: { kind: "text", accepted: [], display: "" }, script: "" }),
-});
-
-/** La Stagione dei Campioni (SPEC §4.13): one league season, four options, +2, two questions each. */
-export const stagione = turnQuiz<StagioneItem>({
-  id: "stagione",
-  count: 4,
-  phases: [{ ms: TIMERS.stagione, judge: pickOne(2) }],
-  mask: (it) => ({ ...it, correct: -1, script: "" }),
 });
 
 /**
@@ -977,8 +941,6 @@ export const MODULES: Record<GameId, GameModule> = {
   asta,
   maglia,
   testa_a_testa: testaATesta,
-  statistiche,
-  stagione,
   bandiere,
 };
 

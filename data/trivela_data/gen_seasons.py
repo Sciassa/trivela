@@ -1,8 +1,14 @@
-"""Two games on one competition and one season (SPEC §4.12, §4.13).
+"""Three families of Tiro Secco questions on one competition and one season (SPEC §4.1, v15).
 
-- Le Statistiche: a player's league season as a card (games, goals, assists, role): who is he?
-- La Stagione dei Campioni: champion, top scorer, top assist man, goalkeeper with most clean sheets, best attack and
-  best defence of a league season, and the same questions on one club (top scorer, most games, top assists, final place).
+- «Di chi è questa stagione?» (tag "scheda"): a memorable league season of a player as a card (games, goals, assists,
+  role); four options, the wrong ones are players of the same role with close numbers in the same season.
+- «Stagione dei campioni» (tag "campioni"): champion, top scorer, top assist man, goalkeeper with most clean sheets, best
+  attack and best defence of a league season, and the same questions on one club (top scorer, most games, top
+  assists, final place).
+- «Chi ne ha fatti di più?» (tag "confronto"): in one league season, which of four players scored the most goals, gave
+  the most assists or got the most yellow cards; the four values are close and never tied.
+
+Until v14 the first two were games of their own (Le Statistiche, La Stagione dei Campioni).
 
 Only closed perimeters: a league season enters when every game is in the dataset (each club plays every other twice)
 and, for each kind of statistic, when every game carries the data it needs:
@@ -24,6 +30,17 @@ from .tm_core import COMP_IT, IN_COMP, L5, OF_COMP, POS_IT, SRC_DATASET, TM, bas
 STAT_MIN_FAME = 70
 STAT_MIN_GAMES = 20
 STAT_PER_PLAYER = 2
+CAP_SCHEDA = 900
+CAP_CONFRONTO = 300  # per statistic
+LINE = {"Goalkeeper": "GK", "Centre-Back": "DEF", "Right-Back": "DEF", "Left-Back": "DEF", "Sweeper": "DEF", "Defender": "DEF",
+        "Defensive Midfield": "MID", "Central Midfield": "MID", "Attacking Midfield": "MID", "Right Midfield": "MID",
+        "Left Midfield": "MID", "midfield": "MID", "Midfield": "MID", "Right Winger": "ATT", "Left Winger": "ATT",
+        "Centre-Forward": "ATT", "Second Striker": "ATT", "Attack": "ATT"}
+
+
+def memorable(n: int, g: int, a: int, line: str) -> bool:
+    """A season worth remembering: «0 games, 0 goals» says nothing about anybody."""
+    return n >= STAT_MIN_GAMES and (g >= 15 or a >= 10 or g + a >= 20 or (line == "DEF" and g >= 5) or (line == "MID" and g + a >= 14))
 
 
 def cap(s: str) -> str:
@@ -83,10 +100,13 @@ class Seasons:
                 self.place[(comp, int(season))][int(club)] = int(pos)
 
     # ------------------------------------------------------------------ helpers
-    def role_of(self, comp: str, season: int, pid: int) -> str | None:
+    def pos_of(self, comp: str, season: int, pid: int) -> str | None:
+        """The position played that season (the most frequent as a starter), else the one of his profile."""
         c = self.role.get((comp, season, pid))
-        pos = c.most_common(1)[0][0] if c else self.t.players[pid]["pos"]
-        return POS_IT.get(pos)
+        return c.most_common(1)[0][0] if c else self.t.players.get(pid, {}).get("pos")
+
+    def role_of(self, comp: str, season: int, pid: int) -> str | None:
+        return POS_IT.get(self.pos_of(comp, season, pid))
 
     def table(self, comp: str, season: int) -> dict[int, dict]:
         """Points, goals for and against from the results (computed), with the recorded final place."""
@@ -111,48 +131,130 @@ class Seasons:
             return None
         return best[:k]
 
-    # ------------------------------------------------------------------ Le Statistiche
-    def statistiche(self) -> list[dict]:
+    # ------------------------------------------------------------------ «Di chi è questa stagione?»
+    def season_rows(self, comp: str, season: int) -> dict[int, tuple]:
+        """Every player of one league season: (games, goals, assists, position, nationality, clubs)."""
+        t = self.t
+        out = {}
+        for pid, by_club in self.apx[(comp, season)].items():
+            n, g, a = (sum(v[i] for v in by_club.values()) for i in range(3))
+            out[pid] = (n, g, a, self.pos_of(comp, season, pid), t.players.get(pid, {}).get("nat"), len(by_club))
+        return out
+
+    def scheda(self) -> list[dict]:
         t = self.t
         cards: dict[int, list] = defaultdict(list)
         for (comp, season), ok in sorted(self.ok.items()):
             if not ok["apx"]:
                 continue
-            rows = self.apx[(comp, season)]
+            rows = self.season_rows(comp, season)
             # every player of that league season, to prove that the card points at one man only
             keyed: Counter = Counter()
-            info = {}
-            for pid, by_club in rows.items():
-                n, g, a = (sum(v[i] for v in by_club.values()) for i in range(3))
-                role = self.role_of(comp, season, pid) if pid in t.players else None
-                nat = t.players.get(pid, {}).get("nat")
-                info[pid] = (n, g, a, role, nat, len(by_club))
-                keyed[(n, g, a, role)] += 1
-                keyed[(n, g, a, role, nat)] += 1
-            for pid, (n, g, a, role, nat, clubs) in info.items():
-                if clubs != 1 or n < STAT_MIN_GAMES or not role or not t.is_notable(pid) or t.fame(pid) < STAT_MIN_FAME:
+            for pid, (n, g, a, pos, nat, _clubs) in rows.items():
+                keyed[(n, g, a, POS_IT.get(pos))] += 1
+                keyed[(n, g, a, POS_IT.get(pos), nat)] += 1
+            for pid, (n, g, a, pos, nat, clubs) in rows.items():
+                role, line = POS_IT.get(pos), LINE.get(pos or "")
+                if clubs != 1 or not role or not line or line == "GK" or not t.is_notable(pid) or t.fame(pid) < STAT_MIN_FAME:
                     continue
-                # the goals of the card are the verified ones too (events or appearances that add up with the score)
+                if not memorable(n, g, a, line):
+                    continue
                 if sum(self.goals[(comp, season)].get(pid, {}).values()) != g:
-                    continue
+                    continue  # the goals of the card are the verified ones too
                 with_nat = keyed[(n, g, a, role)] > 1
                 if with_nat and (not nat or keyed[(n, g, a, role, nat)] > 1):
                     continue  # two players with the very same card: not asked
-                club = next(iter(rows[pid]))
-                cards[pid].append((g + a, n, comp, season, g, a, role, nat if with_nat else None, club))
+                # the wrong options: players of the same role (else line) of that season with the closest numbers
+                near = []
+                for q, (n2, g2, a2, pos2, _nat2, _c2) in rows.items():
+                    if q == pid or not t.is_notable(q) or n2 < 15 or LINE.get(pos2 or "") != line:
+                        continue
+                    if (g2, a2) == (g, a):
+                        continue  # the same goals and assists: the card would hinge on the games alone
+                    dist = abs(g2 - g) + 0.8 * abs(a2 - a) + 0.15 * abs(n2 - n) + (0 if pos2 == pos else 2)
+                    near.append((dist, abs(t.fame(q) - t.fame(pid)), q))
+                near.sort()
+                if len(near) < 3:
+                    continue
+                club = next(iter(self.apx[(comp, season)][pid]))
+                cards[pid].append((g + a, n, comp, season, g, a, role, nat if with_nat else None, club, [q for _, _, q in near[:3]]))
         out = []
         for pid, lst in cards.items():
-            for _, n, comp, season, g, a, role, nat, club in sorted(lst, key=lambda x: (-x[0], -x[1], x[3]))[:STAT_PER_PLAYER]:
+            for _, n, comp, season, g, a, role, nat, club, wrong in sorted(lst, key=lambda x: (-x[0], -x[1], x[3]))[:STAT_PER_PLAYER]:
                 lab = f"{COMP_IT[comp]} {season_label(season)}"
-                it = base(gid_of("stat_scheda", comp), (pid, comp, season), year=season, fame=t.fame(pid),
+                key = (pid, comp, season)
+                o = opts4(t.pname(pid), [t.pname(q) for q in wrong], f"ts_scheda-{key}")
+                if not o:
+                    continue
+                others = "; ".join(f"{t.pname(q)} {sum(v[1] for v in self.apx[(comp, season)][q].values())} gol, "
+                                   f"{sum(v[2] for v in self.apx[(comp, season)][q].values())} assist" for q in wrong)
+                it = base(gid_of("ts_scheda", comp), key, year=season, fame=t.fame(pid),
                           entities=[f"comp:{comp}", t.pid(pid), t.cid(club)], sources=[t.src_player(pid), SRC_DATASET],
                           script=f"{t.pname(pid)} {t.con(club)}, {lab}: {n} presenze, {g} gol e {a} assist in campionato "
-                                 f"({role.lower()}). Solo {COMP_IT[comp]}: coppe e nazionale escluse; dati Transfermarkt.")
-                it.update({"season": season_label(season), "competition": COMP_IT[comp], "scope": f"Solo {COMP_IT[comp]}",
-                           "stats": {"presenze": n, "gol": g, "assist": a}, "role": role, "nat": nat_it(nat) if nat else None,
-                           "team": t.club(club), "answer": t.answer(pid)})
+                                 f"({role.lower()}). Gli altri, quella stagione: {others}. Solo {COMP_IT[comp]}; dati Transfermarkt.")
+                it.update({"question": "Di chi è questa stagione?", "options": o[0], "correct": o[1], "archetype": 2, "tag": "scheda",
+                           "card": {"season": season_label(season), "competition": COMP_IT[comp], "scope": f"Solo {COMP_IT[comp]}",
+                                    "stats": {"presenze": n, "gol": g, "assist": a}, "role": role, "nat": nat_it(nat) if nat else None}})
                 out.append(it)
         out.sort(key=lambda x: (-x["fame"], x["id"]))
+        return out[:CAP_SCHEDA]
+
+    # ------------------------------------------------------------------ «Chi ne ha fatti di più?»
+    def confronto(self) -> list[dict]:
+        t = self.t
+        comps = ",".join(f"'{c}'" for c in L5)
+        # yellow cards: a player counts only when his appearance rows agree with his card events in that season
+        yc = defaultdict(Counter)
+        for comp, season, pid, n in t.q(f"select gm.comp, gm.season, a.pid, sum(a.yc) from apx a join gm using(gid) where gm.comp in ({comps}) group by 1, 2, 3"):
+            yc[(comp, int(season))][int(pid)] = int(n or 0)
+        ev_y = defaultdict(Counter)
+        for comp, season, pid, n in t.q(f"""select gm.comp, gm.season, e.pid, count(*) from ev e join gm using(gid)
+                where e.type = 'Cards' and e.descr ilike '%yellow card%' and e.pid is not null and gm.comp in ({comps}) group by 1, 2, 3"""):
+            ev_y[(comp, int(season))][int(pid)] = int(n)
+        kinds = (("gol", "ha segnato più gol", 1, 10, 6, ("ATT", "MID")), ("assist", "ha fornito più assist", 2, 7, 4, ("ATT", "MID")),
+                 ("gialli", "ha ricevuto più cartellini gialli", None, 8, 4, ("DEF", "MID")))
+        out = []
+        for stat, what, idx, floor, span, lines in kinds:
+            made = []
+            for (comp, season), ok in sorted(self.ok.items()):
+                if not ok["apx"]:
+                    continue
+                rows = self.season_rows(comp, season)
+                val = {p: (yc[(comp, season)][p] if idx is None else r[idx]) for p, r in rows.items()
+                       if t.is_notable(p) and t.fame(p) >= STAT_MIN_FAME and r[0] >= 15 and LINE.get(r[3] or "") in lines
+                       and (idx is not None or yc[(comp, season)][p] == ev_y[(comp, season)][p])}
+                used: set[int] = set()
+                for anchor in sorted(val, key=lambda p: (-val[p], -t.fame(p), p))[:8]:
+                    v = val[anchor]
+                    if v < floor or anchor in used:
+                        continue
+                    # three players a little below, with three different values: close, never tied
+                    pool = [p for p in val if p != anchor and p not in used and v - span <= val[p] < v]
+                    pool.sort(key=lambda p: (abs(t.fame(p) - t.fame(anchor)), p))
+                    picks, seen = [], {v}
+                    for p in pool:
+                        if val[p] not in seen:
+                            picks.append(p)
+                            seen.add(val[p])
+                        if len(picks) == 3:
+                            break
+                    if len(picks) < 3:
+                        continue
+                    used |= {anchor, *picks}
+                    lab = f"{COMP_IT[comp]} {season_label(season)}"
+                    key = (stat, comp, season, anchor)
+                    o = opts4(t.pname(anchor), [t.pname(p) for p in picks], f"ts_confronto-{key}")
+                    unit = {"gol": "gol", "assist": "assist", "gialli": "gialli"}[stat]
+                    ranking = sorted([anchor, *picks], key=lambda p: -val[p])
+                    it = base(gid_of(f"ts_confronto_{stat}", comp), key, year=season, fame=t.fame(anchor),
+                              entities=[f"comp:{comp}", t.pid(anchor), *(t.pid(p) for p in picks)], sources=[SRC_DATASET],
+                              script=f"{cap(lab)}, solo campionato: " + ", ".join(f"{t.pname(p)} {val[p]} {unit}" for p in ranking)
+                                     + ". Dati Transfermarkt.")
+                    it.update({"question": f"{lab}: quale di questi giocatori {what} in campionato?", "options": o[0], "correct": o[1],
+                               "archetype": 2, "tag": "confronto"})
+                    made.append(it)
+            made.sort(key=lambda x: (-x["fame"], x["id"]))
+            out += made[:CAP_CONFRONTO]
         return out
 
     # ------------------------------------------------------------------ La Stagione dei Campioni
@@ -161,7 +263,7 @@ class Seasons:
         if not o:
             return
         it = base(gid_of(gen, comp), key, year=season, fame=fame, entities=[f"comp:{comp}", *entities], sources=[SRC_DATASET], script=script)
-        it.update({"season": season_label(season), "competition": COMP_IT[comp], "question": question, "options": o[0], "correct": o[1]})
+        it.update({"question": question, "options": o[0], "correct": o[1], "archetype": 2, "tag": "campioni"})
         out.append(it)
 
     def stagione(self) -> list[dict]:
@@ -275,4 +377,4 @@ class Seasons:
 
 def generate(t: TM) -> dict[str, list[dict]]:
     s = Seasons(t)
-    return {"statistiche": s.statistiche(), "stagione": s.stagione()}
+    return {"tiro_secco": s.scheda() + s.stagione() + s.confronto()}
