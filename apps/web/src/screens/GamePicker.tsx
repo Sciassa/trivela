@@ -1,8 +1,8 @@
-import { GAME_IDS, type GameId } from "@trivela/protocol";
+import type { GameId } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
 import { Page } from "../components/ui";
-import { GAME_NAMES, GAME_RULES } from "../rules";
+import { CATALOG_GAMES, GAME_NAMES, GAME_RULES } from "../rules";
 
 export type Format = { kind: "quick"; game: GameId } | { kind: "training"; game: GameId };
 
@@ -12,11 +12,11 @@ export function GamePicker({ purpose, onPick, onBack }: { purpose: Format["kind"
     <Page title={purpose === "quick" ? "SFIDA RAPIDA · SCEGLI IL GIOCO" : "ALLENAMENTO · SCEGLI IL GIOCO"} onBack={onBack} wide>
       <div className="note">
         {purpose === "quick"
-          ? "Due giocatori, un solo gioco: 3 round a testa (per Decina, Dischetto e Formazione, 3 giri). Vale in ogni modalità: schermo singolo o con i telefoni."
+          ? "Due giocatori, un solo gioco: 3 round a testa (per Decina, Dischetto, Formazione e Testa a Testa, 3 giri). Vale in ogni modalità: schermo singolo o con i telefoni."
           : "Da solo, senza turni né avversari: scegli il gioco e allenati. Si gioca su un solo schermo."}
       </div>
       <div className="game-pick">
-        {GAME_IDS.map((g) => (
+        {CATALOG_GAMES.map((g) => (
           <button
             key={g}
             style={{ "--game": GAME_COLORS[g] } as React.CSSProperties}

@@ -37,12 +37,19 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
-        globIgnores: ["data/**"],
+        // question packs and flags are fetched when a game needs them, never precached (SPEC §12.7)
+        globIgnores: ["data/**", "flags/**"],
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
         skipWaiting: true,
         runtimeCaching: [
+          {
+            // the flags of Le Bandiere: they never change, kept once seen
+            urlPattern: ({ url }) => url.pathname.includes("/flags/"),
+            handler: "CacheFirst",
+            options: { cacheName: "trivela-flags", expiration: { maxEntries: 200 } },
+          },
           {
             // packs change with every data update: the network first, the cache when offline
             urlPattern: ({ url }) => url.pathname.includes("/data/"),

@@ -25,6 +25,12 @@ const MAPS = {
   giramondo: ["....bbbb....", "..bbggbbbb..", ".bgggggbbbb.", ".bggggbbbgb.", "bbgggbbbgggb", "bbbggbbbgggb", "bbbbgbbbbggb", "bbbbggbbbbbb", ".bbbgggbbbb.", ".bbbbggbbbb.", "..bbbbgbbb..", "....bbbb...."],
   // two heads facing each other, an up and a down arrow between them
   testa_a_testa: ["............", ".cc......cc.", "cfff....fffc", "cfkf.gg.fkfc", "cfff.gg.fffc", ".ff.gggg.ff.", "............", ".ff.rrrr.ff.", "cccc.rr.cccc", "cccc.rr.cccc", "cccc....cccc", "............"],
+  // a scoreboard with two digits
+  statistiche: ["dddddddddddd", "dkkkkkkkkkkd", "dkyyykkyyykd", "dkkkykkykkkd", "dkyyykkyyykd", "dkykkkkkkykd", "dkyyykkyyykd", "dkkkkkkkkkkd", "dddddddddddd", "....dddd....", "...dddddd...", "............"],
+  // a cup with a star above
+  stagione: [".....yy.....", "....yyyy....", ".....yy.....", "............", ".yyyyyyyyyy.", "yyyywyyyyyyy", "y.yywyyyyy.y", ".yyyyyyyyyy.", "...yyyyyy...", ".....yy.....", "...yyyyyy...", "..oooooooo.."],
+  // a flag on a pole, two bands
+  bandiere: ["w...........", "wbbbbbbbbb..", "wbbbbbbbbb..", "wbbbbbbbbb..", "wwwwwwwwww..", "wrrrrrrrrr..", "wrrrrrrrrr..", "wrrrrrrrrr..", "w...........", "w...........", "w...........", "ww.........."],
   clock: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],
   asta: ["..oooo......", ".oooooo.....", "oooooooo....", ".oooooooo...", "..oooooo.o..", "...oooo.ooo.", "....oo...ooo", "..........oo", "............", ".yyyyyyyy...", "yyyyyyyyyy..", "............"],
   maglia: ["..cc....cc..", ".cccwwwwccc.", "cccccwwccccc", "cccccccccccc", "cc.cccccc.cc", "...cccccc...", "...cwwwwc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc..."],
@@ -57,15 +63,5 @@ export function Sprite({ name, size = 96, className = "" }: { name: SpriteName; 
 
 export const GameIcon = ({ game, size, className }: { game: GameId; size?: number; className?: string }) => <Sprite name={game} size={size} className={className} />;
 
-/** Accent colour of each game (HUD badge, intro card). */
-export const GAME_COLORS: Record<GameId, string> = {
-  tiro_secco: "#ff5a5a",
-  mercato: "#ffe600",
-  decina: "#ff9f1c",
-  dischetto: "#39ff14",
-  formazione: "#2fbf4a",
-  giramondo: "#4aa3ff",
-  asta: "#e0a060",
-  maglia: "#00e5ff",
-  testa_a_testa: "#ff6fb5",
-};
+/** Accent colour of each game: kept here for the components that import it with the icons; defined in `rules.ts`. */
+export { GAME_COLORS } from "../rules";

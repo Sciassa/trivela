@@ -2,7 +2,7 @@
 // Usage: pnpm build && node tools/shots.mjs [game,game,...]   (screenshots in test-results/shots/)
 //   VP=pc|phone|tablet limits the viewport; LONG=1 plays with very long player names
 import { spawn } from "node:child_process";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 
 const require = createRequire(import.meta.url);
@@ -10,7 +10,8 @@ const { chromium } = require("playwright");
 const PORT = 8798;
 const OUT = "test-results/shots";
 mkdirSync(OUT, { recursive: true });
-const ALL = ["tiro_secco", "maglia", "decina", "dischetto", "formazione", "asta", "mercato", "giramondo", "testa_a_testa"];
+// every game of the catalogue: the ids are read from the shared protocol, so a new game is shot without editing this file
+const ALL = [...readFileSync(new URL("../packages/protocol/src/index.ts", import.meta.url), "utf8").match(/GAME_IDS = \[([^\]]*)\]/)[1].matchAll(/"(\w+)"/g)].map((m) => m[1]);
 const games = (process.argv[2] ?? ALL.join(",")).split(",");
 const VIEWPORTS = { pc: { width: 1366, height: 768 }, phone: { width: 844, height: 390 }, tablet: { width: 1024, height: 768 } };
 

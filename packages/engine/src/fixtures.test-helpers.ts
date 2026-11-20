@@ -37,6 +37,31 @@ export function makePacks(): Packs {
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
     items.giramondo.push({ ...meta({ activeYears: [2020] }), clues: ["c1", "c2", "c3", "c4", "c5"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
+    items.statistiche.push({
+      ...meta({ yearMin: 2015 + (k % 5) }),
+      season: "2019/20",
+      competition: "Serie A",
+      scope: "Solo Serie A",
+      stats: { presenze: 30 + k, gol: k, assist: 2 },
+      role: "Prima punta",
+      nat: null,
+      team: "Juventus",
+      answer: { kind: "entity", ids: [P(k).id], display: P(k).name },
+    });
+    items.stagione.push({ ...meta({ yearMin: 2015 }), season: "2017/18", competition: "Serie A", question: `Chi ha vinto ${k}?`, options: ["A", "B", "C", "D"], correct: 2 });
+    items.bandiere.push({
+      ...meta({ yearMin: 2016 }),
+      title: "Inter-Juventus 1-0",
+      date: "1 gennaio 2016",
+      competition: "Serie A 2015/16",
+      season: "2015/16",
+      league: "in Serie A",
+      formation: "4-3-3",
+      team: "Juventus",
+      players: Array.from({ length: 11 }, (_, j) => ({ ...P(j), nat: "Italia", flag: j % 2 ? "it" : "fr", x: 0.5, y: j / 11 })),
+      options: ["Juventus", "Inter", "Milan", "Roma"],
+      correct: 0,
+    });
     items.testa_a_testa.push({
       ...meta(),
       title: "Gol in Serie A",

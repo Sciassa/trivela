@@ -109,10 +109,11 @@ try {
   await p.locator(".exit-btn").waitFor();
   const exitOpacity = await p.locator(".exit-btn").evaluate((el) => Number(getComputedStyle(el).opacity));
   check(exitOpacity < 0.6, `the exit button is half transparent until hovered (${exitOpacity})`);
+  const optionsBefore = await p.locator(".option").count(); // four, or two for a true-or-false transfer
   await p.locator(".exit-btn").click();
   check(await p.getByText("SEI SICURO DI VOLER TERMINARE LA SFIDA?").isVisible(), "ending the match asks for a confirmation");
   await p.getByRole("button", { name: "CONTINUA" }).click();
-  check((await p.locator(".option").count()) === 4, "cancelling the confirmation leaves the game as it was");
+  check([2, 4].includes(optionsBefore) && (await p.locator(".option").count()) === optionsBefore, "cancelling the confirmation leaves the game as it was");
   // a wrong answer is written in red for the whole room: the Screen shows what was tried
   let sawWrong = false;
   let sawPop = false;
@@ -359,7 +360,7 @@ try {
     await active.waitForTimeout(900);
     await active.screenshot({ path: "test-results/pad-turn.png" });
     const hasCorrect = await active.evaluate(() => document.body.innerHTML.includes("option right"));
-    check((await active.locator(PAD_OPT).count()) === 4, "the four answers sit in the thumb area of the controller");
+    check([2, 4].includes(await active.locator(PAD_OPT).count()), "the answers (four, or VERO / FALSO) sit in the thumb area of the controller");
     const box = await active.locator(PAD_OPT).last().boundingBox();
     check(!!box && box.y + box.height <= 780 + 1 && box.height >= 56, `... fully visible without scrolling, tall enough to tap (${Math.round(box?.height ?? 0)} px)`);
     check(!hasCorrect, "the controller receives no solution before answering");
@@ -553,6 +554,43 @@ try {
     check(/VINCE IL DUELLO \+3|CATENA COMPLETA/.test(banner), `the duel ends with a winner (+3) or a full chain (${banner})`);
     check(passed || /VINCE/.test(banner), "after a right guess the chain passes to the other phone");
     await screen.screenshot({ path: "test-results/room-testa-reveal.png" });
+    await screen.context().close();
+    await p1.context().close();
+    await p2.context().close();
+  }
+  // ---------------- Le Bandiere in a room, timer OFF: the 5 seconds still run, Screen and phones stay in step
+  {
+    const { screen, code } = await lobby();
+    const p1 = await join(code, "p1");
+    const p2 = await join(code, "p2");
+    await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
+    await screen.getByRole("button", { name: "SFIDA RAPIDA" }).click();
+    await screen.locator(".game-pick button", { hasText: "LE BANDIERE" }).click();
+    await screen.getByPlaceholder("Nome").first().fill("Anna");
+    await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.evaluate(() => localStorage.setItem("trivela.timer", "off"));
+    await screen.getByText("INIZIA LA PARTITA ▶").click();
+    await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
+    await screen.locator(".flags-pitch.memo img.flag").first().waitFor({ timeout: 15000 });
+    const t0 = Date.now();
+    check((await screen.locator(".flags-pitch img.flag").count()) === 11, "Le Bandiere: eleven flags on the Screen's pitch");
+    check((await screen.locator(".flags-pitch .pl-name").count()) === 0 && (await screen.locator(".option").count()) === 0, "... no names and no options during the 5 seconds");
+    check((await p1.locator(PAD_OPT).count()) + (await p2.locator(PAD_OPT).count()) === 0, "... and nothing to press on the phones");
+    await screen.screenshot({ path: "test-results/room-bandiere-memo.png" });
+    await Promise.race([p1.locator(PAD_OPT).first().waitFor({ timeout: 9000 }), p2.locator(PAD_OPT).first().waitFor({ timeout: 9000 })]);
+    const memo = (Date.now() - t0) / 1000;
+    check(memo > 3.5 && memo < 7.5, `with the timer OFF the flags still go after 5 seconds (${memo.toFixed(1)} s)`);
+    check((await screen.locator(".flags-pitch img.flag").count()) === 0 && (await screen.locator(".flags-pitch .flag-q").count()) === 11, "then the flags are hidden on the Screen");
+    const active = (await p1.locator(PAD_OPT).count()) ? p1 : p2;
+    check((await active.locator(PAD_OPT).count()) === 4, "the player on turn picks the team among four on the phone");
+    await active.locator(PAD_OPT).first().click();
+    await screen.locator(".flags-pitch .pl-name").first().waitFor({ timeout: 8000 });
+    check((await screen.locator(".flags-pitch img.flag").count()) === 11 && (await screen.locator(".flags-pitch .pl-name").count()) === 11, "at the reveal flags and names come back on the Screen");
+    const flagFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => u.includes("/data/games/"));
+    check(flagFiles.length === 0, "the phones download no question pack for Le Bandiere");
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();

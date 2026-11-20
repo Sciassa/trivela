@@ -29,7 +29,7 @@ const timeout = (s: MatchState) => {
 const first = (g: GameId) => [g, ...g5.filter((x) => x !== g)].slice(0, 5) as GameId[];
 
 describe("match flow", () => {
-  it("draws five games out of nine, deterministically per seed, with no fixed final", () => {
+  it("draws five games out of twelve, deterministically per seed, with no fixed final", () => {
     const cfg = { judging: "auto" as const, players: ["A", "B"] as [string, string], yearFrom: null, seed: 42 };
     const a = createMatch(cfg, packs);
     const b = createMatch(cfg, packs);
@@ -39,7 +39,7 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(9);
+    expect(POOL).toHaveLength(12);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
@@ -51,7 +51,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(9);
+    expect(Object.keys(MODULES)).toHaveLength(12);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -160,7 +160,7 @@ describe("year filter and sampling", () => {
     for (let seed = 1; seed < 200; seed++) seen.add([...drawGames(new Rng(seed), POOL)].sort().join());
     expect(seen.size).toBeGreaterThan(6);
     const all = new Set(Array.from({ length: 200 }, (_, k) => drawGames(new Rng(k + 1), POOL)).flat());
-    expect(all.size).toBe(9); // every game comes out sooner or later
+    expect(all.size).toBe(12); // every game comes out sooner or later
   });
 });
 
@@ -616,6 +616,101 @@ describe("testa a testa: a duel on one chain (SPEC §4.11)", () => {
   });
   it("sfida rapida: three chains, one per round", () => {
     expect(singleGamePlan("testa_a_testa", { rounds: 3 })).toEqual({ order: ["testa_a_testa", "testa_a_testa", "testa_a_testa"], need: 1 });
+  });
+});
+
+describe("le statistiche (SPEC §4.12)", () => {
+  it("two cards each, a typed name, +3; the club stays hidden until the reveal", () => {
+    let s = start(first("statistiche"));
+    const p = s.game!.turn as 0 | 1;
+    const item = s.game!.items[0];
+    expect(viewFor(s, "screen").game!.items[0].team).toBe("");
+    expect(viewFor(s, "p1").game!.items[0].answer.display).toBe("");
+    s = run(s, { type: "ANSWER", player: p, payload: { text: item.answer.display } });
+    expect(s.scores[p]).toBe(3);
+    expect(viewFor(s, "screen").game!.items[0].team).toBe("Juventus");
+    expect(itemsNeeded("statistiche")).toBe(4);
+  });
+  it("a wrong name is kept to be shown in red, and the countdown has the 10-second grace", () => {
+    let s = start(first("statistiche"));
+    expect(s.timer?.kind).toBe("ask");
+    s = expire(s);
+    expect(s.timer?.grace).toBe(true);
+    s = run(s, { type: "ANSWER", player: s.game!.turn, payload: { text: "Nessuno Proprio" } });
+    expect(s.game!.last).toMatchObject({ ok: false, said: "Nessuno Proprio" });
+  });
+});
+
+describe("la stagione dei campioni (SPEC §4.13)", () => {
+  it("four options, +2, the right one hidden until the reveal", () => {
+    let s = start(first("stagione"));
+    const p = s.game!.turn as 0 | 1;
+    expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
+    s = run(s, { type: "ANSWER", player: p, payload: { choice: 2 } });
+    expect(s.scores[p]).toBe(2);
+  });
+});
+
+describe("le bandiere (SPEC §4.14)", () => {
+  it("shows the flags for exactly 5 seconds, then the question; the team only at the reveal", () => {
+    let s = start(first("bandiere"));
+    expect(s.game!.stage).toBe("memo");
+    expect(s.timer).toMatchObject({ kind: "memo", ms: 5000 });
+    const memo = viewFor(s, "screen").game!.items[0];
+    expect(memo.players.every((p: { flag: string; name: string }) => p.flag && !p.name)).toBe(true);
+    expect(memo.team).toBe("");
+    expect(memo.options).toEqual([]);
+    expect(run(s, { type: "ANSWER", player: s.game!.turn, payload: { choice: 0 } }).game!.stage).toBe("memo"); // no answer before
+    s = expire(s);
+    expect(s.game!.stage).toBe("ask");
+    const ask = viewFor(s, "p2").game!.items[0];
+    expect(ask.players.every((p: { flag: string }) => p.flag === "")).toBe(true);
+    expect(ask.options).toHaveLength(4);
+    expect(ask.correct).toBe(-1);
+    const p = s.game!.turn as 0 | 1;
+    s = run(s, { type: "ANSWER", player: p, payload: { choice: 0 } });
+    expect(s.scores[p]).toBe(2);
+    const shown = viewFor(s, "screen").game!.items[0];
+    expect(shown.team).toBe("Juventus");
+    expect(shown.players[0].name).not.toBe("");
+  });
+  it("the 5 seconds run with the countdowns switched off too", () => {
+    let s = start(first("bandiere"), { timer: false });
+    expect(s.timer).toMatchObject({ kind: "memo", ms: 5000 });
+    s = expire(s);
+    expect(s.game!.stage).toBe("ask");
+    expect(s.timer).toBeNull(); // the answer itself has no countdown
+  });
+  it("two line-ups each, in turn", () => {
+    let s = start(first("bandiere"));
+    const a = s.game!.turn;
+    s = run(expire(s), { type: "ANSWER", player: a, payload: { choice: 1 } }, { type: "NEXT" });
+    expect(s.game!.turn).not.toBe(a);
+    expect(s.game!.stage).toBe("memo");
+  });
+});
+
+describe("tiro secco: trasferimento vero o falso (SPEC §4.1, v14)", () => {
+  it("two options are enough, and a third one is ignored", () => {
+    const vf = { ...meta({ generator: "ts_vero_falso" }), question: "VF", options: ["VERO", "FALSO"], correct: 1, archetype: 5, tag: "vf",
+      transfer: { player: "Mario Abete", from: "A", to: "B", season: "2018/19" } };
+    let s = start(first("tiro_secco"));
+    // force the first question to be the true-or-false one
+    s.game!.items[0] = vf;
+    const p = s.game!.turn as 0 | 1;
+    expect(run(s, { type: "ANSWER", player: p, payload: { choice: 2 } }).game!.stage).toBe("ask");
+    s = run(s, { type: "ANSWER", player: p, payload: { choice: (vf as { correct: number }).correct } });
+    expect(s.scores[p]).toBe(2);
+  });
+  it("comes out about one question in five", () => {
+    const items = [
+      ...Array.from({ length: 40 }, (_, k) => meta({ generator: `gen_kind_${k % 40}`, entities: [`tm:p:${k}`] })),
+      ...Array.from({ length: 200 }, (_, k) => meta({ generator: "ts_vero_falso", entities: [`tm:p:${1000 + k}`] })),
+    ];
+    let vf = 0;
+    for (let seed = 1; seed <= 300; seed++) vf += sampleVaried(items, 4, new Rng(seed), new Set())!.filter((x) => x.generator === "ts_vero_falso").length;
+    expect(vf / 1200).toBeGreaterThan(0.15);
+    expect(vf / 1200).toBeLessThan(0.35);
   });
 });
 

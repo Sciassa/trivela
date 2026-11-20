@@ -11,7 +11,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "statistiche", "stagione", "bandiere"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -31,7 +31,8 @@ def test_at_least_1000_new_questions_with_sources(game):
 def test_tiro_secco_has_four_distinct_options_and_variety():
     items = load("tiro_secco")
     for it in items:
-        assert len(set(it["options"])) == 4 and 0 <= it["correct"] < 4
+        n = 2 if it.get("tag") == "vf" else 4
+        assert len(it["options"]) == n and len(set(it["options"])) == n and 0 <= it["correct"] < n
     assert len({it["generator"].split("@")[0] for it in items}) >= 15
 
 
@@ -225,6 +226,62 @@ def test_testa_a_testa_chains():
         if it["unit"] in ("gol", "presenze"):
             assert re.search(r"\(dal \d{4}/\d{2} al \d{4}/\d{2}\)|\(stagione \d{4}/\d{2}\)", it["title"]), it["title"]
         assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+
+
+def test_tiro_secco_true_or_false_transfers():
+    """SPEC §4.1, v14: real moves and moves proven false, as many of each; no loan/permanent variant (no field for it)."""
+    items = [it for it in load("tiro_secco") if it.get("tag") == "vf"]
+    assert len(items) >= 1000
+    assert sum(1 for it in items if it["correct"] == 0) == sum(1 for it in items if it["correct"] == 1)
+    for it in items:
+        assert it["options"] == ["VERO", "FALSO"] and it["generator"].split("@")[0] == "ts_vero_falso"
+        tr = it["transfer"]
+        assert tr["player"] in it["question"] and re.fullmatch(r"\d{4}/\d{2}", tr["season"])
+        assert it["script"].startswith("Vero:" if it["correct"] == 0 else "Falso:")
+        if it["correct"] == 1:
+            assert "non ha mai giocato né firmato" in it["script"]
+        assert any(e.startswith("comp:") for e in it["entities"])
+        assert "prestito" not in it["question"].lower() and "definitivo" not in it["question"].lower()
+
+
+def test_statistiche_cards():
+    """SPEC §4.12: one league season, one club, the perimeter on the card, and no other player with the same card."""
+    items = load("statistiche")
+    cards = Counter((it["competition"], it["season"], tuple(it["stats"].values()), it["role"], it["nat"]) for it in items)
+    assert max(cards.values()) == 1
+    per = Counter(it["answer"]["ids"][0] for it in items)
+    assert max(per.values()) <= 2
+    for it in items:
+        assert it["scope"] == f"Solo {it['competition']}" and re.fullmatch(r"\d{4}/\d{2}", it["season"])
+        assert it["stats"]["presenze"] >= 20 and all(isinstance(v, int) and v >= 0 for v in it["stats"].values())
+        assert it["role"] and it["team"] and it["answer"]["kind"] == "entity"
+        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+
+
+def test_stagione_dei_campioni():
+    """SPEC §4.13: one league season, four distinct options, ties at the top never asked, every kind present."""
+    items = load("stagione")
+    gens = {it["generator"].split("@")[0] for it in items}
+    assert {"stg_campione", "stg_capocannoniere", "stg_assist", "stg_portiere", "stg_attacco", "stg_difesa",
+            "stg_club_marcatore", "stg_club_presenze", "stg_club_assist", "stg_club_posizione"} <= gens
+    for it in items:
+        assert len(it["options"]) == 4 and len(set(it["options"])) == 4 and 0 <= it["correct"] < 4
+        assert it["season"] in it["question"] or it["season"] in it["script"]
+        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+    # the Ligue 1 2019/20 was stopped: its table is not complete, no champion asked
+    assert not any(it["generator"].startswith("stg_campione") and "Ligue 1 2019/20" in it["question"] for it in items)
+
+
+def test_bandiere_lineups():
+    """SPEC §4.14: eleven real starters of one side, each with a nationality and a flag file; the team among four."""
+    flags = DATA.parent / "flags"
+    items = load("bandiere")
+    for it in items:
+        assert len(it["players"]) == 11 and len({p["id"] for p in it["players"]}) == 11
+        assert all(p["flag"] and p["nat"] and p["name"] and (flags / f"{p['flag']}.svg").exists() for p in it["players"])
+        assert sum(1 for p in it["players"] if p["y"] == min(q["y"] for q in it["players"])) == 1  # one goalkeeper at the back
+        assert len(set(it["options"])) == 4 and it["options"][it["correct"]] == it["team"]
+        assert it["formation"] is None or re.fullmatch(r"\d(-\d)+", it["formation"])
 
 
 def test_maglia_asks_for_a_number_and_skips_banal_ones():

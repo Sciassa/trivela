@@ -4,7 +4,7 @@ import { suggest, type MatchIndex } from "@trivela/matcher";
 import type { PlayerIdx, SourceRef } from "@trivela/protocol";
 import type { MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
-import { GAME_NAMES } from "../rules";
+import { GAME_SHORT } from "../rules";
 import { GAME_COLORS, GameIcon, Sprite } from "./sprites";
 import { Backdrop } from "./scenery";
 import type { Votes } from "../runtime/roomCore";
@@ -323,7 +323,7 @@ export function Scoreboard({ state }: { state: MatchState }) {
       <div className="hud-mid" style={{ "--game": g ? GAME_COLORS[g] : "var(--accent)" } as CSSProperties}>
         <div className="hud-game">
           {g ? <GameIcon game={g} size={40} /> : <Sprite name="ball" size={40} />}
-          <span>{g ? GAME_NAMES[g] : "TRIVELA"}</span>
+          <span>{g ? GAME_SHORT[g] : "TRIVELA"}</span>
         </div>
         <div className="hud-pips">
           {state.order.map((x, k) => (

@@ -8,6 +8,9 @@ import type {
   PlayerIdx,
   Role,
   SetItem,
+  BandiereItem,
+  StagioneItem,
+  StatisticheItem,
   TestaItem,
   TiroSeccoItem,
 } from "@trivela/protocol";
@@ -28,6 +31,12 @@ export const TIMERS = {
   formazione: 60_000,
   asta: 60_000,
   maglia: 30_000,
+  /** Le Statistiche: a typed name, like the other «who is it?» answers. */
+  statistiche: 35_000,
+  stagione: 25_000,
+  /** Le Bandiere: the flags stay up for exactly 5 seconds, then the question has its own time. */
+  memo: 5_000,
+  bandiere: 20_000,
   /** Testa a Testa: each MORE/LESS choice, then the pause that shows the value that came out. */
   testa: 12_000,
   testaFeedback: 1_800,
@@ -169,7 +178,7 @@ const verdictOf = (intent: Intent | null) => (intent && intent.type === "VERDICT
 const pickOne = (points: number) => (item: { correct: number; options: readonly string[] }, intent: Intent | null) => {
   if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
   const a = answerOf(intent);
-  if (a?.choice === undefined || !Number.isInteger(a.choice) || a.choice < 0 || a.choice > 3) return "ignore" as const;
+  if (a?.choice === undefined || !Number.isInteger(a.choice) || a.choice < 0 || a.choice >= item.options.length) return "ignore" as const;
   const ok = a.choice === item.correct;
   return { points: ok ? points : 0, ok, detail: `choice:${a.choice}`, said: item.options[a.choice] };
 };
@@ -201,6 +210,107 @@ export const maglia = turnQuiz<MagliaItem>({
   ],
   mask: (it) => ({ ...it, answer: { kind: "text", accepted: [], display: "" }, script: "" }),
 });
+
+/** Le Statistiche (SPEC §4.12): the card of one league season of a player; who is he? +3, two cards each. */
+export const statistiche = turnQuiz<StatisticheItem>({
+  id: "statistiche",
+  count: 4,
+  phases: [
+    {
+      ms: TIMERS.statistiche,
+      judge(item, intent, env) {
+        if (intent === null) return { points: 0, ok: false, detail: "Tempo scaduto" };
+        const v = verdictOf(intent);
+        const a = answerOf(intent);
+        let ok: boolean;
+        if (v?.correct !== undefined) ok = v.correct;
+        else if (a?.text !== undefined) ok = judgeText(a.text, item.answer, env.ctx.index);
+        else return "ignore";
+        return { points: ok ? 3 : 0, ok, said: a?.text };
+      },
+    },
+  ],
+  // the club would give him away: it comes out with the answer
+  mask: (it) => ({ ...it, team: "", answer: { kind: "text", accepted: [], display: "" }, script: "" }),
+});
+
+/** La Stagione dei Campioni (SPEC §4.13): one league season, four options, +2, two questions each. */
+export const stagione = turnQuiz<StagioneItem>({
+  id: "stagione",
+  count: 4,
+  phases: [{ ms: TIMERS.stagione, judge: pickOne(2) }],
+  mask: (it) => ({ ...it, correct: -1, script: "" }),
+});
+
+/**
+ * Le Bandiere (SPEC §4.14): two line-ups each, in turn. The eleven flags stay on the pitch for exactly 5 seconds
+ * (`memo`, a pause timer: it runs with the countdowns switched off too), then they are hidden and the player on turn
+ * says which team it was among four. +2. The Screen and the phones get the flags only during the 5 seconds, the
+ * options only after them, the names and the team only at the reveal.
+ */
+export const bandiere: GameModule = {
+  id: "bandiere",
+  count: 4,
+  init(items, env) {
+    env.setTimer(TIMERS.memo, "memo");
+    return { game: "bandiere", stage: "memo", turn: env.starter, starter: env.starter, items, i: 0, last: null, script: null };
+  },
+  reduce(s, intent, env) {
+    const item = s.items[s.i] as BandiereItem;
+    if (s.stage === "memo") {
+      if (intent.type === "TIMEOUT") {
+        s.stage = "ask";
+        env.setTimer(TIMERS.bandiere, "ask");
+      }
+      return;
+    }
+    if (s.stage === "ask") {
+      let input: Intent | null;
+      if (intent.type === "TIMEOUT") input = null;
+      else if (intent.type === "ANSWER") {
+        if (env.judging === "auto" && playerOf(intent, s) !== s.turn) return;
+        input = intent;
+      } else return;
+      const r = pickOne(2)(item, input);
+      if (r === "ignore") return;
+      const player = s.turn as PlayerIdx;
+      if (r.points) env.addPoints(player, r.points);
+      env.emit(r.ok ? { type: "correct", player, points: r.points } : { type: "wrong", player, points: 0 });
+      if (input === null) env.emit({ type: "timeout" });
+      s.last = { player, points: r.points, ok: r.ok, detail: r.detail, said: r.ok ? undefined : r.said };
+      s.stage = "reveal";
+      s.script = item.script;
+      env.clearTimer();
+      env.emit({ type: "reveal" });
+      return;
+    }
+    if (s.stage === "reveal" && intent.type === "NEXT") {
+      s.i += 1;
+      if (s.i >= s.items.length) {
+        s.stage = "done";
+        return;
+      }
+      s.turn = turnOf(s.i, s.starter, env.solo);
+      s.last = null;
+      s.script = null;
+      s.stage = "memo";
+      env.setTimer(TIMERS.memo, "memo");
+    }
+  },
+  done: (s) => s.stage === "done",
+  redact(s, role) {
+    if (role === "host") return s;
+    const r = clone(s);
+    r.items = r.items.map((it: BandiereItem, idx: number) => {
+      if (idx < s.i || (idx === s.i && s.stage === "reveal")) return it;
+      if (idx > s.i) return null;
+      const hidden = { title: "", date: "", competition: "", formation: null, team: "", script: "", correct: -1, sources: [] };
+      const players = it.players.map((p) => ({ id: "", name: "", nat: "", flag: s.stage === "memo" ? p.flag : "", x: p.x, y: p.y }));
+      return { ...it, ...hidden, players, options: s.stage === "memo" ? [] : it.options };
+    });
+    return r;
+  },
+};
 
 /* ------------------------------------------------------------------ */
 /* Buzzer games with progressive clues                                  */
@@ -867,6 +977,9 @@ export const MODULES: Record<GameId, GameModule> = {
   asta,
   maglia,
   testa_a_testa: testaATesta,
+  statistiche,
+  stagione,
+  bandiere,
 };
 
 export function redactGame(s: GameStateAny, role: Role): GameStateAny {

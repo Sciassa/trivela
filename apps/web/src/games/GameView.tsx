@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TestaItem, TiroSeccoItem } from "@trivela/protocol";
+import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, StagioneItem, StatisticheItem, TestaItem, TiroSeccoItem } from "@trivela/protocol";
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
@@ -78,12 +78,12 @@ function FourOptions({ item, g, dispatch }: { item: { options: string[]; correct
     return () => window.removeEventListener("keydown", h);
   }, [reveal, readonly, dispatch]);
   return (
-    <div className="options">
+    <div className={`options ${item.options.length === 2 ? "two" : ""}`}>
       {item.options.map((o, k) => (
         <button
           key={k}
           style={{ "--i": k } as CSSProperties}
-          className={`option ${reveal && k === item.correct ? "right" : ""} ${reveal && k === picked && k !== item.correct ? "wrongpick" : ""}`}
+          className={`option ${reveal && k === item.correct ? "right" : ""} ${reveal && k === picked && k !== item.correct ? "wrongpick" : ""} ${item.options.length === 2 ? (k === 0 ? "vf-true" : "vf-false") : ""}`}
           disabled={reveal || readonly}
           onClick={() => dispatch({ type: "ANSWER", payload: { choice: k } })}
         >
@@ -101,13 +101,181 @@ function TiroSecco({ state, g, dispatch, start }: GameProps) {
     <>
       <TurnBar state={state} p={g.turn} info={`DOMANDA ${g.i + 1}/${g.items.length}`} />
       <StateTimer state={state} start={start} />
-      <div className="q-card" key={g.i}>
-        {item.tag && <div className={`q-tag ${item.tag}`}>{item.tag === "record" ? "⚠ RECORD RARISSIMO" : "✎ GIOCO DI NOMI"}</div>}
+      {item.tag === "vf" && item.transfer ? (
+        <TransferCard key={g.i} t={item.transfer} />
+      ) : (
+        <div className="q-card" key={g.i}>
+          {item.tag && <div className={`q-tag ${item.tag}`}>{item.tag === "record" ? "⚠ RECORD RARISSIMO" : "✎ GIOCO DI NOMI"}</div>}
+          <div className="q">{item.question}</div>
+        </div>
+      )}
+      <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
+      {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+    </>
+  );
+}
+
+/** Tiro Secco, «trasferimento vero o falso?» (SPEC §4.1, v14): the move as a transfer ticket. */
+function TransferCard({ t }: { t: NonNullable<TiroSeccoItem["transfer"]> }) {
+  return (
+    <div className="q-card vf-card">
+      <div className="q-tag vf">⇄ TRASFERIMENTO VERO O FALSO?</div>
+      <div className="vf-player">{t.player}</div>
+      <div className="vf-move">
+        <span className="vf-club">
+          <i>DA</i>
+          {t.from}
+        </span>
+        <span className="vf-arrow" aria-hidden>
+          ▶
+        </span>
+        <span className="vf-club">
+          <i>A</i>
+          {t.to}
+        </span>
+      </div>
+      <div className="vf-season">STAGIONE {t.season}</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------ Le Statistiche */
+
+/** Le Statistiche (SPEC §4.12): the season of a player as an arcade scoreboard; the answer is typed. */
+function Statistiche({ state, g, dispatch, ctx, start }: GameProps) {
+  const { readonly } = usePlay();
+  const item = (g.perPlayer ? g.items[g.turn] : g.items[g.i]) as StatisticheItem;
+  const reveal = g.stage === "reveal";
+  const tiles: [string, number][] = [
+    ["PARTITE", item.stats.presenze],
+    ["GOL", item.stats.gol],
+    ["ASSIST", item.stats.assist],
+  ];
+  return (
+    <>
+      <TurnBar state={state} p={g.turn} info={`SCHEDA ${g.i + 1}/${g.items.length}`} />
+      <StateTimer state={state} start={start} />
+      <div className="stat-board" key={g.i}>
+        <div className="sb-head">
+          <span className="sb-season">STAGIONE {item.season}</span>
+          <span className="sb-comp">{item.competition.toUpperCase()}</span>
+          <span className="sb-scope">{item.scope.toUpperCase()}</span>
+        </div>
+        <div className="sb-tiles">
+          {tiles.map(([label, n]) => (
+            <div key={label} className="sb-tile">
+              <span className="sb-label">{label}</span>
+              <span className="sb-num">{n}</span>
+            </div>
+          ))}
+        </div>
+        <div className="sb-role">
+          RUOLO: <b>{item.role.toUpperCase()}</b>
+          {item.nat && (
+            <>
+              {" "}
+              · NAZIONALITÀ: <b>{item.nat.toUpperCase()}</b>
+            </>
+          )}
+        </div>
+        <div className="sb-q">{reveal ? `${item.answer.display}` : "CHI È IL CALCIATORE?"}</div>
+        {reveal && <div className="sb-team">{item.team}</div>}
+      </div>
+      {g.stage === "ask" &&
+        (readonly ? (
+          <PhoneHint />
+        ) : (
+          <div className="col" style={{ gap: 10 }}>
+            <AnswerBox
+              key={g.i}
+              index={ctx.index}
+              placeholder="Chi è?"
+              prompt={`${item.competition} ${item.season} · ${item.stats.presenze} partite, ${item.stats.gol} gol, ${item.stats.assist} assist · ${item.role}`}
+              timer={<StateTimer state={state} start={start} />}
+              actions={<PassButton state={state} dispatch={dispatch} player={g.turn} label="NON LO SO" />}
+              onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })}
+            />
+            <PassButton state={state} dispatch={dispatch} player={g.turn} label="NON LO SO" />
+          </div>
+        ))}
+      {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+    </>
+  );
+}
+
+/* ------------------------------------------------------------ La Stagione dei Campioni */
+
+function Stagione({ state, g, dispatch, start }: GameProps) {
+  const item = g.items[g.i] as StagioneItem;
+  return (
+    <>
+      <TurnBar state={state} p={g.turn} info={`DOMANDA ${g.i + 1}/${g.items.length}`} />
+      <StateTimer state={state} start={start} />
+      <div className="q-card season-card" key={g.i}>
+        <div className="season-banner">
+          <Sprite name="stagione" size={40} />
+          <span>
+            {item.competition.toUpperCase()} {item.season}
+          </span>
+        </div>
         <div className="q">{item.question}</div>
       </div>
       <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
       {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
     </>
+  );
+}
+
+/* ------------------------------------------------------------ Le Bandiere */
+
+/**
+ * Le Bandiere (SPEC §4.14): the eleven flags of a real line-up on the pitch for 5 seconds, then hidden; which team was
+ * it? At the reveal the flags come back with the names. The flags are the `flag-icons` SVGs, loaded only by this game.
+ */
+function Bandiere({ state, g, dispatch, start }: GameProps) {
+  const { readonly, pad } = usePlay();
+  const item = g.items[g.i] as BandiereItem;
+  const memo = g.stage === "memo";
+  const reveal = g.stage === "reveal";
+  const pts = spread(item.players);
+  return (
+    <div className="duo">
+      {!pad && (
+        <div className={`pitch flags-pitch ${memo ? "memo" : ""}`} key={g.i}>
+          {item.players.map((p, k) => (
+            <div key={k} className="pl" style={{ left: `${8 + pts[k]!.x * 84}%`, top: `${95 - pts[k]!.y * 92}%` }}>
+              {p.flag ? <img className="flag" src={`./flags/${p.flag}.svg`} alt={p.nat || "bandiera"} draggable={false} /> : <span className="flag-q">?</span>}
+              {reveal && <span className="pl-name">{p.name.split(" ").slice(-1)[0]}</span>}
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="side">
+        <div className="q-card">
+          {reveal ? (
+            <>
+              <div className="q">{item.team}</div>
+              <div className="sub">
+                {item.title} · {item.competition} · {item.date}
+              </div>
+              {item.formation && <div className="sub c-accent">Modulo {item.formation}</div>}
+            </>
+          ) : (
+            <>
+              <div className="q small">{memo ? "MEMORIZZA LE BANDIERE!" : "QUALE SQUADRA ERA IN CAMPO?"}</div>
+              <div className="sub">
+                Una formazione titolare {item.league} {item.season}
+              </div>
+            </>
+          )}
+        </div>
+        <TurnBar state={state} p={g.turn} info={`FORMAZIONE ${g.i + 1}/${g.items.length}`} />
+        <StateTimer state={state} start={start} />
+        {memo && <div className="memo-note px blink">5 SECONDI…</div>}
+        {!memo && (readonly && !reveal ? <PhoneHint /> : <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />)}
+        {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+      </div>
+    </div>
   );
 }
 
@@ -578,7 +746,7 @@ function Dischetto({ state, g, dispatch, ctx, start }: GameProps) {
 /* ------------------------------------------------------------ La Formazione */
 
 /** Nudge apart the players whose roles sit on the same spot, so names never overlap. */
-function spread(players: FormazioneItem["teams"][0]["players"]): { x: number; y: number }[] {
+function spread(players: { x: number; y: number }[]): { x: number; y: number }[] {
   const pts = players.map((p) => ({ x: p.x, y: p.y }));
   const clamp = (v: number) => Math.min(0.97, Math.max(0.03, v));
   for (let n = 0; n < 12; n++) {
@@ -723,6 +891,12 @@ export function GameView(props: GameProps) {
       return <Maglia {...props} />;
     case "testa_a_testa":
       return <TestaATesta {...props} />;
+    case "statistiche":
+      return <Statistiche {...props} />;
+    case "stagione":
+      return <Stagione {...props} />;
+    case "bandiere":
+      return <Bandiere {...props} />;
     default:
       return null;
   }

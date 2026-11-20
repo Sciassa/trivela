@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { isTimed, usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import { GAME_IDS, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TestaItem, type TiroSeccoItem } from "@trivela/protocol";
+import { type BandiereItem, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type StagioneItem, type StatisticheItem, type TestaItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
@@ -11,7 +11,7 @@ import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } fro
 import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useVerdict, useWakeLock, VerdictCtx, VotesCtx } from "../components/ui";
 import { GameView, isBuzzerGame } from "../games/GameView";
 import { Buzz3D, VoxelBall } from "../components/Voxel3D";
-import { GAME_NAMES } from "../rules";
+import { CATALOG_GAMES, GAME_NAMES, GAME_SHORT } from "../rules";
 import { savedYear } from "../runtime/settings";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
@@ -153,7 +153,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
         <span className="note">{formatKind === "classic" ? "5 giochi sorteggiati su 8." : "Un solo gioco a scelta, 3 round a testa."}</span>
         {formatKind === "quick" && (
           <div className="game-pick">
-            {GAME_IDS.map((g) => (
+            {CATALOG_GAMES.map((g) => (
               <button key={g} className={quickGame === g ? "on" : ""} style={{ "--game": GAME_COLORS[g], background: quickGame === g ? "#2a2a10" : undefined } as React.CSSProperties} onClick={() => setQuickGame(g)}>
                 <GameIcon game={g} size={40} />
                 <span>
@@ -227,7 +227,7 @@ function PhoneFrame({ role, room, children, top, actions, onEnd }: { role: Clien
             <span className="c-p1">
               {s.config.players[0]} {s.scores[0]}
             </span>
-            <span className="mid">{g ? GAME_NAMES[g] : "FINE"}</span>
+            <span className="mid">{g ? GAME_SHORT[g] : "FINE"}</span>
             <span className="c-p2 r">
               {s.scores[1]} {s.config.players[1]}
             </span>
@@ -295,6 +295,18 @@ function solutionOf(g: GameStateAny): string[] {
     case "maglia": {
       const it = g.items[g.i] as MagliaItem;
       return [it.question, `Risposta: numero ${it.answer.display}`];
+    }
+    case "statistiche": {
+      const it = g.items[g.i] as StatisticheItem;
+      return [`Risposta: ${it.answer.display} (${it.team})`, `${it.competition} ${it.season}: ${it.stats.presenze} partite, ${it.stats.gol} gol, ${it.stats.assist} assist · ${it.role}`];
+    }
+    case "stagione": {
+      const it = g.items[g.i] as StagioneItem;
+      return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
+    }
+    case "bandiere": {
+      const it = g.items[g.i] as BandiereItem;
+      return [`Risposta: ${"ABCD"[it.correct]}) ${it.team}`, `${it.title} · ${it.competition}`, g.stage === "memo" ? "Bandiere in campo per 5 secondi…" : ""];
     }
     case "testa_a_testa": {
       const it = g.items[g.i] as TestaItem;
@@ -390,7 +402,10 @@ export function HostRoom({ code }: { code: string }) {
     if (["reveal", "final"].includes(g.stage)) controls = <Btn label="AVANTI ▶" onClick={() => d({ type: "NEXT" })} />;
     else
       switch (g.game) {
+        case "stagione":
+        case "bandiere":
         case "tiro_secco": {
+          if (g.stage === "memo") break; // Le Bandiere: the 5 seconds of the flags, nothing to press
           const it = g.items[g.i] as TiroSeccoItem;
           controls = it.options.map((o, k) => <Btn key={k} label={`${"ABCD"[k]}) ${o}`} cls={k === it.correct ? "ok" : "ghost"} onClick={() => d({ type: "ANSWER", payload: { choice: k } })} />);
           break;
@@ -491,6 +506,7 @@ export function HostRoom({ code }: { code: string }) {
           break;
         }
         case "maglia":
+        case "statistiche":
           controls = okKo;
           break;
       }
@@ -554,6 +570,7 @@ function PadCanvas({ children }: { children: ReactNode }) {
 
 function myTurn(g: GameStateAny, me: PlayerIdx): boolean {
   if (g.game === "formazione" && g.stage === "choose") return g.starter === me;
+  if (g.game === "bandiere" && g.stage === "memo") return false; // the 5 seconds of the flags: eyes on the Screen
   return g.turn === me && !["reveal", "final", "feedback", "done"].includes(g.stage);
 }
 
@@ -724,9 +741,18 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       </PhoneFrame>
     );
   }
-  if (turn && s.config.judging !== "host" && g.game === "tiro_secco") {
-    // four options: the question scrolls, the answers stay under the thumb
-    const it = g.items[g.i] as TiroSeccoItem;
+  if (turn && s.config.judging !== "host" && (g.game === "tiro_secco" || g.game === "stagione" || (g.game === "bandiere" && g.stage === "ask"))) {
+    // four options (two for VERO / FALSO): the question scrolls, the answers stay under the thumb
+    const raw = g.items[g.i] as TiroSeccoItem & { team?: string };
+    const it = {
+      ...raw,
+      question:
+        g.game === "bandiere"
+          ? "Quale squadra era in campo? Le bandiere sono sullo schermo."
+          : raw.transfer
+            ? `${raw.transfer.player}: da ${raw.transfer.from} a ${raw.transfer.to}, stagione ${raw.transfer.season}. Vero o falso?`
+            : raw.question,
+    };
     return (
       <PhoneFrame
         role={role}
