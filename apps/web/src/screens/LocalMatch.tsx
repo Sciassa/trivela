@@ -5,7 +5,7 @@ import { VoxelTrophy } from "../components/Voxel3D";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
-import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, useVerdict, useWakeLock, VerdictCtx, type PlayMode, type Pop, type TimerClock } from "../components/ui";
+import { ConfirmModal, Confetti, ExitButton, Fit, NextButton, PixelWipe, PlayCtx, PointsPops, Scoreboard, Stage, TimerClockCtx, turnOf, useVerdict, useWakeLock, VerdictCtx, type PlayMode, type Pop, type TimerClock } from "../components/ui";
 import { GAME_COLORS, GameIcon, Sprite } from "../components/sprites";
 import { ClueBuzzer, GameView, isBuzzerGame } from "../games/GameView";
 import { GAME_NAMES, GAME_RULES } from "../rules";
@@ -98,6 +98,8 @@ export function MatchShell({
   const pops = usePops(state);
   const wipe = useWipe(state);
   const buzzer = state.phase === "playing" && !!view.game && isBuzzerGame(view.game.game);
+  const turn = buzzer ? null : turnOf(state);
+  const swap = useTurnSwap(turn);
   return (
     <Stage>
       <PlayCtx.Provider value={mode}>
@@ -109,8 +111,13 @@ export function MatchShell({
           <ExitButton kind={state.config.solo ? "home" : "end"} label={state.config.solo ? "TORNA ALLA HOME" : "TERMINA PARTITA"} onClick={() => setAsking(true)} />
         )}
         {onAbort && state.phase === "match_over" && <ExitButton kind="home" label="TORNA ALLA HOME" onClick={() => onExit(state)} />}
-        <main className={`arena ${fx ? `fx-${fx.kind}` : ""}`}>
+        <main className={`arena ${fx ? `fx-${fx.kind}` : ""} ${turn !== null ? `turn-p${turn + 1}` : ""}`}>
           {fx?.party && <Confetti key={fx.id} />}
+          {swap && turn !== null && (
+            <div key={swap} className={`turn-banner p${turn + 1}`} aria-hidden>
+              <span>{turn === 0 ? "◀ " : ""}TOCCA A {state.config.players[turn]}{turn === 1 ? " ▶" : ""}</span>
+            </div>
+          )}
           <PointsPops pops={pops} />
           {state.phase === "draw" && (
             <Fit center>
@@ -201,6 +208,20 @@ export function MatchShell({
   );
 }
 
+/**
+ * A counter that goes up each time the turn passes to the other player (0 = no change seen yet): the key of the band
+ * «TOCCA A …» that crosses the arena. A counter, never a timestamp, as React key.
+ */
+function useTurnSwap(turn: number | null): number {
+  const [n, setN] = useState(0);
+  const prev = useRef<number | null>(null);
+  useEffect(() => {
+    if (turn !== null && prev.current !== null && turn !== prev.current) setN((k) => k + 1);
+    prev.current = turn;
+  }, [turn]);
+  return n;
+}
+
 function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
   const [shown, setShown] = useState(0);
   useEffect(() => {
@@ -233,13 +254,37 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
         )}
       </div>
       {state.config.yearFrom !== null && <div className="dim">Domande dal {state.config.yearFrom} in poi (elenchi e classifiche usano tutte le stagioni).</div>}
-      {!state.config.solo && (
-        <div className="px" style={{ visibility: done ? "visible" : "hidden" }}>
-          MONETA: INIZIA <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
-        </div>
-      )}
-      <div style={{ visibility: done ? "visible" : "hidden" }}>
+      {!state.config.solo && (done ? <CoinToss players={state.config.players} coin={state.coin} /> : <div className="coin-toss" aria-hidden />)}
+      <div className={state.config.solo ? "" : "after-coin"} style={{ visibility: done ? "visible" : "hidden" }}>
         <NextButton label="SI PARTE ▶" onClick={onStart} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Who starts (SPEC §3.2): a pixel coin with one face per player is tossed, spins in the air and lands on the face of
+ * the starter. Transform and opacity only; with reduced motion it simply lies on the right face.
+ */
+function CoinToss({ players, coin }: { players: string[]; coin: number }) {
+  useEffect(() => {
+    const t = window.setTimeout(() => audio.play("coin"), 1450);
+    return () => window.clearTimeout(t);
+  }, []);
+  const initial = (name: string | undefined) => (name ?? "?").trim().charAt(0).toUpperCase() || "?";
+  return (
+    <div className="coin-toss" role="img" aria-label={`Lancio della moneta: inizia ${players[coin]}`}>
+      <div className="coin-stage">
+        <div className="coin-shadow" />
+        <div className="coin-arc">
+          <div className={`coin land-${coin}`}>
+            <span className="coin-face p1">{initial(players[0])}</span>
+            <span className="coin-face p2">{initial(players[1])}</span>
+          </div>
+        </div>
+      </div>
+      <div className="px coin-result">
+        MONETA: INIZIA <span className={coin === 0 ? "c-p1" : "c-p2"}>{players[coin]}</span>
       </div>
     </div>
   );

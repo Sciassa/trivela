@@ -3,7 +3,7 @@
   "generatedAt": "2026-11-20T13:46:38+00:00",
   "snapshot": "2026-07-06",
   "counts": {
-    "tiro_secco": 5474,
+    "tiro_secco": 7652,
     "mercato": 1857,
     "decina": 1400,
     "dischetto": 1336,
@@ -12,12 +12,10 @@
     "asta": 1500,
     "maglia": 1500,
     "testa_a_testa": 1200,
-    "statistiche": 1500,
-    "stagione": 1500,
     "bandiere": 1336
   },
   "generators": {
-    "tiro_secco": 73,
+    "tiro_secco": 101,
     "mercato": 2,
     "decina": 23,
     "dischetto": 67,
@@ -26,8 +24,6 @@
     "asta": 28,
     "maglia": 6,
     "testa_a_testa": 12,
-    "statistiche": 2,
-    "stagione": 20,
     "bandiere": 2
   },
   "sources": [
@@ -46,7 +42,7 @@
   ],
   "filters": {
     "tiro_secco": {
-      "kept": 8178,
+      "kept": 11286,
       "excluded_show": 215,
       "excluded_not_notable": 0
     },
@@ -87,16 +83,6 @@
     },
     "testa_a_testa": {
       "kept": 1200,
-      "excluded_show": 0,
-      "excluded_not_notable": 0
-    },
-    "statistiche": {
-      "kept": 3339,
-      "excluded_show": 0,
-      "excluded_not_notable": 0
-    },
-    "stagione": {
-      "kept": 2130,
       "excluded_show": 0,
       "excluded_not_notable": 0
     },

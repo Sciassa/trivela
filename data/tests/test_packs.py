@@ -11,7 +11,7 @@ from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "statistiche", "stagione", "bandiere"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere"]
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -244,30 +244,33 @@ def test_tiro_secco_true_or_false_transfers():
         assert "prestito" not in it["question"].lower() and "definitivo" not in it["question"].lower()
 
 
-def test_statistiche_cards():
-    """SPEC §4.12: one league season, one club, the perimeter on the card, and no other player with the same card."""
-    items = load("statistiche")
-    cards = Counter((it["competition"], it["season"], tuple(it["stats"].values()), it["role"], it["nat"]) for it in items)
+def test_tiro_secco_season_families():
+    """SPEC §4.1, v15: the questions of the old Le Statistiche and La Stagione dei Campioni now live in the Tiro Secco."""
+    items = load("tiro_secco")
+    fam = Counter(it.get("tag") for it in items)
+    assert fam["scheda"] >= 400 and fam["campioni"] >= 1000 and fam["confronto"] >= 300, fam
+    # every family of questions is there, so the four questions of a match can all be of a different kind
+    assert {"record", "nomi", "vf", "scheda", "campioni", "confronto", None} <= set(fam)
+    cards = Counter()
+    for it in (x for x in items if x.get("tag") == "scheda"):
+        c = it["card"]
+        st = c["stats"]
+        assert c["scope"] == f"Solo {c['competition']}" and re.fullmatch(r"\d{4}/\d{2}", c["season"])
+        assert st["presenze"] >= 20 and c["role"]
+        # a season worth remembering: never «20 games, 0 goals»
+        assert st["gol"] >= 5 or st["assist"] >= 10 or st["gol"] + st["assist"] >= 14, st
+        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+        cards[(c["competition"], c["season"], tuple(st.values()), c["role"], c["nat"])] += 1
     assert max(cards.values()) == 1
-    per = Counter(it["answer"]["ids"][0] for it in items)
-    assert max(per.values()) <= 2
-    for it in items:
-        assert it["scope"] == f"Solo {it['competition']}" and re.fullmatch(r"\d{4}/\d{2}", it["season"])
-        assert it["stats"]["presenze"] >= 20 and all(isinstance(v, int) and v >= 0 for v in it["stats"].values())
-        assert it["role"] and it["team"] and it["answer"]["kind"] == "entity"
-        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
-
-
-def test_stagione_dei_campioni():
-    """SPEC §4.13: one league season, four distinct options, ties at the top never asked, every kind present."""
-    items = load("stagione")
-    gens = {it["generator"].split("@")[0] for it in items}
-    assert {"stg_campione", "stg_capocannoniere", "stg_assist", "stg_portiere", "stg_attacco", "stg_difesa",
-            "stg_club_marcatore", "stg_club_presenze", "stg_club_assist", "stg_club_posizione"} <= gens
-    for it in items:
-        assert len(it["options"]) == 4 and len(set(it["options"])) == 4 and 0 <= it["correct"] < 4
-        assert it["season"] in it["question"] or it["season"] in it["script"]
-        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+    for it in (x for x in items if x.get("tag") == "confronto"):
+        # the four values are named in the Copione, all different, the answer first
+        vals = [int(v) for v in re.findall(r" (\d+) (?:gol|assist|gialli)", it["script"])]
+        assert len(vals) == 4 and len(set(vals)) == 4 and vals == sorted(vals, reverse=True), it["script"]
+        assert it["options"][it["correct"]] in it["script"].split(",")[1]
+        assert "in campionato" in it["question"]
+    gens = {it["generator"].split("@")[0] for it in items if it.get("tag") in ("campioni", "confronto")}
+    assert {"stg_campione", "stg_capocannoniere", "stg_assist", "stg_portiere", "stg_attacco", "stg_difesa", "stg_club_marcatore",
+            "stg_club_presenze", "stg_club_assist", "stg_club_posizione", "ts_confronto_gol", "ts_confronto_assist", "ts_confronto_gialli"} <= gens
     # the Ligue 1 2019/20 was stopped: its table is not complete, no champion asked
     assert not any(it["generator"].startswith("stg_campione") and "Ligue 1 2019/20" in it["question"] for it in items)
 

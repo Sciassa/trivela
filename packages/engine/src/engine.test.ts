@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameId } from "@trivela/protocol";
 import { MODULES } from "./games";
-import { createMatch, drawGames, eligibleItems, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, singleGamePlan, subjectsOf, viewFor } from "./match";
+import { createMatch, drawGames, eligibleItems, FAMILY_OF, GAMES_PER_MATCH, itemsNeeded, passesLeagueFilter, passesYearFilter, POOL, reduce, sampleVaried, singleGamePlan, subjectsOf, viewFor } from "./match";
 import { Rng } from "./rng";
 import { createTournament, recordResult, roundRobin, standings } from "./tournament";
 import type { Intent, MatchConfig, MatchState } from "./types";
@@ -39,7 +39,7 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(12);
+    expect(POOL).toHaveLength(10);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
@@ -51,7 +51,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(12);
+    expect(Object.keys(MODULES)).toHaveLength(10);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -160,7 +160,7 @@ describe("year filter and sampling", () => {
     for (let seed = 1; seed < 200; seed++) seen.add([...drawGames(new Rng(seed), POOL)].sort().join());
     expect(seen.size).toBeGreaterThan(6);
     const all = new Set(Array.from({ length: 200 }, (_, k) => drawGames(new Rng(k + 1), POOL)).flat());
-    expect(all.size).toBe(12); // every game comes out sooner or later
+    expect(all.size).toBe(10); // every game comes out sooner or later
   });
 });
 
@@ -619,38 +619,6 @@ describe("testa a testa: a duel on one chain (SPEC §4.11)", () => {
   });
 });
 
-describe("le statistiche (SPEC §4.12)", () => {
-  it("two cards each, a typed name, +3; the club stays hidden until the reveal", () => {
-    let s = start(first("statistiche"));
-    const p = s.game!.turn as 0 | 1;
-    const item = s.game!.items[0];
-    expect(viewFor(s, "screen").game!.items[0].team).toBe("");
-    expect(viewFor(s, "p1").game!.items[0].answer.display).toBe("");
-    s = run(s, { type: "ANSWER", player: p, payload: { text: item.answer.display } });
-    expect(s.scores[p]).toBe(3);
-    expect(viewFor(s, "screen").game!.items[0].team).toBe("Juventus");
-    expect(itemsNeeded("statistiche")).toBe(4);
-  });
-  it("a wrong name is kept to be shown in red, and the countdown has the 10-second grace", () => {
-    let s = start(first("statistiche"));
-    expect(s.timer?.kind).toBe("ask");
-    s = expire(s);
-    expect(s.timer?.grace).toBe(true);
-    s = run(s, { type: "ANSWER", player: s.game!.turn, payload: { text: "Nessuno Proprio" } });
-    expect(s.game!.last).toMatchObject({ ok: false, said: "Nessuno Proprio" });
-  });
-});
-
-describe("la stagione dei campioni (SPEC §4.13)", () => {
-  it("four options, +2, the right one hidden until the reveal", () => {
-    let s = start(first("stagione"));
-    const p = s.game!.turn as 0 | 1;
-    expect(viewFor(s, "screen").game!.items[0].correct).toBe(-1);
-    s = run(s, { type: "ANSWER", player: p, payload: { choice: 2 } });
-    expect(s.scores[p]).toBe(2);
-  });
-});
-
 describe("le bandiere (SPEC §4.14)", () => {
   it("shows the flags for exactly 5 seconds, then the question; the team only at the reveal", () => {
     let s = start(first("bandiere"));
@@ -702,15 +670,39 @@ describe("tiro secco: trasferimento vero o falso (SPEC §4.1, v14)", () => {
     s = run(s, { type: "ANSWER", player: p, payload: { choice: (vf as { correct: number }).correct } });
     expect(s.scores[p]).toBe(2);
   });
-  it("comes out about one question in five", () => {
-    const items = [
-      ...Array.from({ length: 40 }, (_, k) => meta({ generator: `gen_kind_${k % 40}`, entities: [`tm:p:${k}`] })),
-      ...Array.from({ length: 200 }, (_, k) => meta({ generator: "ts_vero_falso", entities: [`tm:p:${1000 + k}`] })),
-    ];
-    let vf = 0;
-    for (let seed = 1; seed <= 300; seed++) vf += sampleVaried(items, 4, new Rng(seed), new Set())!.filter((x) => x.generator === "ts_vero_falso").length;
-    expect(vf / 1200).toBeGreaterThan(0.15);
-    expect(vf / 1200).toBeLessThan(0.35);
+});
+
+describe("tiro secco: famiglie di domande (SPEC §4.1, v15)", () => {
+  const tagged = (tag: string | undefined, gens: number, per: number, from: number) =>
+    Array.from({ length: gens * per }, (_, k) => ({ ...meta({ generator: `${tag ?? "quiz"}_${k % gens}`, entities: [`tm:p:${from + k}`] }), tag }));
+  // a curiosity family with many generators and many questions, and five smaller families
+  const items = [
+    ...tagged(undefined, 35, 40, 0),
+    ...tagged("record", 28, 10, 5000),
+    ...tagged("nomi", 8, 10, 6000),
+    ...tagged("vf", 2, 500, 7000),
+    ...tagged("scheda", 2, 200, 9000),
+    ...tagged("campioni", 20, 50, 10000),
+    ...tagged("confronto", 6, 60, 12000),
+  ];
+  const fam = FAMILY_OF.tiro_secco!;
+  it("the four questions of a match come from four different families", () => {
+    for (let seed = 1; seed <= 200; seed++) {
+      const picked = sampleVaried(items, 4, new Rng(seed), new Set(), new Set(), fam)!;
+      expect(new Set(picked.map(fam)).size).toBe(4);
+    }
+  });
+  it("every family comes out about as often, however many generators or questions it has", () => {
+    const seen = new Map<string, number>();
+    for (let seed = 1; seed <= 700; seed++) for (const it of sampleVaried(items, 4, new Rng(seed), new Set(), new Set(), fam)!) seen.set(fam(it), (seen.get(fam(it)) ?? 0) + 1);
+    for (const f of ["curiosita", "record", "nomi", "vf", "scheda", "campioni", "confronto"]) {
+      expect(seen.get(f)! / 2800).toBeGreaterThan(0.1);
+      expect(seen.get(f)! / 2800).toBeLessThan(0.19);
+    }
+  });
+  it("with fewer families than questions, families repeat instead of failing", () => {
+    const two = [...tagged("vf", 2, 20, 0), ...tagged("scheda", 2, 20, 100)];
+    expect(sampleVaried(two, 4, new Rng(5), new Set(), new Set(), fam)).toHaveLength(4);
   });
 });
 

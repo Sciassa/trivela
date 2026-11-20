@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { LEAGUES } from "@trivela/protocol";
-import { GAME_NAMES } from "../rules";
+import { DRAW_LINE, GAME_NAMES } from "../rules";
 import type { Format } from "./GamePicker";
 import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
@@ -170,7 +170,7 @@ export function Setup({
       </div>
       <div className="panel note">
         {!format
-          ? "5 giochi sorteggiati su 8 · al massimo 2 domande a testa per gioco · vince chi fa più punti."
+          ? `${DRAW_LINE} · al massimo 2 domande a testa per gioco · vince chi fa più punti.`
           : format.kind === "quick"
             ? `${GAME_NAMES[format.game]}: solo questo gioco, 3 round a testa · vince chi fa più punti.`
             : `${GAME_NAMES[format.game]}: da solo, senza turni né avversari. Nessuna classifica: serve per allenarsi.`}

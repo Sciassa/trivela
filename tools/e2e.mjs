@@ -96,12 +96,28 @@ try {
   await chip("Premier League").click();
   await chip("Serie A").click();
   await p.getByText("GIOCA ▶").click();
+  // the coin toss: a coin with one face per player lands on the starter's face, and the name is written under it
+  await p.locator(".coin-result").waitFor({ timeout: 15000 });
+  const coin = await p.locator(".coin").getAttribute("class");
+  const starter = (await p.locator(".coin-result span").innerText()).trim();
+  check(/land-[01]/.test(coin) && starter.length > 0, `the coin is tossed and lands on who starts (${starter})`);
   await p.getByText("SI PARTE ▶").click({ timeout: 15000 });
   const gameFiles = p.dataRequests.filter((u) => u.includes("/data/games/"));
   check(gameFiles.length === 5, `the screen downloads only the 5 drawn games (${gameFiles.length} files)`);
   await p.getByText("VIA! ▶").click();
   await p.locator(".option").first().waitFor();
   check((await p.locator(".option.right").count()) === 0, "no highlighted answer before the reveal");
+  // whose turn: the player on turn is lit, the other dimmed, the arena framed in his colour, the label on his side
+  {
+    await p.waitForTimeout(400); // the other player fades out in a quarter of a second
+    const on = await p.evaluate(() => {
+      const hud = document.querySelector(".hud");
+      const t = hud?.className.match(/turn-p([12])/)?.[1];
+      const other = document.querySelector(`.hud-player.p${t === "1" ? 2 : 1}`);
+      return { t, dim: other ? Number(getComputedStyle(other).opacity) : 1, lit: !!document.querySelector(`.hud-player.p${t}.turn`), arena: document.querySelector(".arena")?.classList.contains(`turn-p${t}`), side: document.querySelector(".turnbar")?.classList.contains("side-p2") === (t === "2") };
+    });
+    check(on.t && on.lit && on.dim < 0.6 && on.arena && on.side, `the player on turn is lit, the other dimmed (${JSON.stringify(on)})`);
+  }
   await p.locator(".option").first().click();
   await p.locator(".option.right").waitFor();
   await p.screenshot({ path: "test-results/local-reveal.png" });

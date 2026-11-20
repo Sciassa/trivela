@@ -13,14 +13,16 @@ from .paths import PACKS_OUT
 from .postprocess import finalize
 from .tm_core import SNAPSHOT, TM, TM_DATASET, norm
 
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "statistiche", "stagione",
-         "bandiere"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere"]
 MIN_ITEMS = 1000
 CAPS = {"tiro_secco": 3600, "mercato": 2400, "decina": 1400, "dischetto": 1350, "formazione": 1400,
         "giramondo": 1400, "asta": 1500, "maglia": 1500,
-        "testa_a_testa": 1500, "statistiche": 1500, "stagione": 1500, "bandiere": 1500,
-        # Tiro Secco: the questions of v10 plus the true-or-false transfers of v14 (gen_vf)
-        "tiro_secco_vf": 2000}
+        "testa_a_testa": 1500, "bandiere": 1500,
+        # Tiro Secco: the questions of v10, plus the families added later, each with a cap of its own:
+        # true-or-false transfers (v14, gen_vf) and the season questions of v15 (gen_seasons)
+        "tiro_secco_vf": 2000, "tiro_secco_scheda": 900, "tiro_secco_campioni": 1200, "tiro_secco_confronto": 600}
+# families of the Tiro Secco kept apart from the v10 cap (tag of the item)
+TS_FAMILIES = ("vf", "scheda", "campioni", "confronto")
 
 
 def cap(items: list[dict], n: int) -> list[dict]:
@@ -88,15 +90,18 @@ def main() -> None:
         seen: set[str] = set()
         packs[game] = [it for it in items if it["sources"] and not (it["id"] in seen or seen.add(it["id"]))]
     packs, report = finalize(packs, {t.pid(p) for p in t.notable})
-    # Tiro Secco: its v10 questions keep their own cap; the true-or-false transfers (tag "vf") are added on top of them
-    vf = [it for it in packs["tiro_secco"] if it.get("tag") == "vf"]
-    packs["tiro_secco"] = [it for it in packs["tiro_secco"] if it.get("tag") != "vf"]
+    # Tiro Secco: its v10 questions keep their own cap; the later families are added on top of them
+    fam = {f: [it for it in packs["tiro_secco"] if it.get("tag") == f] for f in TS_FAMILIES}
+    packs["tiro_secco"] = [it for it in packs["tiro_secco"] if it.get("tag") not in TS_FAMILIES]
     packs = {g: cap(v, CAPS[g]) for g, v in packs.items()}
+    vf = fam.pop("vf")
     # after the filters, as many true as false moves again («always VERO» must not pay)
     true, false = ([it for it in vf if it["correct"] == c] for c in (0, 1))
     n = min(len(true), len(false), CAPS["tiro_secco_vf"] // 2)
     rank = lambda xs: sorted(xs, key=lambda x: (-x["fame"], x["id"]))[:n]  # noqa: E731
     packs["tiro_secco"] += sorted(rank(true) + rank(false), key=lambda x: (-x["fame"], x["id"]))
+    for f, items in fam.items():
+        packs["tiro_secco"] += cap(items, CAPS[f"tiro_secco_{f}"])
     short = {g: len(v) for g, v in packs.items() if len(v) < MIN_ITEMS}
     if short:
         raise SystemExit(f"Giochi sotto le {MIN_ITEMS} domande: {short}")

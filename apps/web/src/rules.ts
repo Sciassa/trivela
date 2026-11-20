@@ -1,3 +1,4 @@
+import { GAMES_PER_MATCH } from "@trivela/engine";
 import { GAME_IDS, type GameId } from "@trivela/protocol";
 
 /**
@@ -20,7 +21,7 @@ export const GAME_CATALOG: Record<GameId, GameInfo> = {
   tiro_secco: {
     name: "TIRO SECCO",
     color: "#ff5a5a",
-    rules: ["2 domande a testa: curiosità, record rarissimi e giochi di nomi.", "Quattro risposte, 25 secondi.", "+2 per ogni risposta esatta."],
+    rules: ["2 domande a testa, ognuna di un tipo diverso.", "Curiosità, record, nomi, stagioni e campioni, vero o falso.", "Quattro risposte (o due), 25 secondi. +2 se esatta."],
   },
   mercato: {
     name: "IL MERCATO",
@@ -62,17 +63,6 @@ export const GAME_CATALOG: Record<GameId, GameInfo> = {
     color: "#ff6fb5",
     rules: ["Un duello su una catena di giocatori: una statistica, a turno.", "Il prossimo ne ha PIÙ o MENO? Giusto +1, e la palla passa.", "Chi sbaglia per primo regala +3 all'avversario."],
   },
-  statistiche: {
-    name: "LE STATISTICHE",
-    color: "#ffd166",
-    rules: ["2 schede a testa: una stagione di campionato di un calciatore.", "Presenze, gol, assist e ruolo: chi è? Rispondi scrivendo.", "+3 per ogni nome esatto."],
-  },
-  stagione: {
-    name: "LA STAGIONE DEI CAMPIONI",
-    short: "I CAMPIONI",
-    color: "#f4a261",
-    rules: ["2 domande a testa su un campionato e una stagione.", "Campioni, capocannonieri, assist, porte inviolate, club.", "Quattro risposte, 25 secondi. +2 se esatta."],
-  },
   bandiere: {
     name: "LE BANDIERE",
     color: "#7bdff2",
@@ -82,6 +72,8 @@ export const GAME_CATALOG: Record<GameId, GameInfo> = {
 
 /** Games in catalogue order (the order of `GAME_IDS`), for menus and pickers. */
 export const CATALOG_GAMES: GameId[] = [...GAME_IDS];
+/** «5 giochi sorteggiati su 10»: counted from the catalogue, never written by hand. */
+export const DRAW_LINE = `${GAMES_PER_MATCH} giochi sorteggiati su ${CATALOG_GAMES.length}`;
 
 const pick = <K extends keyof GameInfo>(k: K) => Object.fromEntries(GAME_IDS.map((g) => [g, GAME_CATALOG[g][k]])) as Record<GameId, GameInfo[K]>;
 export const GAME_NAMES = pick("name");

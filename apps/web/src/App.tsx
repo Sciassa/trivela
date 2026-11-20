@@ -16,7 +16,7 @@ import { LocalMatch } from "./screens/LocalMatch";
 import { Tournament } from "./screens/Tournament";
 import { GamePicker, type Format } from "./screens/GamePicker";
 import { RoomScreen, RoomJoin, HostRoom, PadRoom } from "./screens/Rooms";
-import { GAME_NAMES } from "./rules";
+import { CATALOG_GAMES, DRAW_LINE, GAME_NAMES } from "./rules";
 
 type Route =
   | { name: "start" }
@@ -83,7 +83,7 @@ function HomeSettings({ onOptions, onCredits, total }: { onOptions: () => void; 
         </div>
         <span className="set-note">{timer ? "Tempo per rispondere, più 10 secondi per finire di scrivere" : "Nessun conto alla rovescia: gli indizi si scoprono a mano"}</span>
       </div>
-      <div className="set">
+      <div className="set year">
         <span className="set-label">FILTRO ANNO</span>
         <div className="set-step" role="group" aria-label="Filtro anno">
           <button aria-label="Anno precedente" onClick={() => step(-1)}>
@@ -108,7 +108,7 @@ function HomeSettings({ onOptions, onCredits, total }: { onOptions: () => void; 
             ▼ INSTALLA L'APP
           </button>
         )}
-        <span className="set-note">{total.toLocaleString("it-IT")} domande · 8 giochi</span>
+        <span className="set-note">{total.toLocaleString("it-IT")} domande · {CATALOG_GAMES.length} giochi</span>
       </div>
     </section>
   );
@@ -194,7 +194,7 @@ export function App() {
                 <div className="menu-cols">
                   <section className="menu-group">
                     <h2>GIOCA SU QUESTO SCHERMO</h2>
-                    <MenuCard primary badge="CONSIGLIATO" color="#ffd23f" icon={<Sprite name="screen" size={72} />} title="PARTITA CLASSICA" text="5 giochi sorteggiati su 8, due giocatori" onClick={() => go({ name: "setup" })} i={0} />
+                    <MenuCard primary badge="CONSIGLIATO" color="#ffd23f" icon={<Sprite name="screen" size={72} />} title="PARTITA CLASSICA" text={`${DRAW_LINE}, due giocatori`} onClick={() => go({ name: "setup" })} i={0} />
                     <div className="menu-pair">
                       <MenuCard color="#5ee06a" icon={<Sprite name="clock" size={56} />} title="SFIDA RAPIDA" text="Un gioco a scelta, 3 round a testa" onClick={() => go({ name: "pick", purpose: "quick" })} i={1} />
                       <MenuCard color="#7fd8ff" icon={<Sprite name="face" size={56} />} title="ALLENAMENTO" text="Da solo, senza avversari" onClick={() => go({ name: "pick", purpose: "training" })} i={2} />

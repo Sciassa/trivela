@@ -1,5 +1,5 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, StagioneItem, StatisticheItem, TestaItem, TiroSeccoItem } from "@trivela/protocol";
+import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TestaItem, TiroSeccoItem } from "@trivela/protocol";
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
@@ -22,11 +22,14 @@ const pc = (p: PlayerIdx | null | undefined) => (p === 0 ? "c-p1" : p === 1 ? "c
 
 function TurnBar({ state, p, text = "TOCCA A", info, children }: { state: MatchState; p: PlayerIdx | null | undefined; text?: string; info?: string; children?: ReactNode }) {
   return (
-    <div className="turnbar">
+    // the label stands on the side of the player on turn (left for the first, right for the second), like the HUD
+    <div className={`turnbar ${p === 1 ? "side-p2" : ""}`}>
       {p !== null && p !== undefined && (
         <span key={p} className={`who ${pc(p)}`}>
           <span>
+            {p === 0 && !state.config.solo ? "◀ " : ""}
             {text} {state.config.players[p]}
+            {p === 1 ? " ▶" : ""}
           </span>
         </span>
       )}
@@ -103,15 +106,61 @@ function TiroSecco({ state, g, dispatch, start }: GameProps) {
       <StateTimer state={state} start={start} />
       {item.tag === "vf" && item.transfer ? (
         <TransferCard key={g.i} t={item.transfer} />
+      ) : item.tag === "scheda" && item.card ? (
+        <SeasonCard key={g.i} c={item.card} />
       ) : (
         <div className="q-card" key={g.i}>
-          {item.tag && <div className={`q-tag ${item.tag}`}>{item.tag === "record" ? "⚠ RECORD RARISSIMO" : "✎ GIOCO DI NOMI"}</div>}
+          {item.tag && TAG_LABEL[item.tag] && <div className={`q-tag ${item.tag}`}>{TAG_LABEL[item.tag]}</div>}
           <div className="q">{item.question}</div>
         </div>
       )}
       <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
       {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
     </>
+  );
+}
+
+/** The small label over a Tiro Secco question, by family (SPEC §4.1); the curiosities have none. */
+const TAG_LABEL: Partial<Record<NonNullable<TiroSeccoItem["tag"]>, string>> = {
+  record: "⚠ RECORD RARISSIMO",
+  nomi: "✎ GIOCO DI NOMI",
+  campioni: "★ STAGIONE DEI CAMPIONI",
+  confronto: "▲ CHI NE HA FATTI DI PIÙ?",
+};
+
+/** Tiro Secco, «di chi è questa stagione?» (SPEC §4.1, v15): a league season of a player as an arcade scoreboard. */
+function SeasonCard({ c }: { c: NonNullable<TiroSeccoItem["card"]> }) {
+  const tiles: [string, number][] = [
+    ["PARTITE", c.stats.presenze],
+    ["GOL", c.stats.gol],
+    ["ASSIST", c.stats.assist],
+  ];
+  return (
+    <div className="stat-board">
+      <div className="q-tag scheda">◆ DI CHI È QUESTA STAGIONE?</div>
+      <div className="sb-head">
+        <span className="sb-season">STAGIONE {c.season}</span>
+        <span className="sb-comp">{c.competition.toUpperCase()}</span>
+        <span className="sb-scope">{c.scope.toUpperCase()}</span>
+      </div>
+      <div className="sb-tiles">
+        {tiles.map(([label, n]) => (
+          <div key={label} className="sb-tile">
+            <span className="sb-label">{label}</span>
+            <span className="sb-num">{n}</span>
+          </div>
+        ))}
+      </div>
+      <div className="sb-role">
+        RUOLO: <b>{c.role.toUpperCase()}</b>
+        {c.nat && (
+          <>
+            {" "}
+            · NAZIONALITÀ: <b>{c.nat.toUpperCase()}</b>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -136,93 +185,6 @@ function TransferCard({ t }: { t: NonNullable<TiroSeccoItem["transfer"]> }) {
       </div>
       <div className="vf-season">STAGIONE {t.season}</div>
     </div>
-  );
-}
-
-/* ------------------------------------------------------------ Le Statistiche */
-
-/** Le Statistiche (SPEC §4.12): the season of a player as an arcade scoreboard; the answer is typed. */
-function Statistiche({ state, g, dispatch, ctx, start }: GameProps) {
-  const { readonly } = usePlay();
-  const item = (g.perPlayer ? g.items[g.turn] : g.items[g.i]) as StatisticheItem;
-  const reveal = g.stage === "reveal";
-  const tiles: [string, number][] = [
-    ["PARTITE", item.stats.presenze],
-    ["GOL", item.stats.gol],
-    ["ASSIST", item.stats.assist],
-  ];
-  return (
-    <>
-      <TurnBar state={state} p={g.turn} info={`SCHEDA ${g.i + 1}/${g.items.length}`} />
-      <StateTimer state={state} start={start} />
-      <div className="stat-board" key={g.i}>
-        <div className="sb-head">
-          <span className="sb-season">STAGIONE {item.season}</span>
-          <span className="sb-comp">{item.competition.toUpperCase()}</span>
-          <span className="sb-scope">{item.scope.toUpperCase()}</span>
-        </div>
-        <div className="sb-tiles">
-          {tiles.map(([label, n]) => (
-            <div key={label} className="sb-tile">
-              <span className="sb-label">{label}</span>
-              <span className="sb-num">{n}</span>
-            </div>
-          ))}
-        </div>
-        <div className="sb-role">
-          RUOLO: <b>{item.role.toUpperCase()}</b>
-          {item.nat && (
-            <>
-              {" "}
-              · NAZIONALITÀ: <b>{item.nat.toUpperCase()}</b>
-            </>
-          )}
-        </div>
-        <div className="sb-q">{reveal ? `${item.answer.display}` : "CHI È IL CALCIATORE?"}</div>
-        {reveal && <div className="sb-team">{item.team}</div>}
-      </div>
-      {g.stage === "ask" &&
-        (readonly ? (
-          <PhoneHint />
-        ) : (
-          <div className="col" style={{ gap: 10 }}>
-            <AnswerBox
-              key={g.i}
-              index={ctx.index}
-              placeholder="Chi è?"
-              prompt={`${item.competition} ${item.season} · ${item.stats.presenze} partite, ${item.stats.gol} gol, ${item.stats.assist} assist · ${item.role}`}
-              timer={<StateTimer state={state} start={start} />}
-              actions={<PassButton state={state} dispatch={dispatch} player={g.turn} label="NON LO SO" />}
-              onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })}
-            />
-            <PassButton state={state} dispatch={dispatch} player={g.turn} label="NON LO SO" />
-          </div>
-        ))}
-      {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
-    </>
-  );
-}
-
-/* ------------------------------------------------------------ La Stagione dei Campioni */
-
-function Stagione({ state, g, dispatch, start }: GameProps) {
-  const item = g.items[g.i] as StagioneItem;
-  return (
-    <>
-      <TurnBar state={state} p={g.turn} info={`DOMANDA ${g.i + 1}/${g.items.length}`} />
-      <StateTimer state={state} start={start} />
-      <div className="q-card season-card" key={g.i}>
-        <div className="season-banner">
-          <Sprite name="stagione" size={40} />
-          <span>
-            {item.competition.toUpperCase()} {item.season}
-          </span>
-        </div>
-        <div className="q">{item.question}</div>
-      </div>
-      <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
-      {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
-    </>
   );
 }
 
@@ -891,10 +853,6 @@ export function GameView(props: GameProps) {
       return <Maglia {...props} />;
     case "testa_a_testa":
       return <TestaATesta {...props} />;
-    case "statistiche":
-      return <Statistiche {...props} />;
-    case "stagione":
-      return <Stagione {...props} />;
     case "bandiere":
       return <Bandiere {...props} />;
     default:

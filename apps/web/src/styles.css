@@ -178,6 +178,25 @@ a { color: var(--p1); }
 .hud-name { font-family: var(--pixel); font-size: 24px; line-height: 1.2; max-width: 360px; overflow: hidden; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
 .hud-tag { font-family: var(--pixel); font-size: 12px; color: var(--dim); }
 .hud-player.turn .hud-tag { color: var(--accent); }
+/* whose turn (SPEC §3.9): the player on turn lights up in his colour, the other one dims */
+.hud-player { padding: 6px 12px; border: 4px solid transparent; transition: opacity .25s ease-out; justify-self: start; max-width: 100%; }
+.hud-player.p2 { justify-self: end; }
+.hud-player.turn { border-color: currentColor; background: #050510; box-shadow: inset 0 0 0 4px var(--bg), inset 0 0 36px -8px currentColor; }
+.hud.turn-p1 .hud-player.p2, .hud.turn-p2 .hud-player.p1 { opacity: .38; }
+/* the arena wears the colour of the player on turn: a frame, thicker on his side */
+.arena.turn-p1::after, .arena.turn-p2::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3; border: 5px solid; }
+.arena.turn-p1::after { border-color: var(--p1); border-left-width: 16px; }
+.arena.turn-p2::after { border-color: var(--p2); border-right-width: 16px; }
+/* when the turn passes, a band «TOCCA A …» crosses the arena from the side of the new player */
+.turn-banner { position: absolute; left: 0; right: 0; top: 38%; z-index: 40; pointer-events: none; display: flex; justify-content: center; opacity: 0; }
+.turn-banner span { font-family: var(--pixel); font-size: 44px; color: var(--bg); padding: 22px 48px; box-shadow: 0 10px 0 rgba(0,0,0,.5); white-space: nowrap; }
+.turn-banner.p1 span { background: var(--p1); }
+.turn-banner.p2 span { background: var(--p2); }
+.turn-banner.p1 { animation: turn-in-left 1.1s both; }
+.turn-banner.p2 { animation: turn-in-right 1.1s both; }
+@keyframes turn-in-left { 0% { transform: translateX(-60%); opacity: 0; animation-timing-function: cubic-bezier(.2,.8,.3,1); } 22% { transform: none; opacity: 1; } 75% { transform: none; opacity: 1; animation-timing-function: ease-in; } 100% { transform: translateX(40%); opacity: 0; } }
+@keyframes turn-in-right { 0% { transform: translateX(60%); opacity: 0; animation-timing-function: cubic-bezier(.2,.8,.3,1); } 22% { transform: none; opacity: 1; } 75% { transform: none; opacity: 1; animation-timing-function: ease-in; } 100% { transform: translateX(-40%); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .turn-banner { display: none; } }
 .hud-score { font-family: var(--pixel); font-size: 54px; min-width: 150px; text-align: center; background: #050510; border: 4px solid currentColor; padding: 12px 10px 8px; text-shadow: 0 0 14px currentColor; }
 .hud-score.rolling { animation: pop .2s cubic-bezier(.22,.8,.3,1); }
 @keyframes delta { 0% { transform: translateY(30px) scale(.4); opacity: 0; } 20% { transform: translateY(0) scale(1.25); opacity: 1; } 70% { opacity: 1; } 100% { transform: translateY(-34px) scale(1); opacity: 0; } }
@@ -226,7 +245,8 @@ a { color: var(--p1); }
 @keyframes flash { 0% { opacity: 1; } 40% { opacity: .2; } 60% { opacity: .9; } 100% { opacity: 0; } }
 
 .turnbar { display: flex; align-items: center; gap: 18px; min-height: 48px; }
-.turnbar .who { font-family: var(--pixel); font-size: 20px; padding: 12px 16px; background: currentColor; animation: pop .3s cubic-bezier(.22,.8,.3,1); }
+.turnbar .who { font-family: var(--pixel); font-size: 24px; padding: 14px 20px; background: currentColor; box-shadow: 0 6px 0 rgba(0,0,0,.45); animation: pop .3s cubic-bezier(.22,.8,.3,1); }
+.turnbar.side-p2 { flex-direction: row-reverse; }
 .turnbar .who span { color: var(--bg); }
 .turnbar .info { font-family: var(--pixel); font-size: 16px; color: var(--dim); }
 
@@ -287,6 +307,34 @@ a { color: var(--p1); }
 .draw-card.open { border-color: var(--game); color: var(--game); animation: pop .45s cubic-bezier(.22,.8,.3,1); }
 .draw-card .n { color: var(--dim); font-size: 14px; }
 @keyframes slot { 50% { transform: translateY(-5px); filter: brightness(1.6); } }
+/* the coin toss of who starts: up, six turns and a half (or six) in the air, a little bounce; transform and opacity only */
+.coin-toss { display: flex; flex-direction: column; align-items: center; gap: 14px; min-height: 196px; }
+.coin-stage { position: relative; width: 132px; height: 140px; perspective: 700px; }
+.coin-arc { position: absolute; left: 0; top: 0; animation: coin-arc 1.45s both; }
+.coin { position: relative; width: 132px; height: 132px; transform-style: preserve-3d; animation: 1.45s cubic-bezier(.25,.6,.3,1) both; }
+.coin.land-0 { animation-name: coin-spin-0; }
+.coin.land-1 { animation-name: coin-spin-1; }
+.coin-face { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 50%; backface-visibility: hidden; font-family: var(--pixel); font-size: 58px;
+  background: radial-gradient(circle at 38% 34%, #fff3a6 0 18%, #ffd23f 19% 62%, #e0a800 63%); border: 8px solid #8a5a00; box-shadow: inset 0 0 0 6px #ffe98a, inset 0 -10px 0 rgba(0,0,0,.18); text-shadow: 4px 4px 0 #000; }
+.coin-face.p1 { color: var(--p1); }
+.coin-face.p2 { color: var(--p2); transform: rotateX(180deg); }
+.coin-shadow { position: absolute; left: 16px; right: 16px; bottom: -10px; height: 18px; border-radius: 50%; background: rgba(0,0,0,.45); animation: coin-shadow 1.45s both; }
+.coin-result { font-size: 22px; animation: pop .4s 1.45s cubic-bezier(.22,.8,.3,1) both; }
+.after-coin { animation: fade-in .3s 1.6s both; }
+@keyframes coin-arc {
+  0% { transform: translateY(30px) scale(.7); animation-timing-function: cubic-bezier(.2,.7,.4,1); }
+  48% { transform: translateY(-150px) scale(1.12); animation-timing-function: cubic-bezier(.6,0,.8,.4); }
+  82% { transform: translateY(0) scale(1); animation-timing-function: ease-out; }
+  91% { transform: translateY(-16px) scale(1); animation-timing-function: ease-in; }
+  100% { transform: translateY(0) scale(1); }
+}
+@keyframes coin-shadow { 0% { transform: scale(.8); opacity: .8; } 48% { transform: scale(.35); opacity: .25; } 82%, 100% { transform: scale(1); opacity: 1; } 91% { transform: scale(.85); } }
+@keyframes coin-spin-0 { from { transform: rotateX(0); } to { transform: rotateX(2160deg); } }
+@keyframes coin-spin-1 { from { transform: rotateX(0); } to { transform: rotateX(2340deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .coin-arc, .coin, .coin-shadow, .coin-result, .after-coin { animation: none; }
+  .coin.land-1 { transform: rotateX(180deg); }
+}
 .vs { display: flex; align-items: center; gap: 30px; font-family: var(--pixel); font-size: 30px; }
 .winner-name { font-family: var(--pixel); font-size: 72px; animation: rainbow 1.2s steps(6) infinite, pop .6s cubic-bezier(.22,.8,.3,1); text-shadow: 6px 6px 0 #000; }
 @keyframes rainbow { 0% { filter: hue-rotate(0); } 100% { filter: hue-rotate(360deg); } }
@@ -746,9 +794,13 @@ table.table tr.top td { color: var(--accent); }
 .menu-card.compact b { font-size: 17px; }
 .menu-card.compact small { font-size: 23px; margin-top: 5px; }
 .menu-card.primary { min-height: 124px; }
-.menu-settings { width: min(1360px, 96%); display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.3fr) auto; gap: 0; text-align: left; background: rgba(27,10,63,.9); border: 4px solid #1b0a3f; box-shadow: inset 0 0 0 3px #7c5ad1, 0 8px 0 rgba(27,10,63,.75); }
+.menu-settings { width: min(1360px, 96%); display: grid; grid-template-columns: minmax(0, .85fr) minmax(min-content, 1.3fr) auto; gap: 0; text-align: left; background: rgba(27,10,63,.9); border: 4px solid #1b0a3f; box-shadow: inset 0 0 0 3px #7c5ad1, 0 8px 0 rgba(27,10,63,.75); }
 .menu-settings .set { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 6px 14px; padding: 12px 18px; min-width: 0; }
 .menu-settings .set + .set { border-left: 3px dashed rgba(181,140,255,.45); }
+/* the year filter: label above the stepper, which always has the whole cell (it used to run into the next column) */
+.menu-settings .set.year { grid-template-columns: minmax(0, 1fr); }
+.menu-settings .set.year .set-step { justify-self: stretch; }
+.menu-settings .set.year .set-value { flex: 1 1 auto; }
 .set-label { font-family: var(--pixel); font-size: 13px; color: var(--accent); letter-spacing: 2px; white-space: nowrap; }
 .set-note { grid-column: 1 / -1; font-family: var(--term); font-size: 22px; line-height: 1; color: #d9c8ff; }
 .set-seg, .set-step { display: flex; align-items: stretch; justify-self: start; }
@@ -884,26 +936,26 @@ canvas.voxel { display: block; image-rendering: pixelated; }
 .options.two .option.vf-true:not(:disabled) { border-color: var(--ok); color: var(--ok); }
 .options.two .option.vf-false:not(:disabled) { border-color: var(--ko); color: var(--ko); }
 
-/* ------------------------------------------------------------ Le Statistiche (SPEC §4.12): an arcade scoreboard */
-.stat-board { display: flex; flex-direction: column; gap: 16px; padding: 20px 26px 22px; background: #050510; border: 6px solid var(--line);
+/* ------------------------------------------------------------ Tiro Secco, «di chi è questa stagione?» (SPEC §4.1): an arcade scoreboard */
+.stat-board { display: flex; flex-direction: column; gap: 12px; padding: 16px 24px 18px; background: #050510; border: 6px solid var(--line);
   box-shadow: inset 0 0 0 4px #0f0f2a, 0 10px 0 rgba(0,0,0,.45); animation: pop .4s cubic-bezier(.22,.8,.3,1); }
 .sb-head { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; font-family: var(--pixel); font-size: 16px; }
 .sb-season { color: var(--bg); background: #ffd166; padding: 8px 12px; }
 .sb-comp { color: #ffd166; text-shadow: 0 0 12px rgba(255,209,102,.5); }
 .sb-scope { margin-left: auto; color: var(--dim); font-size: 12px; border: 3px solid var(--line); padding: 6px 10px; }
 .sb-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.sb-tile { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px 8px 16px; background: #0a0a20; border: 4px solid var(--line); }
+.sb-tile { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px 8px 12px; background: #0a0a20; border: 4px solid var(--line); }
 .sb-label { font-family: var(--pixel); font-size: 14px; color: var(--dim); }
-.sb-num { font-family: var(--pixel); font-size: 64px; line-height: 1; color: var(--accent); text-shadow: 0 0 16px rgba(255,230,0,.55), 5px 5px 0 #000; }
-.sb-role { font-size: 32px; line-height: 1.1; color: var(--ink); }
+.sb-num { font-family: var(--pixel); font-size: 52px; line-height: 1; color: var(--accent); text-shadow: 0 0 16px rgba(255,230,0,.55), 5px 5px 0 #000; }
+.sb-role { font-size: 30px; line-height: 1.1; color: var(--ink); }
 .sb-role b { font-weight: normal; color: #ffd166; }
-.sb-q { font-family: var(--pixel); font-size: 24px; color: var(--ok); text-align: center; }
-.sb-team { text-align: center; font-size: 30px; color: var(--dim); }
+.stat-board .q-tag { align-self: flex-start; margin-bottom: 0; }
 @media (prefers-reduced-motion: reduce) { .stat-board { animation: none; } }
 
-/* ------------------------------------------------------------ La Stagione dei Campioni (SPEC §4.13) */
-.season-card { border-left-color: #f4a261; }
-.season-banner { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; font-family: var(--pixel); font-size: 18px; color: #f4a261; }
+/* the families of the Tiro Secco (SPEC §4.1, v15): one colour each */
+.q-tag.scheda { background: #ffd166; }
+.q-tag.campioni { background: #f4a261; }
+.q-tag.confronto { background: #8ce99a; }
 
 /* ------------------------------------------------------------ Le Bandiere (SPEC §4.14) */
 .flags-pitch .pl { width: 150px; }

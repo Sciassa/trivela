@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v14 — 12 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v15 — 10 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -176,6 +176,12 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v15** (novembre 2026):
+> - **Le Statistiche** e **La Stagione dei Campioni** non sono più giochi: la prima era troppo difficile (un nome da scrivere partendo da tre numeri), la seconda aveva buone domande ma non bastava per un gioco intero. Le loro domande sono ora **tre famiglie del Tiro Secco** (§4.1): «Di chi è questa stagione?» (la scheda, ora a quattro risposte e solo con stagioni memorabili), «Stagione dei campioni» e la nuova «Chi ne ha fatti di più?» (gol, assist, gialli). I giochi tornano **10**; §4.12 e §4.13 restano vuoti;
+> - il Tiro Secco si sorteggia **per famiglie**: le 4 domande di una partita sono di 4 famiglie diverse (§4.1), al posto del peso fisso del vero o falso;
+> - **lancio della moneta animato** all'inizio della partita (§3.2) e **turno ben visibile** (§3.9);
+> - Home: il filtro anno non invade più la colonna accanto sui telefoni; i conteggi («5 giochi sorteggiati su 10») si leggono dal catalogo.
+
 > **v14** (novembre 2026), Fase 1 dell'espansione dei minigiochi, tutto sul dataset esistente:
 > - tre giochi nuovi: **Le Statistiche** (indovina il calciatore dalla scheda di una sua stagione di campionato, §4.12), **La Stagione dei Campioni** (una competizione, una stagione: campioni, capocannonieri, assist, porte inviolate, club, §4.13) e **Le Bandiere** (la squadra dalle bandiere degli undici titolari, viste per 5 secondi, §4.14). I giochi sono **12**; la Partita Classica ne sorteggia sempre 5 (§5.2); Sfida Rapida e Allenamento li offrono tutti;
 > - Tiro Secco: nuova categoria **Trasferimento vero o falso** (§4.1); *Il Mercato* non cambia;
@@ -331,7 +337,7 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 
 ### 3.2 Turni
 
-- Gioco 1: inizia chi vince il sorteggio iniziale (lancio di moneta animato).
+- Gioco 1: inizia chi vince il sorteggio iniziale. Il motore lo sceglie con l'RNG con seme (`state.coin`); lo Schermo lo mostra (v15) con una **moneta in pixel** con una faccia per giocatore (l'iniziale nel suo colore) che sale, gira su se stessa e atterra sulla faccia di chi inizia; sotto compare «MONETA: INIZIA …» e poi «SI PARTE». Solo `transform` e `opacity`; con `prefers-reduced-motion` la moneta è già ferma sulla faccia giusta.
 - Dal gioco 2 in poi: **inizia chi è in svantaggio** nel punteggio generale. A parità inizia chi **non** ha iniziato il gioco precedente.
 
 ### 3.3 Applicazione del filtro anno
@@ -349,8 +355,6 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | Dal Dischetto | ❌ | Tutte le stagioni coperte |
 | L'Asta | ❌ | Tutte le stagioni coperte |
 | Testa a Testa | ❌ | Statistiche su finestre complete o su dati anagrafici: come le classifiche |
-| Le Statistiche | ✅ | Stagione della scheda ≥ ANNO |
-| La Stagione dei Campioni | ✅ | Stagione della domanda ≥ ANNO |
 | Le Bandiere | ✅ | Stagione della partita ≥ ANNO |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
@@ -396,6 +400,14 @@ In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **
 
 ---
 
+### 3.9 Di chi è il turno (v15)
+
+Nei giochi a turni (tutti tranne quelli a prenotazione, Il Mercato e Il Giramondo) lo Schermo dice in quattro modi chi deve rispondere:
+- nella barra in alto il giocatore di turno è **acceso** (riquadro e bagliore nel suo colore, «★ TOCCA A TE»), l'altro è **spento** (opacità ridotta);
+- il palco ha una **cornice nel colore** del giocatore di turno, più spessa dal suo lato (a sinistra il primo, a destra il secondo, come nella barra);
+- il cartellino «◀ TOCCA A …» / «TOCCA A … ▶» è più grande e sta **dal lato** del giocatore;
+- quando il turno passa all'altro, una **fascia** «TOCCA A …» attraversa il palco dal lato del nuovo giocatore (1,1 secondi, non blocca i tocchi; spenta con `prefers-reduced-motion`).
+
 ## 4. Catalogo dei giochi
 
 I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web/src/rules.ts`). Ogni gioco ha un `id` stabile usato nel codice. Tutte le istanze sono calcolate sul dataset (§0.5, §0.6).
@@ -403,16 +415,26 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 ### 4.1 `tiro_secco` — Tiro Secco
 - **2 domande a testa** (4 totali), risposta multipla A/B/C/D, a turno alternato. Nessuna possibilità di rubare.
 - Timer: **25 s** (20 fino alla v6: le domande sui record sono più lunghe). Punti: **+2** esatta, 0 errata.
-- Tre famiglie di domande, tutte con distrattori **verificati come errati**; un'etichetta sopra la domanda dice la famiglia:
+- **Sette famiglie** di domande (v15), tutte con distrattori **verificati come errati**; un'etichetta sopra la domanda dice la famiglia (le curiosità non ne hanno):
   1. **Curiosità** "da maniaco" calcolate sui dati (compleanni, rimonte, omonimi, gol dalla panchina…).
   2. **Record rarissimi** (`tag: "record"`, generatori `an_*`): erano il gioco *L'Anomalia Statistica*, vedi §4.2.
   3. **Giochi di nomi** (`tag: "nomi"`, generatori `nomi_*`, `data/trivela_data/gen_nomi.py`): che cosa vuol dire un cognome, **incrociato con statistiche vere**.
   4. **Trasferimento vero o falso** (v14, `tag: "vf"`, generatore `ts_vero_falso`, `data/trivela_data/gen_vf.py`): la scheda mostra `GIOCATORE`, `DA` → `A`, `STAGIONE`; due pulsanti grandi **VERO** / **FALSO** (anche sulle pulsantiere e per la Regia), +2 se esatta.
      - **Veri**: trasferimenti reali del dataset, di giocatori noti (fama ≥ 75), con almeno una delle due squadre in un campionato top in quel momento.
      - **Falsi**: lo stesso trasferimento reale con la squadra di arrivo sostituita da una squadra dello stesso campionato e della stessa stagione, di peso simile, che il giocatore **non ha mai avuto** in tutta la sua storia: nessun trasferimento da o verso di lei, nessuna presenza, nessuna formazione. Un trasferimento non è mai dichiarato falso solo perché manca nei dati. Il Copione dice il trasferimento vero.
-     - **Tanti veri quanti falsi** (937 + 937), così «sempre VERO» non paga. Nel sorteggio valgono come una dozzina degli altri tipi (`GENERATOR_WEIGHTS`): circa una domanda su cinque.
+     - **Tanti veri quanti falsi** (937 + 937), così «sempre VERO» non paga. Dalla v15 sono una famiglia come le altre nel sorteggio per famiglie (fino alla v14 pesavano come una dozzina di tipi, `GENERATOR_WEIGHTS`).
      - **Variante Prestito / Definitivo: non fatta.** Il dataset non ha un campo esplicito sul tipo di operazione e l'importo non lo prova (un parametro zero non è un prestito).
-     - Le 3600 domande della v10 restano identiche; le nuove si aggiungono (Tiro Secco: 5474).
+     - Le 3600 domande della v10 restano identiche; le nuove si aggiungono (Tiro Secco: 5474 nella v14).
+  5. **Di chi è questa stagione?** (v15, `tag: "scheda"`, generatore `ts_scheda`, `gen_seasons.py`, `scheda()`): era il gioco *Le Statistiche*. La stagione di campionato di un calciatore come un tabellone arcade (STAGIONE · COMPETIZIONE · «SOLO SERIE A»; PARTITE · GOL · ASSIST; RUOLO, e la nazionalità solo se serve a distinguere), quattro nomi, **+2**.
+     - **Solo stagioni memorabili**: almeno 20 presenze e almeno 15 gol, o 10 assist, o 20 tra gol e assist; per i difensori bastano 5 gol, per i centrocampisti 14 tra gol e assist. Una scheda tipo «20 presenze, 0 gol» non ricorda nessuno e non esce. Niente portieri.
+     - **Opzioni sbagliate**: giocatori noti dello **stesso reparto** (stessa posizione prima) in quel campionato e in quella stagione, con i numeri **più vicini** (gol, poi assist, poi presenze), mai con gli stessi gol e assist; così non si va per esclusione. Il Copione dice i numeri di tutti e quattro.
+     - Restano le regole della v14: stagioni con ogni partita e ogni riga di presenza, gol confermati dagli eventi, una sola squadra, fama ≥ 70, al massimo 2 schede per giocatore, **nessun altro giocatore** di quella stagione con la stessa scheda.
+  6. **Stagione dei campioni** (v15, `tag: "campioni"`, generatori `stg_*`, `gen_seasons.py`, `stagione()`): era il gioco *La Stagione dei Campioni*, con le stesse regole (§4.13 della v14, riportate qui): campione (primo per punti calcolati **e** nella classifica registrata all'ultima giornata, altrimenti non esce), capocannoniere (gol verificati), assistman, portiere con più porte inviolate («partita giocata per intero da titolare senza subire gol»), miglior attacco e difesa, e per un club miglior marcatore, più presenze, più assist, posizione finale. Mai un pari merito al primo posto; la Ligue 1 2019/20, interrotta, non ha domande sul campione né sulle classifiche.
+  7. **Chi ne ha fatti di più?** (v15, `tag: "confronto"`, generatori `ts_confronto_gol`, `ts_confronto_assist`, `ts_confronto_gialli`, `gen_seasons.py`, `confronto()`): «Premier League 2015/16: quale di questi giocatori ha segnato più gol in campionato?», e lo stesso per assist e **cartellini gialli**.
+     - Un campionato e una stagione con le righe di presenza complete; giocatori noti (fama ≥ 70) con almeno 15 presenze, di reparti adatti (attaccanti e centrocampisti per gol e assist, difensori e centrocampisti per i gialli).
+     - La risposta è tra i primi della stagione; le altre tre opzioni hanno **valori poco sotto** (entro 6 gol, 4 assist o 4 gialli) e **tutti diversi**: mai un pari merito, mai un distacco enorme.
+     - Gialli: un giocatore entra solo se i gialli delle sue righe di presenza tornano, uno per uno, con i cartellini registrati negli eventi di quella stagione.
+- **Sorteggio per famiglie (v15)**. Con sette famiglie e generatori molto diversi per numero (35 tipi di curiosità, 2 di schede) il sorteggio per generatore dava quasi sempre curiosità. Ora il motore (`FAMILY_OF`, `sampleVaried` in `match.ts`) pesca **una famiglia alla volta in ordine casuale**: le 4 domande di una partita sono di **4 famiglie diverse** e ogni famiglia esce con la stessa frequenza (circa una domanda su sette), qualunque sia il numero delle sue domande; dentro la famiglia i generatori si alternano. Con i filtri attivi, se restano meno di 4 famiglie, una si ripete.
 - **Giochi di nomi (v7.1)**. Le quattro opzioni sono **solo cognomi** della stessa famiglia di parole, e uno solo appartiene davvero a un giocatore che ha fatto la cosa chiesta:
   - «Quale di questi cognomi (tutti nomi di animali) appartiene a un giocatore che ha giocato in Serie A (dal 2013/14 al 2025/26)?» Gatti · Cani · Topi · Salmoni;
   - «Quale di questi cognomi (tutti nomi di mestieri in tedesco) appartiene a un giocatore che ha segnato almeno 30 gol in Bundesliga?» Schmid · Bauer · Klempner · Bergmann.
@@ -432,7 +454,7 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - **giochi di nomi**: i cognomi sbagliati sono di un **calciatore noto** (supera il filtro notorietà), il più vicino per fama al portatore della risposta, e lo script dice di chi sono («Soria, Valencia e Lucca sono cognomi di calciatori veri (David Soria, Antonio Valencia, Lorenzo Lucca)…»). Le domande scendono da circa 270 a circa 70, ma le quattro opzioni «suonano» tutte;
   - **una domanda per fatto e per cognome**: niente varianti dello stesso fatto con altre opzioni.
 - Test: `test_wrong_options_are_not_spotted_by_fame` (ogni posizione della risposta per fama tra il 10% e il 40%), `test_one_question_per_rare_fact`.
-- Stato: 3600 domande (circa 2470 curiosità, 1060 record, 70 giochi di nomi). Il sorteggio alterna i generatori, quindi le tre famiglie si mescolano in ogni partita.
+- Stato: 7652 domande. Le 3600 della v10 (circa 2470 curiosità, 1060 record, 70 giochi di nomi) e i 1874 vero o falso restano identici; si aggiungono 542 schede, 1200 domande sui campioni e 436 confronti (tetti per famiglia in `generate.py`).
 
 ### 4.2 I record rarissimi del Tiro Secco (ex *L'Anomalia Statistica*)
 - Fino alla v6 erano un gioco a sé (`anomalia`, +3 a domanda); dalla v7 sono domande del Tiro Secco (+2), generate da `data/trivela_data/gen_anomalie.py`.
@@ -549,29 +571,9 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - Pacchetto: 1200 catene (40 per statistica e campionato).
 - **Soluzioni**: Schermo e pulsantiere vedono i valori già confrontati e il nome dello sfidante, mai il suo valore né i giocatori successivi; alla fine si scopre la catena intera.
 
-### 4.12 `statistiche` — Le Statistiche (v14)
-- **2 schede a testa**, a turno: la stagione di campionato di un calciatore come un **tabellone arcade** (STAGIONE · COMPETIZIONE · «SOLO SERIE A»; PARTITE · GOL · ASSIST; RUOLO). Domanda: **CHI È IL CALCIATORE?** Si risponde **scrivendo** (tastiera di gioco e correttore, §10), 35 secondi più il tempo extra (§3.8); **+3** se esatto. Con il timer spento c'è «NON LO SO».
-- **Perimetro sempre dichiarato**: solo campionato, mai mescolato con coppe o nazionale.
-- **Dati** (`data/trivela_data/gen_seasons.py`, `statistiche()`):
-  - solo stagioni in cui **ogni partita** del campionato è nel dataset (ogni squadra gioca 2 volte con ogni altra) e ha le righe di presenza di entrambe le squadre, con i gol che tornano col risultato;
-  - presenze, gol e assist dalle righe di presenza; i gol sono confermati anche dai gol verificati (eventi);
-  - il ruolo è quello giocato quella stagione (la posizione più frequente da titolare);
-  - una sola squadra nel campionato quella stagione; almeno 20 presenze; giocatore noto (fama ≥ 70); al massimo 2 schede per giocatore;
-  - **univocità**: nessun altro giocatore di quel campionato e di quella stagione (noto o no) ha la stessa scheda. Se c'è un gemello, si aggiunge la nazionalità; se resta ambigua, la scheda non esce;
-  - niente livelli di difficoltà: un solo pool di 1500 schede.
-- **Soluzioni**: la squadra e il nome escono solo alla rivelazione.
+### 4.12 *(libero: era Le Statistiche, confluito nel Tiro Secco nella v15, §4.1)*
 
-### 4.13 `stagione` — La Stagione dei Campioni (v14)
-- **2 domande a testa**, a turno, quattro risposte, 25 secondi, **+2**. Ogni domanda è su **un campionato e una stagione** (diversa da Decina e Dischetto: una domanda secca, non un elenco).
-- **Tipi**, solo dove la stagione è completa per quel dato:
-  - **campione**: primo per punti calcolati dai risultati **e** primo nella classifica registrata da Transfermarkt all'ultima giornata (penalizzazioni comprese); se non coincidono, la domanda non esce;
-  - **capocannoniere** (gol verificati, stagione con tutti i gol); **miglior assistman** (stagione con tutte le righe di presenza);
-  - **portiere con più porte inviolate**: definizione esplicita nel Copione, «partita giocata per intero da titolare senza subire gol»; servono formazioni e minuti completi;
-  - **miglior attacco / miglior difesa** (gol fatti e subiti dai risultati);
-  - **un club**: miglior marcatore, più presenze, più assist, **posizione finale** (dal registro dell'ultima giornata, solo se coincide con i punti e il club non è a pari punti con altri).
-- **Pari merito**: un pari merito al primo posto non viene mai chiesto. Le risposte sbagliate sono i piazzati subito dopo (o posizioni vicine per la classifica finale).
-- La Ligue 1 2019/20, interrotta, non ha domande sul campione né sulle classifiche.
-- Pacchetto: 1500 domande su 20 tipi (generatori `stg_*`, `gen_seasons.py`, `stagione()`).
+### 4.13 *(libero: era La Stagione dei Campioni, confluito nel Tiro Secco nella v15, §4.1)*
 
 ### 4.14 `bandiere` — Le Bandiere (v14)
 - **2 formazioni a testa**, a turno. Sul campo in pixel art compaiono le **11 bandiere dei titolari** di una squadra in una partita vera, disposte come hanno giocato (la posizione registrata per ognuno; il modulo, quando è registrato, si vede alla fine). Mai nomi o stemmi in questa fase.
@@ -602,13 +604,11 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | asta | 20 | |
 | maglia | 6 | |
 | testa_a_testa | 7 | 4 confronti giusti + 3 del duello; in pratica 3–6 |
-| statistiche | 6 | 2 schede × 3 |
-| stagione | 4 | 2 domande × 2 |
 | bandiere | 4 | 2 formazioni × 2 |
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: i 12 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
+- Pool: i 10 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
 - Vincoli:
   - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
   - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
