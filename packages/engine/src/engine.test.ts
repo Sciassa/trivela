@@ -39,7 +39,7 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(10);
+    expect(POOL).toHaveLength(11);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
@@ -51,7 +51,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(10);
+    expect(Object.keys(MODULES)).toHaveLength(11);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -160,7 +160,7 @@ describe("year filter and sampling", () => {
     for (let seed = 1; seed < 200; seed++) seen.add([...drawGames(new Rng(seed), POOL)].sort().join());
     expect(seen.size).toBeGreaterThan(6);
     const all = new Set(Array.from({ length: 200 }, (_, k) => drawGames(new Rng(k + 1), POOL)).flat());
-    expect(all.size).toBe(10); // every game comes out sooner or later
+    expect(all.size).toBe(11); // every game comes out sooner or later
   });
 });
 
@@ -616,6 +616,36 @@ describe("testa a testa: a duel on one chain (SPEC §4.11)", () => {
   });
   it("sfida rapida: three chains, one per round", () => {
     expect(singleGamePlan("testa_a_testa", { rounds: 3 })).toEqual({ order: ["testa_a_testa", "testa_a_testa", "testa_a_testa"], need: 1 });
+  });
+});
+
+describe("indovina lo stemma (SPEC §4.15)", () => {
+  it("before the reveal the Screen and the phones see only the transformed crest", () => {
+    let s = start(first("stemma"));
+    for (const role of ["screen", "p1", "p2"] as const) {
+      const it = viewFor(s, role).game!.items[0];
+      expect(it.correct).toBe(-1);
+      expect(it.original).toBe("");
+      expect(it.team).toBe("");
+      expect(it.credit).toBe("");
+      expect(it.options).toHaveLength(4);
+      expect(it.image ?? it.colors).toBeTruthy();
+      expect(viewFor(s, role).game!.items[1]).toBeNull(); // the next crest is not sent at all
+    }
+    const p = s.game!.turn as 0 | 1;
+    s = run(s, { type: "ANSWER", player: p, payload: { choice: 0 } });
+    expect(s.scores[p]).toBe(2);
+    const shown = viewFor(s, "screen").game!.items[0];
+    expect(shown.original).toMatch(/^crests\//);
+    expect(shown.team).toMatch(/^Club /);
+  });
+  it("four crests of four different clubs, in different variants", () => {
+    for (let seed = 1; seed <= 40; seed++) {
+      const s = start(first("stemma"), { seed });
+      const items = s.game!.items as { entities: string[]; variant: string }[];
+      expect(new Set(items.map((x) => x.entities.find((e) => e.startsWith("tm:c:")))).size).toBe(4);
+      expect(new Set(items.map((x) => x.variant)).size).toBe(4);
+    }
   });
 });
 

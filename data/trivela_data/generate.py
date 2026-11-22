@@ -8,16 +8,31 @@ from __future__ import annotations
 import datetime as dt
 import json
 
-from . import gen_anomalie, gen_bandiere, gen_lists, gen_matches, gen_nomi, gen_players, gen_quiz, gen_seasons, gen_testa, gen_vf
+from . import (
+    gen_anomalie,
+    gen_bandiere,
+    gen_cards,
+    gen_lists,
+    gen_matches,
+    gen_nomi,
+    gen_players,
+    gen_quiz,
+    gen_seasons,
+    gen_stemma,
+    gen_testa,
+    gen_vf,
+)
 from .paths import PACKS_OUT
 from .postprocess import finalize
 from .tm_core import SNAPSHOT, TM, TM_DATASET, norm
 
-GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere"]
+GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere", "stemma"]
 MIN_ITEMS = 1000
+# visual games (SPEC §0.8): as many questions as licensed assets allow, never padded with copies; their own floor
+MIN_ITEMS_VISUAL = {"stemma": 150}
 CAPS = {"tiro_secco": 3600, "mercato": 2400, "decina": 1400, "dischetto": 1350, "formazione": 1400,
         "giramondo": 1400, "asta": 1500, "maglia": 1500,
-        "testa_a_testa": 1500, "bandiere": 1500,
+        "testa_a_testa": 1500, "bandiere": 1500, "stemma": 2000,
         # Tiro Secco: the questions of v10, plus the families added later, each with a cap of its own:
         # true-or-false transfers (v14, gen_vf) and the season questions of v15 (gen_seasons)
         "tiro_secco_vf": 2000, "tiro_secco_scheda": 900, "tiro_secco_campioni": 1200, "tiro_secco_confronto": 600}
@@ -83,7 +98,7 @@ def build_entities(t: TM, packs: dict[str, list[dict]]) -> list[dict]:
 def main() -> None:
     t = TM()
     packs: dict[str, list[dict]] = {g: [] for g in GAMES}
-    for mod in (gen_quiz, gen_anomalie, gen_nomi, gen_matches, gen_lists, gen_players, gen_testa, gen_seasons, gen_bandiere, gen_vf):
+    for mod in (gen_quiz, gen_anomalie, gen_nomi, gen_matches, gen_lists, gen_players, gen_testa, gen_seasons, gen_bandiere, gen_vf, gen_stemma):
         for game, items in mod.generate(t).items():
             packs[game] += items
     for game, items in packs.items():
@@ -102,13 +117,14 @@ def main() -> None:
     packs["tiro_secco"] += sorted(rank(true) + rank(false), key=lambda x: (-x["fame"], x["id"]))
     for f, items in fam.items():
         packs["tiro_secco"] += cap(items, CAPS[f"tiro_secco_{f}"])
-    short = {g: len(v) for g, v in packs.items() if len(v) < MIN_ITEMS}
+    short = {g: len(v) for g, v in packs.items() if len(v) < MIN_ITEMS_VISUAL.get(g, MIN_ITEMS)}
     if short:
         raise SystemExit(f"Giochi sotto le {MIN_ITEMS} domande: {short}")
     entities = build_entities(t, packs)
     for game, items in packs.items():
         dump(PACKS_OUT / "games" / f"{game}.json", items)
     dump(PACKS_OUT / "entities.json", entities)
+    print("cards:", gen_cards.write(t, packs))
     manifest = {
         "version": dt.date.today().isoformat(),
         "generatedAt": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
@@ -118,7 +134,9 @@ def main() -> None:
         "sources": [
             {"family": "transfermarkt", "label": "Transfermarkt (dataset dcaribou/transfermarkt-datasets, stagioni 2012/13–2025/26)",
              "url": TM_DATASET, "licence": "Dati © Transfermarkt; dataset pubblico, uso non commerciale"},
-            {"family": "wikidata", "label": "Wikidata (solo date di nascita degli allenatori)", "url": "https://www.wikidata.org", "licence": "CC0"},
+            {"family": "wikidata", "label": "Wikidata (date di nascita degli allenatori; ID Transfermarkt per stemmi e foto)", "url": "https://www.wikidata.org", "licence": "CC0"},
+            {"family": "wikimedia", "label": "Wikimedia Commons (stemmi e foto con licenza libera, vedi assets-manifest.json)", "url": "https://commons.wikimedia.org",
+             "licence": "per file: CC0, pubblico dominio, CC BY, CC BY-SA"},
         ],
         "filters": report,
     }

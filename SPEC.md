@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v15 — 10 giochi, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v16 — 11 giochi (con il primo gioco visivo, Indovina lo Stemma), figurine dei giocatori, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -176,6 +176,10 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 ## 0.6 Decisione v5/v6/v7: 8 giochi, niente argomento, round brevi, stanze senza server
 
+> **v16** (novembre 2026), Fase 2: asset calcistici.
+> - Nuova decisione sulle fonti (§0.8): **stemmi e foto** solo da Wikidata + Wikimedia Commons, con la licenza di ogni file verificata; API-Football e TheSportsDB valutate e scartate.
+> - Nuovo gioco **Indovina lo Stemma** (§4.15), con una soglia di domande dedicata ai giochi visivi; **figurine dei giocatori** (§14.3) nelle rivelazioni e come premio di fine partita.
+
 > **v15** (novembre 2026):
 > - **Le Statistiche** e **La Stagione dei Campioni** non sono più giochi: la prima era troppo difficile (un nome da scrivere partendo da tre numeri), la seconda aveva buone domande ma non bastava per un gioco intero. Le loro domande sono ora **tre famiglie del Tiro Secco** (§4.1): «Di chi è questa stagione?» (la scheda, ora a quattro risposte e solo con stagioni memorabili), «Stagione dei campioni» e la nuova «Chi ne ha fatti di più?» (gol, assist, gialli). I giochi tornano **10**; §4.12 e §4.13 restano vuoti;
 > - il Tiro Secco si sorteggia **per famiglie**: le 4 domande di una partita sono di 4 famiglie diverse (§4.1), al posto del peso fisso del vero o falso;
@@ -256,6 +260,32 @@ Decisione del committente (novembre 2026). Questa sezione prevale su tutte le pr
 - Grafica: stadio notturno animato (stelle, riflettori, pubblico, prato), sprite pixel-art per ogni gioco, tabellone a LED con punteggi animati, sorteggio a carte, coriandoli, lampi verde/rosso, transizioni a scatti. Sempre nel rispetto di `prefers-reduced-motion`.
 - I moduli (nuova sfida, sala d'attesa, torneo) sono pagine a scorrimento normale, a due colonne sugli schermi larghi; le schermate dei telefoni seguono §12.5.
 - Identità visiva «tramonto pixel» (§0.7) e menu principale rifatto.
+
+## 0.8 Decisione v16: asset grafici da fonti libere (stemmi e foto)
+
+L'utente ha autorizzato fonti esterne gratuite **solo per asset grafici** (stemmi e fotografie) necessari ai giochi visivi e alle figurine, con provenienza documentata e diritti rispettati. I fatti calcistici restano solo Transfermarkt (§0.5).
+
+- **Fonti accettate**:
+  - **Wikidata** (CC0) per l'identità: una squadra si abbina **solo** con il suo ID Transfermarkt (`P7223`), un giocatore solo con il suo (`P2446`), mai per nome; l'ID deve portare a un solo elemento e l'elemento a un solo ID. Lo stemma è la dichiarazione `P154` in uso (rango preferito, altrimenti l'unica senza data di fine); la foto è l'immagine `P18`, solo se è una.
+  - **Wikimedia Commons** per file, licenza e autore (`imageinfo` + `extmetadata`).
+- **Fonti scartate**: **API-Football** (`media.api-sports.io`), perché i loghi sono distribuiti con l'API, senza una licenza per file da poter verificare; **TheSportsDB**, perché le immagini sono caricate dagli utenti e i diritti restano dei titolari, senza una licenza per file. Senza una licenza verificabile non si pubblica (§17).
+- **Licenze** (classificazione automatica da `extmetadata`, `data/trivela_data/assets.py`):
+
+  | Classe | Pubblicato | Modificabile | Note |
+  |---|---|---|---|
+  | CC0, pubblico dominio (es. `PD-textlogo`) | ✅ | ✅ | molti stemmi sono pubblico dominio perché sotto la soglia di originalità, ma restano **marchi** registrati (segnalati nel manifest) |
+  | CC BY, CC BY-SA | ✅ | ✅ | con attribuzione; una versione trasformata di un file CC BY-SA resta CC BY-SA |
+  | CC BY-ND | ✅ (solo originale) | ❌ | mai trasformato, quindi mai in un gioco che trasforma; per le foto (mostrate solo come ritratto in pixel) escluso |
+  | CC …-NC, GFDL senza altra licenza, non libero, sconosciuta | ❌ | ❌ | non scaricato né pubblicato |
+
+  Per ogni file il manifest registra: soggetto (`tm:c:…`/`tm:p:…`), ID Wikidata, pagina e URL originale, fonte, licenza e suo URL, autore, attribuzione, marchio sì/no, `modifiable`, file locali, stato di verifica.
+- **Uso dei marchi**: lo stemma serve solo a indicare la squadra in una domanda o in una rivelazione; nessun marchio è usato come branding di TRIVELA (invariante 8).
+- **Pipeline** (manuale, mai dal browser, idempotente):
+  - `cd data && uv run python -m trivela_data.assets fetch [--photos N] [--download M] [--refresh]`: identità e licenze (salvate in `data/static/assets_sources.json`), poi i file, in cache in `data/cache/assets/` (non versionata). Si scaricano solo i file pubblicabili: prima le miniature PNG da 250 px degli stemmi, poi le foto dei giocatori più noti (miniature da 330 px), infine gli SVG originali che servono alla variante senza scritte. Rilanciato, riprende da dove si era fermato; identità e licenze si rileggono solo con `--refresh`.
+  - `cd data && uv run python -m trivela_data.assets build`: offline; scrive `apps/web/public/crests/`, `apps/web/public/photos/`, `apps/web/public/data/assets-manifest.json`, `data/static/crests.json` e `data/static/photos.json`. Poi `pnpm data:generate` e `node tools/flags.mjs`.
+- **Rate limit**: un client Wikimedia senza contatto nell'User-Agent ha circa **600 kB al minuto**. La pipeline va più piano: dopo ogni file aspetta in proporzione al suo peso (circa 9 kB/s), almeno 12 secondi (circa 5 file al minuto, sotto il limite di raffica); rispetta `Retry-After`; raggruppa 50 file per chiamata API; usa solo larghezze standard delle miniature. I file passano da `curl` (HTTP/2) con l'User-Agent della pipeline, mai travestito da browser: il client HTTP/1.1 di Python riceveva 429 a qualunque ritmo. Chi vuole limiti più larghi può aggiungere a mano un contatto con `TRIVELA_UA_CONTACT`; la pipeline non lo compila mai da sola.
+- **Peso e PWA**: stemmi in PNG da 128 px, foto ridotte a ritratti da 60×80 pixel a 32 colori (pochi kB l'uno). Le cartelle `crests/` e `photos/` e i dati `data/` (manifest, figurine) sono **fuori dalla precache**: si scaricano solo quando servono e restano in una cache a runtime (`trivela-assets`, 300 file al massimo).
+- **Soglia dei giochi visivi**: le domande dipendono dagli asset con licenza. Un gioco visivo ha una soglia propria (Indovina lo Stemma: **150**) invece di 1000, e non si gonfia mai con copie: una domanda per stemma e per variante.
 
 ### 0.7 Identità visiva e menu principale (v6)
 
@@ -356,6 +386,7 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | L'Asta | ❌ | Tutte le stagioni coperte |
 | Testa a Testa | ❌ | Statistiche su finestre complete o su dati anagrafici: come le classifiche |
 | Le Bandiere | ✅ | Stagione della partita ≥ ANNO |
+| Indovina lo Stemma | ❌ | Lo stemma è quello in uso oggi: non appartiene a una stagione |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
 
@@ -587,6 +618,18 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - **Bandiere**: SVG del pacchetto `flag-icons` (MIT), 4:3, nitide su ogni schermo; `tools/flags.mjs` copia in `apps/web/public/flags/` solo le 106 usate (circa 1 MB in tutto). Si scaricano solo quando il gioco è sorteggiato.
 - **Soluzioni**: Schermo e telefoni ricevono le bandiere solo durante i 5 secondi, le opzioni solo dopo, nomi e squadra solo alla rivelazione; la Regia vede tutto.
 
+### 4.15 `stemma` — Indovina lo Stemma (v16)
+- **2 stemmi a testa**, a turno: sul tabellone in pixel compare lo stemma di una squadra **trasformato offline** dalla pipeline (§0.8); il giocatore di turno sceglie la squadra tra **quattro** (20 secondi, **+2**). Le quattro risposte sono più comode sul telefono di un nome da scrivere, e sono le stesse sulle pulsantiere e per la Regia. Alla rivelazione compare lo **stemma vero**, con il nome della squadra e l'attribuzione del file.
+- **Quattro varianti**, applicate solo agli stemmi la cui licenza consente modifiche; nessun menu né livello, si alternano nel sorteggio (in una partita le varianti sono diverse finché ce ne sono, e la stessa squadra non torna):
+  - **SENZA SCRITTE** (`notext`): l'SVG originale senza i suoi elementi di testo, disegnato con resvg. Solo se l'SVG ha testo vero da togliere e il risultato è pulito (cambia tra l'1% e il 30% dell'immagine e resta almeno il 60% della figura); mai rettangoli o cancellature. La maggior parte degli stemmi ha le lettere già trasformate in tracciati: per questi la variante non esiste;
+  - **SFOCATO** (`blur`): sfocatura gaussiana (raggio 7 su 128 px) che lascia forme e colori;
+  - **SILHOUETTE** (`silhouette`): la sagoma piena calcolata dal **canale alfa vero** (angoli trasparenti, sagoma tra il 20% e il 95% del quadrato), mai dal bordo del file; esclusi dischi e rettangoli semplici, che non dicono nulla;
+  - **SOLO I COLORI** (`colors`): i colori caratteristici (riduzione a 6 colori dei pixel opachi, colori vicini uniti, quelli sotto il 7% scartati, da 2 a 4) disegnati dall'app come **bande in pixel** dentro uno scudo a gradini. Nessuna immagine derivata.
+- **Risposte sbagliate**: squadre dello stesso campionato (l'ultimo dei cinque in cui ha giocato, altrimenti il campionato nazionale per le squadre viste nelle coppe) con il peso più vicino. Per la silhouette, nessuna con una sagoma quasi uguale (sovrapposizione > 0,8); per i colori, solo squadre dai colori noti e **diversi** (distanza di palette > 55 in entrambe le direzioni), altrimenti la domanda avrebbe due risposte.
+- **Filtri**: tag `comp:` del campionato; per le squadre fuori dai cinque campionati, il torneo europeo in cui sono nel dataset (sempre incluso, §3.4). Il filtro anno non si applica.
+- **Soluzioni**: fino alla rivelazione Schermo e pulsantiere ricevono solo l'immagine trasformata (o i colori) e le quattro squadre; stemma originale, squadra, attribuzione (che nomina il file) e risposta arrivano solo alla rivelazione. I nomi dei file sono hash e non nominano la squadra.
+- **Perimetro reale**: STEMMA_COUNTS
+
 ---
 
 ## 5. Bilanciamento e sorteggio
@@ -605,10 +648,11 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | maglia | 6 | |
 | testa_a_testa | 7 | 4 confronti giusti + 3 del duello; in pratica 3–6 |
 | bandiere | 4 | 2 formazioni × 2 |
+| stemma | 4 | 2 stemmi × 2 |
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: i 10 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
+- Pool: gli 11 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
 - Vincoli:
   - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
   - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
@@ -977,6 +1021,19 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 - Pallone e coppa sono disegnati da un piccolo motore su canvas (`components/voxel.ts`): solo le facce che toccano il vuoto e girate verso chi guarda, colorate per faccia (luce diffusa più riflesso sull'oro), dalla più lontana alla più vicina. La tela è piccola (52 e 96 pixel) e la pagina la ingrandisce con `image-rendering: pixelated`: i pixel restano netti. Al massimo 30 fotogrammi al secondo; con «riduci animazioni» un solo fotogramma fermo.
 - Anteprima: `?voxel` nell'indirizzo mostra coppa e pallone (serve ai controlli visivi).
 
+### 14.3 Figurine dei giocatori (v16)
+
+- Componente originale `PlayerCard` (`apps/web/src/components/PlayerCard.tsx`), ispirato alle figurine ma disegnato in pixel art: cornice spessa a pixel, angoli quadrati, foto ridotta a 60×80 pixel e mostrata `pixelated` su una scacchiera scura, nessuna scansione o grafica di terzi.
+- **Campi**, tutti dai dati: foto con licenza (§0.8) o **segnaposto** 8-bit (la faccina dell'app), nome, bandiera (SVG di `flag-icons`) e nazionalità, squadra, ruolo, competizione e stagione, **presenze, gol, assist** di quella stagione. La stagione è la **migliore stagione di campionato** del giocatore nel dataset (più gol + assist, almeno 10 presenze con una sola squadra, stagione con le righe di presenza complete). Nessun «overall» o voto inventato. Sotto, l'attribuzione della foto o «Dati Transfermarkt · solo campionato».
+- **Tre stili**, solo estetici e da criteri oggettivi:
+  - **Leggendaria**: almeno 100 gol o 400 presenze nelle competizioni principali del dataset (campionati top, Champions, Mondiali, Europei); cornice magenta con un riflesso che scorre (solo `transform`);
+  - **Speciale**: la stagione della figurina è memorabile, con la stessa regola di «Di chi è questa stagione?» (§4.1); cornice oro;
+  - **Classica**: tutte le altre; cornice argento.
+- **Dove compare**:
+  - nella **rivelazione** delle domande su un solo calciatore: Il Mercato, Il Giramondo, La Maglia, «Di chi è questa stagione?» del Tiro Secco (formato largo, foto a sinistra). Se il giocatore non ha figurina resta la rivelazione di prima;
+  - a **fine partita**, «LA FIGURINA DELLA PARTITA»: tra i giocatori delle domande della partita, quello con lo stile più raro e poi più gol + assist. È solo un premio visivo: nessuna collezione, moneta, scambio o mercato.
+- **Dati**: `data/trivela_data/gen_cards.py` (dentro `pnpm data:generate`, o da solo con `uv run python -m trivela_data.gen_cards` sui pacchetti pubblicati) scrive 16 file `apps/web/public/data/cards/<id % 16>.json`. Li scarica solo lo Schermo, solo a rivelazione avvenuta o a fine partita; mai i telefoni.
+
 ---
 
 ## 15. Stack e struttura del repository
@@ -1025,6 +1082,7 @@ trivela/
 ## 17. Licenze e attribuzioni
 
 - Wikidata: CC0. Wikipedia: CC BY-SA — salvare solo brevi citazioni + URL; pagina "Crediti" con attribuzioni.
+- Stemmi e foto (v16, §0.8): solo file di Wikimedia Commons con licenza CC0, pubblico dominio, CC BY o CC BY-SA; ogni file è elencato con autore, licenza e pagina in `apps/web/public/data/assets-manifest.json` e nella pagina «Fonti dei dati» (sezione «Autori e licenze di stemmi e foto», caricata a richiesta). L'attribuzione compare anche alla rivelazione dello stemma e sotto la foto della figurina. Le versioni trasformate restano sotto la licenza dell'originale.
 - StatsBomb Open Data: attribuzione secondo i loro termini.
 - Dataset di terzi e API di livello B: usare solo secondo licenza; documentare la licenza di ogni connettore in `data/ingest/<fonte>/LICENSE.md`.
 - Font e campioni audio: solo licenze aperte (OFL, CC0) o produzione propria.

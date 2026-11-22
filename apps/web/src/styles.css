@@ -965,3 +965,62 @@ canvas.voxel { display: block; image-rendering: pixelated; }
 .flags-pitch .pl-name { font-size: 24px; }
 .memo-note { font-size: 18px; color: var(--accent); text-align: center; }
 @media (prefers-reduced-motion: reduce) { .flags-pitch.memo .flag { animation: none; } .memo-note { animation: none; } }
+
+/* ------------------------------------------------------------ Indovina lo Stemma (SPEC §4.15) */
+.crest-layout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 28px; align-items: center; }
+.crest-board { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 16px 20px 18px; background: #050510; border: 6px solid var(--line);
+  box-shadow: inset 0 0 0 4px #0f0f2a, 0 10px 0 rgba(0,0,0,.45); animation: pop .4s cubic-bezier(.22,.8,.3,1); }
+.crest-board.revealed { border-color: #a3e635; }
+.crest-board .q-tag { margin-bottom: 0; background: #a3e635; }
+.crest-stage { width: 296px; height: 296px; display: grid; place-items: center;
+  background: repeating-conic-gradient(#0c0c26 0 25%, #12123a 0 50%) 0 0 / 32px 32px; border: 4px solid #1b1b46; }
+.crest-img { width: 256px; height: 256px; object-fit: contain; image-rendering: pixelated; }
+.crest-img.original { animation: pop .45s cubic-bezier(.22,.8,.3,1); }
+.crest-team { font-family: var(--pixel); font-size: 20px; color: #a3e635; text-align: center; max-width: 296px; }
+.crest-side { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.crest-side .q { font-size: 38px; line-height: 1.1; }
+.crest-side .options { grid-template-columns: 1fr; }
+.crest-credit { font-size: 18px; color: var(--dim); margin-top: 6px; overflow-wrap: anywhere; }
+/* the colour bands: a pixel shield, 12 columns, hard edges */
+.color-shield { padding: 8px; background: #f2f2ff; clip-path: polygon(0 0, 100% 0, 100% 68%, 92% 68%, 92% 78%, 84% 78%, 84% 87%, 72% 87%, 72% 94%, 58% 94%, 58% 100%, 42% 100%, 42% 94%, 28% 94%, 28% 87%, 16% 87%, 16% 78%, 8% 78%, 8% 68%, 0 68%); filter: drop-shadow(8px 8px 0 #000); }
+.color-bands { width: 216px; height: 240px; display: grid; grid-template-columns: repeat(12, 1fr); clip-path: polygon(0 0, 100% 0, 100% 68%, 92% 68%, 92% 78%, 84% 78%, 84% 87%, 72% 87%, 72% 94%, 58% 94%, 58% 100%, 42% 100%, 42% 94%, 28% 94%, 28% 87%, 16% 87%, 16% 78%, 8% 78%, 8% 68%, 0 68%); }
+.color-bands i { display: block; height: 100%; box-shadow: inset 0 -10px 0 rgba(0,0,0,.18); }
+@media (prefers-reduced-motion: reduce) { .crest-board, .crest-img.original { animation: none; } }
+
+/* ------------------------------------------------------------ Player card (SPEC §14.3): an original pixel-art card */
+.pcard { --pc-edge: #8fa3d9; --pc-ink: #f2f2ff; --pc-glow: rgba(143,163,217,.25); position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 12px;
+  width: 320px; padding: 14px; background: linear-gradient(#141440, #08081e); border: 6px solid var(--pc-edge);
+  box-shadow: inset 0 0 0 4px #050510, inset 0 0 0 8px var(--pc-glow), 8px 8px 0 #000; animation: pop .45s cubic-bezier(.22,.8,.3,1); text-align: left; }
+.pcard.speciale { --pc-edge: #ffd23f; --pc-glow: rgba(255,210,63,.3); background: linear-gradient(#2a1a48, #0d0820); }
+.pcard.leggendaria { --pc-edge: #ff6fd8; --pc-glow: rgba(255,111,216,.35); background: linear-gradient(#3a0d4a, #120424); }
+/* pixel corners: four squares on the frame */
+.pcard::before, .pcard::after { content: ""; position: absolute; width: 14px; height: 14px; background: var(--pc-edge); }
+.pcard::before { top: 0; left: 0; }
+.pcard::after { right: 0; bottom: 0; }
+.pc-photo { display: grid; place-items: center; height: 240px; background: repeating-conic-gradient(#0c0c26 0 25%, #12123a 0 50%) 0 0 / 24px 24px; border: 4px solid #050510; }
+.pc-photo img { width: 180px; height: 240px; object-fit: cover; image-rendering: pixelated; }
+.pc-placeholder { color: var(--pc-edge); opacity: .9; }
+.pc-body { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.pc-top { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-family: var(--pixel); font-size: 11px; }
+.pc-season { color: #050510; background: var(--pc-edge); padding: 5px 8px; }
+.pc-badge { color: var(--pc-edge); }
+.pc-name { font-family: var(--pixel); font-size: 20px; line-height: 1.25; color: var(--pc-ink); overflow-wrap: anywhere; }
+.pc-line { display: flex; align-items: center; gap: 10px; font-size: 24px; line-height: 1.1; color: var(--pc-ink); }
+.pc-line.dim { color: #b9a8e6; }
+.pc-flag { width: 36px; height: 27px; border: 3px solid #000; image-rendering: pixelated; flex: none; }
+.pc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pc-stats span { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 6px 4px; background: #050510; border: 3px solid #23234d; font-family: var(--pixel); font-size: 9px; color: #b9a8e6; }
+.pc-stats b { font-size: 26px; font-weight: normal; color: var(--accent); text-shadow: 3px 3px 0 #000; }
+.pc-credit { font-size: 15px; line-height: 1.1; color: #8c80b8; overflow-wrap: anywhere; }
+.pc-shine { position: absolute; top: -20%; bottom: -20%; width: 60px; left: 0; background: rgba(255,255,255,.14); transform: translateX(-150%) skewX(-18deg); animation: pc-shine 3.2s ease-in-out infinite; pointer-events: none; }
+@keyframes pc-shine { 0%, 55% { transform: translateX(-150%) skewX(-18deg); } 100% { transform: translateX(700%) skewX(-18deg); } }
+/* the reveal version: photo on the left, the data on the right */
+.pcard.wide { flex-direction: row; width: min(760px, 100%); align-items: stretch; }
+.pcard.wide .pc-photo { height: auto; min-height: 176px; width: 140px; flex: none; }
+.pcard.wide .pc-photo img { width: 132px; height: 176px; }
+.pcard.wide .pc-body { flex: 1; }
+.pcard.wide .pc-name { font-size: 22px; }
+.match-prize { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.match-prize .px { font-size: 14px; color: var(--accent); }
+.match-over-row { display: flex; gap: 48px; align-items: center; justify-content: center; }
+@media (prefers-reduced-motion: reduce) { .pcard { animation: none; } .pc-shine { display: none; } }

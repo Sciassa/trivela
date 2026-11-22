@@ -38,7 +38,7 @@ export default defineConfig({
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,png,webmanifest}"],
         // question packs and flags are fetched when a game needs them, never precached (SPEC §12.7)
-        globIgnores: ["data/**", "flags/**"],
+        globIgnores: ["data/**", "flags/**", "crests/**", "photos/**"],
         navigateFallback: "index.html",
         cleanupOutdatedCaches: true,
         clientsClaim: true,
@@ -51,10 +51,16 @@ export default defineConfig({
             options: { cacheName: "trivela-flags", expiration: { maxEntries: 200 } },
           },
           {
+            // crests and player photos (SPEC §0.8): fetched only when a question or a card shows them, a few hundred at most
+            urlPattern: ({ url }) => url.pathname.includes("/crests/") || url.pathname.includes("/photos/"),
+            handler: "CacheFirst",
+            options: { cacheName: "trivela-assets", expiration: { maxEntries: 300, maxAgeSeconds: 60 * 60 * 24 * 90 } },
+          },
+          {
             // packs change with every data update: the network first, the cache when offline
             urlPattern: ({ url }) => url.pathname.includes("/data/"),
             handler: "NetworkFirst",
-            options: { cacheName: "trivela-data", networkTimeoutSeconds: 5, expiration: { maxEntries: 20 } },
+            options: { cacheName: "trivela-data", networkTimeoutSeconds: 5, expiration: { maxEntries: 40 } },
           },
           {
             urlPattern: ({ url }) => url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com",

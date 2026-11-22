@@ -37,6 +37,19 @@ export function makePacks(): Packs {
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
     items.giramondo.push({ ...meta({ activeYears: [2020] }), clues: ["c1", "c2", "c3", "c4", "c5"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
+    for (const variant of ["notext", "blur", "silhouette", "colors"] as const)
+      items.stemma.push({
+        ...meta({ generator: `stemma_${variant}`, entities: ["comp:IT1", `tm:c:${k}`] }),
+        question: "Di quale squadra è questo stemma?",
+        variant,
+        image: variant === "colors" ? null : `crests/v${k}${variant}.png`,
+        colors: variant === "colors" ? [["#000000", 0.5], ["#0000ff", 0.5]] : null,
+        original: `crests/o${k}.png`,
+        team: `Club ${k}`,
+        credit: `«Club ${k}.svg», autore, CC0`,
+        options: [`Club ${k}`, "Altra A", "Altra B", "Altra C"],
+        correct: 0,
+      });
     items.bandiere.push({
       ...meta({ yearMin: 2016 }),
       title: "Inter-Juventus 1-0",

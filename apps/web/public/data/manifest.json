@@ -12,7 +12,8 @@
     "asta": 1500,
     "maglia": 1500,
     "testa_a_testa": 1200,
-    "bandiere": 1336
+    "bandiere": 1336,
+    "stemma": 65
   },
   "generators": {
     "tiro_secco": 101,

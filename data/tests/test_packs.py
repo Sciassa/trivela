@@ -12,6 +12,10 @@ from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
 GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere"]
+# visual games (SPEC §0.8): as many questions as the licensed assets allow, with a floor of their own
+VISUAL = {"stemma": 150}
+PUBLIC = DATA.parent
+FREE = {"cc0", "pd", "cc-by", "cc-by-sa"}
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
 
 
@@ -331,3 +335,70 @@ def test_helpers():
     assert fee_label(20_900_000) == "20,9 mln €" and season_label(2015) == "2015/16"
     assert articled("di", "Inter") == "dell'Inter" and articled("con", "Juventus") == "con la Juventus"
     assert articled("di", "PSG") == "del PSG" and articled("di", "Paesi Bassi", True) == "dei Paesi Bassi"
+
+
+def test_visual_games_have_their_own_floor_and_no_copies():
+    for game, floor in VISUAL.items():
+        items = load(game)
+        assert len(items) >= floor, (game, len(items))
+        assert len({it["id"] for it in items}) == len(items)
+        # one question per crest and variant: never the same picture twice to reach a number
+        assert len({(it["original"], it["variant"]) for it in items}) == len(items)
+
+
+def test_assets_are_all_licensed_and_credited():
+    """SPEC §0.8: every crest and photo on the site is in the manifest, with a free licence, author and source page."""
+    m = json.loads((DATA / "assets-manifest.json").read_text(encoding="utf-8"))
+    listed = set()
+    for a in m["assets"]:
+        assert a["licence_class"] in FREE, a
+        assert a["page"].startswith("https://commons.wikimedia.org/") and a["wikidata"].startswith("Q")
+        assert a["author"] and a["attribution"] and a["licence"]
+        assert a["status"].startswith("verificato")
+        for f in a["files"].values():
+            assert (PUBLIC / f).exists(), f
+            listed.add(f)
+        if a["kind"] == "foto" or len(a["files"]) > 1:
+            assert a["modifiable"], a  # a transformed file only from a licence that allows it
+    on_disk = {f"{d}/{p.name}" for d in ("crests", "photos") for p in (PUBLIC / d).glob("*")}
+    assert on_disk == listed, sorted(on_disk ^ listed)[:5]
+    assert m["counts"]["stemmi"] == sum(1 for a in m["assets"] if a["kind"] == "stemma")
+
+
+def test_stemma_questions():
+    """SPEC §4.15: a transformed crest of a licensed file, four clubs, the answer among them, the variants all present."""
+    m = json.loads((DATA / "assets-manifest.json").read_text(encoding="utf-8"))
+    crest_files = {f for a in m["assets"] if a["kind"] == "stemma" for f in a["files"].values()}
+    items = load("stemma")
+    for it in items:
+        assert it["variant"] in ("notext", "blur", "silhouette", "colors")
+        assert len(set(it["options"])) == 4 and it["options"][it["correct"]] == it["team"]
+        assert it["original"] in crest_files and it["credit"]
+        if it["variant"] == "colors":
+            assert it["image"] is None and 2 <= len(it["colors"]) <= 4
+            assert all(re.fullmatch(r"#[0-9a-f]{6}", c) for c, _ in it["colors"])
+        else:
+            assert it["image"] in crest_files and it["image"] != it["original"]
+        # the file names never name the club
+        assert not any(w.lower() in (it["image"] or "") for w in it["team"].split() if len(w) > 3)
+        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1
+    per = Counter(it["variant"] for it in items)
+    assert per["blur"] and per["silhouette"] and per["colors"], per
+
+
+def test_player_cards():
+    """SPEC §14.3: real numbers only, no rating; the style from objective thresholds; a photo only if licensed."""
+    photos = {f"photos/{p.name}" for p in (PUBLIC / "photos").glob("*.png")}
+    cards = {}
+    for k in range(16):
+        cards |= json.loads((DATA / "cards" / f"{k}.json").read_text(encoding="utf-8"))
+    assert len(cards) >= 1000
+    for pid, c in cards.items():
+        assert int(pid) % 16 == int(pid) % 16 and c["id"] == f"tm:p:{pid}"
+        assert set(c) == {"id", "name", "nat", "flag", "club", "role", "season", "competition", "stats", "style", "photo", "credit"}
+        assert c["stats"]["presenze"] >= 10 and c["style"] in ("classica", "speciale", "leggendaria")
+        assert re.fullmatch(r"\d{4}/\d{2}", c["season"])
+        assert c["photo"] is None or (c["photo"] in photos and c["credit"])
+        assert c["flag"] is None or (PUBLIC / "flags" / f"{c['flag']}.svg").exists(), c["flag"]
+    styles = Counter(c["style"] for c in cards.values())
+    assert styles["classica"] > styles["speciale"] > 0 and styles["leggendaria"] > 0, styles

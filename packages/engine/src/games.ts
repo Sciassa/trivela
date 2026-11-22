@@ -9,6 +9,7 @@ import type {
   Role,
   SetItem,
   BandiereItem,
+  StemmaItem,
   TestaItem,
   TiroSeccoItem,
 } from "@trivela/protocol";
@@ -32,6 +33,8 @@ export const TIMERS = {
   /** Le Bandiere: the flags stay up for exactly 5 seconds, then the question has its own time. */
   memo: 5_000,
   bandiere: 20_000,
+  /** Indovina lo Stemma: four options, like Le Bandiere. */
+  stemma: 20_000,
   /** Testa a Testa: each MORE/LESS choice, then the pause that shows the value that came out. */
   testa: 12_000,
   testaFeedback: 1_800,
@@ -183,6 +186,18 @@ export const tiroSecco = turnQuiz<TiroSeccoItem>({
   count: 4,
   phases: [{ ms: TIMERS.tiro_secco, judge: pickOne(2) }],
   mask: (it) => ({ ...it, correct: -1 as never, script: "" }),
+});
+
+/**
+ * Indovina lo Stemma (SPEC §4.15): two crests each, in turn, transformed offline; which club? Four options, +2. Until
+ * the reveal the Screen and the phones get the transformed image only: the original crest, the club, the credit of
+ * the file (it names the club) and the right option stay out of their view.
+ */
+export const stemma = turnQuiz<StemmaItem>({
+  id: "stemma",
+  count: 4,
+  phases: [{ ms: TIMERS.stemma, judge: pickOne(2) }],
+  mask: (it) => ({ ...it, correct: -1, original: "", team: "", credit: "", sources: [], script: "" }),
 });
 
 export const maglia = turnQuiz<MagliaItem>({
@@ -942,6 +957,7 @@ export const MODULES: Record<GameId, GameModule> = {
   maglia,
   testa_a_testa: testaATesta,
   bandiere,
+  stemma,
 };
 
 export function redactGame(s: GameStateAny, role: Role): GameStateAny {

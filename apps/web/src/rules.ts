@@ -68,6 +68,12 @@ export const GAME_CATALOG: Record<GameId, GameInfo> = {
     color: "#7bdff2",
     rules: ["2 formazioni a testa: undici bandiere in campo.", "Le vedi per 5 secondi, poi spariscono.", "Quale squadra era? Quattro risposte, +2 se esatta."],
   },
+  stemma: {
+    name: "INDOVINA LO STEMMA",
+    short: "LO STEMMA",
+    color: "#a3e635",
+    rules: ["2 stemmi a testa, trasformati: senza scritte, sfocati, in silhouette o nei loro colori.", "Di quale squadra è? Quattro risposte, 20 secondi.", "+2 se esatta, poi lo stemma vero."],
+  },
 };
 
 /** Games in catalogue order (the order of `GAME_IDS`), for menus and pickers. */
