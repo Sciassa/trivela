@@ -186,21 +186,22 @@ def current_logo(statements: list[dict]) -> dict | None:
 
 
 def download_files(crests: dict, photos_: dict, order: dict[int, int], download: int) -> None:
-    """The files: only those that may be published are downloaded at all; crests first, then photos by fame."""
+    """The files: only those that may be published are downloaded at all; crests (thumbnails, then the SVG originals
+    for the «senza scritte» variant), then photos by fame."""
     for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"]):
         crest_source(r["commons"])
         if k % 20 == 0:
             print(f"  crests {k}", flush=True)
+    for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]):
+        crest_svg(r["commons"])
+        if k % 20 == 0:
+            print(f"  svg {k}", flush=True)
     pics = sorted((r for r in photos_.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]),
                   key=lambda r: order.get(r["player"], 10**9))
     for k, r in enumerate(pics[:download]):
         cached(r["commons"]["thumb"], ".jpg")
         if k % 25 == 0:
             print(f"  photos {k}/{min(download, len(pics))}", flush=True)
-    for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]):
-        crest_svg(r["commons"])
-        if k % 20 == 0:
-            print(f"  svg {k}", flush=True)
     print("fetch done", flush=True)
 
 
