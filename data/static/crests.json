@@ -49,30 +49,6 @@
    ]
   }
  },
- "1038": {
-  "attribution": "«Flag of Sampdoria.svg», F l a n k e r, Public domain, via Wikimedia Commons",
-  "club": 1038,
-  "licence": "pd",
-  "original": "crests/6c174fc9cbec.png",
-  "qid": "Q1457",
-  "variants": {
-   "blur": "crests/931ece2dfd75.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.43
-    ],
-    [
-     "#024a96",
-     0.361
-    ],
-    [
-     "#542041",
-     0.206
-    ]
-   ]
-  }
- },
  "1044": {
   "attribution": "«Djurgardens IF logo.svg», Djurgårdens IF, Public domain, via Wikimedia Commons",
   "club": 1044,
@@ -310,26 +286,6 @@
    ]
   }
  },
- "1180": {
-  "attribution": "«FK Dinamo Minsk escudo blr.jpg», HBdiego13, CC BY 4.0, via Wikimedia Commons",
-  "club": 1180,
-  "licence": "cc-by",
-  "original": "crests/24f8700a0d83.png",
-  "qid": "Q211477",
-  "variants": {
-   "blur": "crests/ef2f15ceedfb.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.677
-    ],
-    [
-     "#3b83c5",
-     0.268
-    ]
-   ]
-  }
- },
  "1184": {
   "attribution": "«KRC Genk Logo 2016.svg», KRC Genk, Public domain, via Wikimedia Commons",
   "club": 1184,
@@ -353,16 +309,6 @@
      0.2
     ]
    ]
-  }
- },
- "12": {
-  "attribution": "«AS ROMA Text Logo 2020 - 2021 .svg», Associazione Sportiva Roma S.p.A., Public domain, via Wikimedia Commons",
-  "club": 12,
-  "licence": "pd",
-  "original": "crests/39b940e47294.png",
-  "qid": "Q2739",
-  "variants": {
-   "blur": "crests/d97242095bea.png"
   }
  },
  "122": {
@@ -419,17 +365,7 @@
   "original": "crests/7b37e253fa03.png",
   "qid": "Q2693",
   "variants": {
-   "blur": "crests/203f7f81a8a8.png",
-   "colors": [
-    [
-     "#152322",
-     0.452
-    ],
-    [
-     "#fff2b8",
-     0.375
-    ]
-   ]
+   "blur": "crests/203f7f81a8a8.png"
   }
  },
  "131": {
@@ -859,26 +795,6 @@
    "silhouette": "crests/7d3f744c00b9.png"
   }
  },
- "23": {
-  "attribution": "«600px Giallo e Blu con stemma Eintracht Braunschweig.png», Skawise, CC BY-SA 3.0, via Wikimedia Commons",
-  "club": 23,
-  "licence": "cc-by-sa",
-  "original": "crests/c7016ba3a1cb.png",
-  "qid": "Q154053",
-  "variants": {
-   "blur": "crests/0ea0cb736d75.png",
-   "colors": [
-    [
-     "#06108a",
-     0.48
-    ],
-    [
-     "#ffef08",
-     0.433
-    ]
-   ]
-  }
- },
  "2300": {
   "attribution": "«Jagiellonia Białystok Logo 1.png», Unknown author Unknown author, CC0, via Wikimedia Commons",
   "club": 2300,
@@ -926,34 +842,6 @@
    ]
   }
  },
- "238": {
-  "attribution": "«Logo Lech Poznań 100 1922-2022.jpg», Klapi, CC BY-SA 4.0, via Wikimedia Commons",
-  "club": 238,
-  "licence": "cc-by-sa",
-  "original": "crests/2f5d47f8da96.png",
-  "qid": "Q52942",
-  "variants": {
-   "blur": "crests/6531fd04a1f5.png",
-   "colors": [
-    [
-     "#112875",
-     0.417
-    ],
-    [
-     "#a5f8fd",
-     0.308
-    ],
-    [
-     "#9fa9b0",
-     0.164
-    ],
-    [
-     "#5b4298",
-     0.111
-    ]
-   ]
-  }
- },
  "2381": {
   "attribution": "«Sivasspor-Logo.png», Sivasspor logo, Public domain, via Wikimedia Commons",
   "club": 2381,
@@ -961,17 +849,7 @@
   "original": "crests/1bcff4fb98a0.png",
   "qid": "Q372599",
   "variants": {
-   "blur": "crests/75bcfb13b7fc.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.757
-    ],
-    [
-     "#e71232",
-     0.235
-    ]
-   ]
+   "blur": "crests/75bcfb13b7fc.png"
   }
  },
  "23826": {
@@ -1337,26 +1215,6 @@
    "silhouette": "crests/5c38145a84f2.png"
   }
  },
- "31": {
-  "attribution": "«Logo Liverpool FC (2024).png», Liverpool FC, Public domain, via Wikimedia Commons",
-  "club": 31,
-  "licence": "pd",
-  "original": "crests/70e59fcd7a11.png",
-  "qid": "Q1130849",
-  "variants": {
-   "blur": "crests/ef47a9f05a1f.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.742
-    ],
-    [
-     "#e31224",
-     0.256
-    ]
-   ]
-  }
- },
  "321": {
   "attribution": "«FC Sion.svg», Unknown author Unknown author, Public domain, via Wikimedia Commons",
   "club": 321,
@@ -1466,17 +1324,7 @@
   "original": "crests/19d8c225f510.png",
   "qid": "Q8615",
   "variants": {
-   "blur": "crests/57109067684b.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.741
-    ],
-    [
-     "#000000",
-     0.259
-    ]
-   ]
+   "blur": "crests/57109067684b.png"
   }
  },
  "3709": {
@@ -1557,21 +1405,7 @@
   "original": "crests/37424520f1ba.png",
   "qid": "Q128897",
   "variants": {
-   "blur": "crests/a0747c2877cc.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.733
-    ],
-    [
-     "#4f788c",
-     0.131
-    ],
-    [
-     "#be2e30",
-     0.115
-    ]
-   ]
+   "blur": "crests/a0747c2877cc.png"
   }
  },
  "3911": {
@@ -1581,25 +1415,7 @@
   "original": "crests/bf44bf4a21cb.png",
   "qid": "Q218372",
   "variants": {
-   "blur": "crests/d5aa20453cad.png",
-   "colors": [
-    [
-     "#3280a7",
-     0.416
-    ],
-    [
-     "#bf3326",
-     0.295
-    ],
-    [
-     "#413946",
-     0.149
-    ],
-    [
-     "#e6f2f2",
-     0.14
-    ]
-   ]
+   "blur": "crests/d5aa20453cad.png"
   }
  },
  "3948": {
@@ -1692,17 +1508,7 @@
   "original": "crests/7fff175c1e56.png",
   "qid": "Q51974",
   "variants": {
-   "blur": "crests/b9084a6d0619.png",
-   "colors": [
-    [
-     "#1e5cb3",
-     0.719
-    ],
-    [
-     "#fdfefd",
-     0.197
-    ]
-   ]
+   "blur": "crests/b9084a6d0619.png"
   }
  },
  "410": {
@@ -1738,17 +1544,7 @@
   "original": "crests/8dc924b0b99a.png",
   "qid": "Q392310",
   "variants": {
-   "blur": "crests/47284ab6b634.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.676
-    ],
-    [
-     "#151616",
-     0.324
-    ]
-   ]
+   "blur": "crests/47284ab6b634.png"
   }
  },
  "417": {
@@ -2119,17 +1915,7 @@
   "original": "crests/983bf2e0cc39.png",
   "qid": "Q34479193",
   "variants": {
-   "blur": "crests/1da669d28238.png",
-   "colors": [
-    [
-     "#ffffff",
-     0.536
-    ],
-    [
-     "#000000",
-     0.456
-    ]
-   ]
+   "blur": "crests/1da669d28238.png"
   }
  },
  "61": {
@@ -2160,17 +1946,7 @@
   "original": "crests/df48f61e727b.png",
   "qid": "Q723457",
   "variants": {
-   "blur": "crests/0f648000d6e0.png",
-   "colors": [
-    [
-     "#101e72",
-     0.506
-    ],
-    [
-     "#fffffe",
-     0.43
-    ]
-   ]
+   "blur": "crests/0f648000d6e0.png"
   }
  },
  "618": {
@@ -2216,26 +1992,6 @@
    "silhouette": "crests/2bc5b1cdc7a9.png"
   }
  },
- "641": {
-  "attribution": "«Middlesbrough Walk (27470064759).jpg», Paul Hudson from United Kingdom, CC BY 2.0, via Wikimedia Commons",
-  "club": 641,
-  "licence": "cc-by",
-  "original": "crests/e83617bd9e94.png",
-  "qid": "Q18661",
-  "variants": {
-   "blur": "crests/21042c25ab3b.png",
-   "colors": [
-    [
-     "#f0eef3",
-     0.824
-    ],
-    [
-     "#a55d71",
-     0.176
-    ]
-   ]
-  }
- },
  "65": {
   "attribution": "«SpVgg Greuther Fürth 2017.svg», Unknown author Unknown author, Public domain, via Wikimedia Commons",
   "club": 65,
@@ -2253,34 +2009,6 @@
     [
      "#31a744",
      0.476
-    ]
-   ]
-  }
- },
- "667": {
-  "attribution": "«Racing Club de Strasbourg contre Racing Lens décembre 2016 .jpg», KOBI FRANCK, CC BY-SA 4.0, via Wikimedia Commons",
-  "club": 667,
-  "licence": "cc-by-sa",
-  "original": "crests/8aaf12b750b4.png",
-  "qid": "Q126334",
-  "variants": {
-   "blur": "crests/1c1dea24d43e.png",
-   "colors": [
-    [
-     "#0c2948",
-     0.318
-    ],
-    [
-     "#497099",
-     0.236
-    ],
-    [
-     "#592f3a",
-     0.189
-    ],
-    [
-     "#d7d6cd",
-     0.155
     ]
    ]
   }
@@ -2316,26 +2044,6 @@
   "variants": {
    "blur": "crests/3b89634d0d09.png",
    "silhouette": "crests/034d980a69be.png"
-  }
- },
- "720": {
-  "attribution": "«Emblema F C Porto (derived).jpg», Manuel de Sousa / JotaCartas, CC BY-SA 3.0, via Wikimedia Commons",
-  "club": 720,
-  "licence": "cc-by-sa",
-  "original": "crests/fe98590a6baa.png",
-  "qid": "Q128446",
-  "variants": {
-   "blur": "crests/5446712c87d7.png",
-   "colors": [
-    [
-     "#eeeeee",
-     0.599
-    ],
-    [
-     "#505157",
-     0.401
-    ]
-   ]
   }
  },
  "749": {
@@ -2617,17 +2325,7 @@
   "original": "crests/a1deedcf0acc.png",
   "qid": "Q192071",
   "variants": {
-   "blur": "crests/fd7d08d503ba.png",
-   "colors": [
-    [
-     "#ffdc00",
-     0.736
-    ],
-    [
-     "#00a82d",
-     0.264
-    ]
-   ]
+   "blur": "crests/fd7d08d503ba.png"
   }
  }
 }

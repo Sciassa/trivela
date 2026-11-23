@@ -972,8 +972,9 @@ canvas.voxel { display: block; image-rendering: pixelated; }
   box-shadow: inset 0 0 0 4px #0f0f2a, 0 10px 0 rgba(0,0,0,.45); animation: pop .4s cubic-bezier(.22,.8,.3,1); }
 .crest-board.revealed { border-color: #a3e635; }
 .crest-board .q-tag { margin-bottom: 0; background: #a3e635; }
+/* a light pixel checkerboard: dark crests (navy, black) stay visible, light ones keep their outline */
 .crest-stage { width: 296px; height: 296px; display: grid; place-items: center;
-  background: repeating-conic-gradient(#0c0c26 0 25%, #12123a 0 50%) 0 0 / 32px 32px; border: 4px solid #1b1b46; }
+  background: repeating-conic-gradient(#c9cde3 0 25%, #dfe2f0 0 50%) 0 0 / 32px 32px; border: 4px solid #1b1b46; box-shadow: inset 0 0 0 4px #9aa0c4; }
 .crest-img { width: 256px; height: 256px; object-fit: contain; image-rendering: pixelated; }
 .crest-img.original { animation: pop .45s cubic-bezier(.22,.8,.3,1); }
 .crest-team { font-family: var(--pixel); font-size: 20px; color: #a3e635; text-align: center; max-width: 296px; }

@@ -47,7 +47,7 @@ _last = [0.0]
 # Wikimedia asks automated clients for a contact in the User-Agent and gives them wider limits: set it by hand if you
 # wish (an e-mail or a page about the tool), it is never filled in automatically.
 UA = BASE_UA + (f" contact: {os.environ['TRIVELA_UA_CONTACT']}" if os.environ.get("TRIVELA_UA_CONTACT") else "")
-FILE_GAP = 12.0  # seconds between two file downloads at least: about 5 a minute, under the burst limit
+FILE_GAP = float(os.environ.get("TRIVELA_FILE_GAP", "5"))  # seconds between two file downloads at least (Retry-After on top)
 BYTES_PER_S = 9000  # Wikimedia's budget for clients without a contact is 600 kB a minute: stay under it
 
 
@@ -186,22 +186,22 @@ def current_logo(statements: list[dict]) -> dict | None:
 
 
 def download_files(crests: dict, photos_: dict, order: dict[int, int], download: int) -> None:
-    """The files: only those that may be published are downloaded at all; crests (thumbnails, then the SVG originals
-    for the «senza scritte» variant), then photos by fame."""
+    """The files: only those that may be published are downloaded at all; crest thumbnails, photos by fame (both from
+    the thumbnail host), then the SVG originals for the «senza scritte» variant (from the original-file host)."""
     for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"]):
         crest_source(r["commons"])
         if k % 20 == 0:
             print(f"  crests {k}", flush=True)
-    for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]):
-        crest_svg(r["commons"])
-        if k % 20 == 0:
-            print(f"  svg {k}", flush=True)
     pics = sorted((r for r in photos_.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]),
                   key=lambda r: order.get(r["player"], 10**9))
     for k, r in enumerate(pics[:download]):
         cached(r["commons"]["thumb"], ".jpg")
         if k % 25 == 0:
             print(f"  photos {k}/{min(download, len(pics))}", flush=True)
+    for k, r in enumerate(r for r in crests.values() if r.get("commons") and r["commons"]["publish"] and r["commons"]["modifiable"]):
+        crest_svg(r["commons"])
+        if k % 20 == 0:
+            print(f"  svg {k}", flush=True)
     print("fetch done", flush=True)
 
 

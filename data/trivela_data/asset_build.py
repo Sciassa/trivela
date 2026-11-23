@@ -24,6 +24,13 @@ from .paths import ROOT
 STATIC = ROOT / "static"
 SIZE = 128  # crests: drawn pixelated on the board, so a small canvas is enough and keeps the 8-bit look
 SIL_FILL = (255, 233, 168, 255)
+# files on the logo property that are not a crest, checked by eye on the whole set (SPEC §4.15): never asked
+NOT_A_CREST = {
+    12: "solo la scritta del nome (AS Roma)",
+    31: "solo la scritta del nome (Liverpool)",
+    23: "una bandiera, non lo stemma (Eintracht Braunschweig)",
+    1038: "una bandiera, non lo stemma (Sampdoria)",
+}
 
 
 def key(*parts) -> str:
@@ -181,6 +188,14 @@ def build() -> None:
         if not c["publish"]:
             excluded[f"stemma: licenza {c['class']}"] += 1
             continue
+        if int(tm) in NOT_A_CREST:
+            excluded["stemma: non è uno stemma (solo scritta o bandiera)"] += 1
+            continue
+        if c["mime"] == "image/jpeg":
+            # a crest is a drawing (SVG or PNG): the JPEG files on the logo property are photos (a match, a street, a
+            # carved emblem), a mistake of the source
+            excluded["stemma: il file è una foto, non un logo"] += 1
+            continue
         f = crest_source(c, offline=True)
         if f is None:
             excluded["stemma: non ancora scaricato"] += 1
@@ -204,7 +219,7 @@ def build() -> None:
                 nt = no_text(svg)
                 if nt is not None:
                     rec["variants"]["notext"] = files["senza scritte"] = publish(fit(nt), "crests", key(k, "notext"))
-            pal = palette(base)
+            pal = palette(base) if real_alpha(raw) else []  # without transparency the background would be a «colour»
             if len(pal) >= 2:
                 rec["variants"]["colors"] = pal  # colours are drawn by the app as pixel bands: no image is derived
         crests[tm] = rec

@@ -15,13 +15,15 @@
   }
  ],
  "counts": {
-  "stemmi": 117,
-  "foto": 2
+  "stemmi": 108,
+  "foto": 25
  },
  "excluded": {
   "foto: licenza unknown": 5,
-  "foto: non ancora scaricata": 943,
-  "silhouette: sagoma uguale a quella di altri stemmi": 29
+  "foto: non ancora scaricata": 920,
+  "silhouette: sagoma uguale a quella di altri stemmi": 29,
+  "stemma: il file è una foto, non un logo": 5,
+  "stemma: non è uno stemma (solo scritta o bandiera)": 4
  },
  "assets": [
   {
@@ -111,27 +113,6 @@
   },
   {
    "kind": "stemma",
-   "subject": "tm:c:12",
-   "wikidata": "Q2739",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:AS_ROMA_Text_Logo_2020_-_2021_.svg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/AS_ROMA_Text_Logo_2020_-_2021_.svg",
-   "title": "AS ROMA Text Logo 2020 - 2021 .svg",
-   "licence": "Public domain",
-   "licence_class": "pd",
-   "licence_url": "",
-   "author": "Associazione Sportiva Roma S.p.A.",
-   "attribution": "«AS ROMA Text Logo 2020 - 2021 .svg», Associazione Sportiva Roma S.p.A., Public domain, via Wikimedia Commons",
-   "trademark": true,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/39b940e47294.png",
-    "sfocato": "crests/d97242095bea.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
    "subject": "tm:c:14",
    "wikidata": "Q131209",
    "source": "Wikimedia Commons",
@@ -195,27 +176,6 @@
   },
   {
    "kind": "stemma",
-   "subject": "tm:c:23",
-   "wikidata": "Q154053",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:600px_Giallo_e_Blu_con_stemma_Eintracht_Braunschweig.png",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2e/600px_Giallo_e_Blu_con_stemma_Eintracht_Braunschweig.png",
-   "title": "600px Giallo e Blu con stemma Eintracht Braunschweig.png",
-   "licence": "CC BY-SA 3.0",
-   "licence_class": "cc-by-sa",
-   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
-   "author": "Skawise",
-   "attribution": "«600px Giallo e Blu con stemma Eintracht Braunschweig.png», Skawise, CC BY-SA 3.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/c7016ba3a1cb.png",
-    "sfocato": "crests/0ea0cb736d75.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
    "subject": "tm:c:26",
    "wikidata": "Q189671",
    "source": "Wikimedia Commons",
@@ -254,27 +214,6 @@
    "files": {
     "originale": "crests/fa2f26e1063c.png",
     "sfocato": "crests/14e16f8cfcf9.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
-   "subject": "tm:c:31",
-   "wikidata": "Q1130849",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Logo_Liverpool_FC_(2024).png",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/30/Logo_Liverpool_FC_%282024%29.png",
-   "title": "Logo Liverpool FC (2024).png",
-   "licence": "Public domain",
-   "licence_class": "pd",
-   "licence_url": "",
-   "author": "Liverpool FC",
-   "attribution": "«Logo Liverpool FC (2024).png», Liverpool FC, Public domain, via Wikimedia Commons",
-   "trademark": true,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/70e59fcd7a11.png",
-    "sfocato": "crests/ef47a9f05a1f.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -898,27 +837,6 @@
   },
   {
    "kind": "stemma",
-   "subject": "tm:c:238",
-   "wikidata": "Q52942",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Logo_Lech_Pozna%C5%84_100_1922-2022.jpg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/13/Logo_Lech_Pozna%C5%84_100_1922-2022.jpg",
-   "title": "Logo Lech Poznań 100 1922-2022.jpg",
-   "licence": "CC BY-SA 4.0",
-   "licence_class": "cc-by-sa",
-   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
-   "author": "Klapi",
-   "attribution": "«Logo Lech Poznań 100 1922-2022.jpg», Klapi, CC BY-SA 4.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/2f5d47f8da96.png",
-    "sfocato": "crests/6531fd04a1f5.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
    "subject": "tm:c:244",
    "wikidata": "Q132885",
    "source": "Wikimedia Commons",
@@ -1387,48 +1305,6 @@
   },
   {
    "kind": "stemma",
-   "subject": "tm:c:641",
-   "wikidata": "Q18661",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Middlesbrough_Walk_(27470064759).jpg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Middlesbrough_Walk_%2827470064759%29.jpg",
-   "title": "Middlesbrough Walk (27470064759).jpg",
-   "licence": "CC BY 2.0",
-   "licence_class": "cc-by",
-   "licence_url": "https://creativecommons.org/licenses/by/2.0",
-   "author": "Paul Hudson from United Kingdom",
-   "attribution": "«Middlesbrough Walk (27470064759).jpg», Paul Hudson from United Kingdom, CC BY 2.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/e83617bd9e94.png",
-    "sfocato": "crests/21042c25ab3b.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
-   "subject": "tm:c:667",
-   "wikidata": "Q126334",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Racing_Club_de_Strasbourg_contre_Racing_Lens_d%C3%A9cembre_2016_.jpg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Racing_Club_de_Strasbourg_contre_Racing_Lens_d%C3%A9cembre_2016_.jpg",
-   "title": "Racing Club de Strasbourg contre Racing Lens décembre 2016 .jpg",
-   "licence": "CC BY-SA 4.0",
-   "licence_class": "cc-by-sa",
-   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
-   "author": "KOBI FRANCK",
-   "attribution": "«Racing Club de Strasbourg contre Racing Lens décembre 2016 .jpg», KOBI FRANCK, CC BY-SA 4.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/8aaf12b750b4.png",
-    "sfocato": "crests/1c1dea24d43e.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
    "subject": "tm:c:687",
    "wikidata": "Q208552",
    "source": "Wikimedia Commons",
@@ -1467,27 +1343,6 @@
     "originale": "crests/21d0df5a127a.png",
     "sfocato": "crests/3b89634d0d09.png",
     "silhouette": "crests/034d980a69be.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
-   "subject": "tm:c:720",
-   "wikidata": "Q128446",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Emblema_F_C_Porto_(derived).jpg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2b/Emblema_F_C_Porto_%28derived%29.jpg",
-   "title": "Emblema F C Porto (derived).jpg",
-   "licence": "CC BY-SA 3.0",
-   "licence_class": "cc-by-sa",
-   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
-   "author": "Manuel de Sousa / JotaCartas",
-   "attribution": "«Emblema F C Porto (derived).jpg», Manuel de Sousa / JotaCartas, CC BY-SA 3.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/fe98590a6baa.png",
-    "sfocato": "crests/5446712c87d7.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -1684,27 +1539,6 @@
   },
   {
    "kind": "stemma",
-   "subject": "tm:c:1038",
-   "wikidata": "Q1457",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:Flag_of_Sampdoria.svg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Flag_of_Sampdoria.svg",
-   "title": "Flag of Sampdoria.svg",
-   "licence": "Public domain",
-   "licence_class": "pd",
-   "licence_url": "",
-   "author": "F l a n k e r",
-   "attribution": "«Flag of Sampdoria.svg», F l a n k e r, Public domain, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/6c174fc9cbec.png",
-    "sfocato": "crests/931ece2dfd75.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
    "subject": "tm:c:1044",
    "wikidata": "Q622430",
    "source": "Wikimedia Commons",
@@ -1848,27 +1682,6 @@
    "files": {
     "originale": "crests/aa2c66db45af.png",
     "sfocato": "crests/50f138357308.png"
-   },
-   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
-  },
-  {
-   "kind": "stemma",
-   "subject": "tm:c:1180",
-   "wikidata": "Q211477",
-   "source": "Wikimedia Commons",
-   "page": "https://commons.wikimedia.org/wiki/File:FK_Dinamo_Minsk_escudo_blr.jpg",
-   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0f/FK_Dinamo_Minsk_escudo_blr.jpg",
-   "title": "FK Dinamo Minsk escudo blr.jpg",
-   "licence": "CC BY 4.0",
-   "licence_class": "cc-by",
-   "licence_url": "https://creativecommons.org/licenses/by/4.0",
-   "author": "HBdiego13",
-   "attribution": "«FK Dinamo Minsk escudo blr.jpg», HBdiego13, CC BY 4.0, via Wikimedia Commons",
-   "trademark": false,
-   "modifiable": true,
-   "files": {
-    "originale": "crests/24f8700a0d83.png",
-    "sfocato": "crests/ef2f15ceedfb.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2548,6 +2361,466 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/3dc5e1308e3f.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:28003",
+   "wikidata": "Q615",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Leo_Messi_Argentina_v_Egypt_7_July_2026-1.jpg",
+   "title": "Leo Messi Argentina v Egypt 7 July 2026-1.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Leo Messi Argentina v Egypt 7 July 2026-1.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b7dd95223dd0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:31909",
+   "wikidata": "Q131234",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Toni_Kroos_Real_Madrid_2021.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/64/Toni_Kroos_Real_Madrid_2021.jpg",
+   "title": "Toni Kroos Real Madrid 2021.jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "https://www.youtube.com/@realmadrid",
+   "attribution": "«Toni Kroos Real Madrid 2021.jpg», https://www.youtube.com/@realmadrid, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/58e1cf6113c0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:32467",
+   "wikidata": "Q115453",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ivan_Rakiti%C4%87_2020_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Ivan_Rakiti%C4%87_2020_%28cropped%29.jpg",
+   "title": "Ivan Rakitić 2020 (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Дмитрий Пукалик",
+   "attribution": "«Ivan Rakitić 2020 (cropped).jpg», Дмитрий Пукалик, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e3f7f304feff.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:38253",
+   "wikidata": "Q151269",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Robert_Lewandowski_2018,_JAP-POL_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Robert_Lewandowski_2018%2C_JAP-POL_%28cropped%29.jpg",
+   "title": "Robert Lewandowski 2018, JAP-POL (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Светлана Бекетова",
+   "attribution": "«Robert Lewandowski 2018, JAP-POL (cropped).jpg», Светлана Бекетова, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/77e72a2ef74d.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:39381",
+   "wikidata": "Q184586",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2022_FIFA_World_Cup_United_States_1%E2%80%931_Wales_-_(32)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/1e/2022_FIFA_World_Cup_United_States_1%E2%80%931_Wales_-_%2832%29_%28cropped%29.jpg",
+   "title": "2022 FIFA World Cup United States 1–1 Wales - (32) (cropped).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "حسین ظهروند",
+   "attribution": "«2022 FIFA World Cup United States 1–1 Wales - (32) (cropped).jpg», حسین ظهروند, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ab2c783cbe4d.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:40433",
+   "wikidata": "Q180553",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alexis_Sanchez_Arsenal_Vs_Burnley_(24736448805)_(cropped)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/6b/Alexis_Sanchez_Arsenal_Vs_Burnley_%2824736448805%29_%28cropped%29_%28cropped%29.jpg",
+   "title": "Alexis Sanchez Arsenal Vs Burnley (24736448805) (cropped) (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "joshjdss",
+   "attribution": "«Alexis Sanchez Arsenal Vs Burnley (24736448805) (cropped) (cropped).jpg», joshjdss, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/bdea0cb0095b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:44352",
+   "wikidata": "Q26517",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Luis_Su%C3%A1rez_NE_Revolution_Inter_Miami_7.9.25-053_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Luis_Su%C3%A1rez_NE_Revolution_Inter_Miami_7.9.25-053_%28cropped%29.jpg",
+   "title": "Luis Suárez NE Revolution Inter Miami 7.9.25-053 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Luis Suárez NE Revolution Inter Miami 7.9.25-053 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/2b8b32bcefa7.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:50202",
+   "wikidata": "Q214204",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Eden_Hazard_at_Baku_before_2019_UEFA_Europe_League_Final.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/46/Eden_Hazard_at_Baku_before_2019_UEFA_Europe_League_Final.jpg",
+   "title": "Eden Hazard at Baku before 2019 UEFA Europe League Final.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Amir Hosseini",
+   "attribution": "«Eden Hazard at Baku before 2019 UEFA Europe League Final.jpg», Amir Hosseini, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/5f3e30750f1e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:58358",
+   "wikidata": "Q43666",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Thomas_M%C3%BCller_2022_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Thomas_M%C3%BCller_2022_%28cropped%29.jpg",
+   "title": "Thomas Müller 2022 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Werner100359",
+   "attribution": "«Thomas Müller 2022 (cropped).jpg», Werner100359, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f63eb4a3b02b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:58864",
+   "wikidata": "Q44977",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:1_Pierre-Emerick_Aubameyang_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/37/1_Pierre-Emerick_Aubameyang_%28cropped%29.jpg",
+   "title": "1 Pierre-Emerick Aubameyang (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Chensiyuan",
+   "attribution": "«1 Pierre-Emerick Aubameyang (cropped).jpg», Chensiyuan, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/07123821639a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:59377",
+   "wikidata": "Q150268",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:David_de_Gea_2017.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/68/David_de_Gea_2017.jpg",
+   "title": "David de Gea 2017.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«David de Gea 2017.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f8413a8154ff.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:65230",
+   "wikidata": "Q49704",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Sergio_Busquets_NYCFC_Miami_24_Sep_2025-020_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/40/Sergio_Busquets_NYCFC_Miami_24_Sep_2025-020_%28cropped%29.jpg",
+   "title": "Sergio Busquets NYCFC Miami 24 Sep 2025-020 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Sergio Busquets NYCFC Miami 24 Sep 2025-020 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7890849bf556.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:68290",
+   "wikidata": "Q142794",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Neymar_Junior_Brazil_V_Morocco_13_June_2026-40.jpg",
+   "title": "Neymar Junior Brazil V Morocco 13 June 2026-40.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Neymar Junior Brazil V Morocco 13 June 2026-40.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8e309d64e5cf.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:68863",
+   "wikidata": "Q136986",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mauro_Icardi_en_2025.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/14/Mauro_Icardi_en_2025.jpg",
+   "title": "Mauro Icardi en 2025.jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "Telefe",
+   "attribution": "«Mauro Icardi en 2025.jpg», Telefe, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c86922951504.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:69633",
+   "wikidata": "Q294951",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20140904_-_Christian_Eriksen_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/20140904_-_Christian_Eriksen_%28cropped%29.jpg",
+   "title": "20140904 - Christian Eriksen (cropped).jpg",
+   "licence": "CC BY-SA 2.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "author": "Chris 0023 from Lyngby, Denmark",
+   "attribution": "«20140904 - Christian Eriksen (cropped).jpg», Chris 0023 from Lyngby, Denmark, CC BY-SA 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7ff8ddc423c8.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:69751",
+   "wikidata": "Q187159",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Russia-Spain_2017_(11).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Russia-Spain_2017_%2811%29.jpg",
+   "title": "Russia-Spain 2017 (11).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Russia-Spain 2017 (11).jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/0e9b4a9f7276.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:74229",
+   "wikidata": "Q276091",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Koke_2019.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/17/Koke_2019.jpg",
+   "title": "Koke 2019.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Анна Нэсси",
+   "attribution": "«Koke 2019.jpg», Анна Нэсси, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3d65d2aeb82a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:74857",
+   "wikidata": "Q160472",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marc-Andre_Ter_Stegen_ACCI_FCBARCELONA_Turisme_Catalunya_gira_pretemporada_CATPRESS.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/Marc-Andre_Ter_Stegen_ACCI_FCBARCELONA_Turisme_Catalunya_gira_pretemporada_CATPRESS.jpg",
+   "title": "Marc-Andre Ter Stegen ACCI FCBARCELONA Turisme Catalunya gira pretemporada CATPRESS.jpg",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "Government of Catalonia",
+   "attribution": "«Marc-Andre Ter Stegen ACCI FCBARCELONA Turisme Catalunya gira pretemporada CATPRESS.jpg», Government of Catalonia, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/fa91dfe05213.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:80444",
+   "wikidata": "Q311872",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Coutinho_2018.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/6c/Coutinho_2018.jpg",
+   "title": "Coutinho 2018.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Oleg Bkhambri (Voltmetro)",
+   "attribution": "«Coutinho 2018.jpg», Oleg Bkhambri (Voltmetro), CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f2de10e37e1e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:85288",
+   "wikidata": "Q80892",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Liver-RM_(5)_(cropped_2).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e1/Liver-RM_%285%29_%28cropped_2%29.jpg",
+   "title": "Liver-RM (5) (cropped 2).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Liver-RM (5) (cropped 2).jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b21c0ce0d3f9.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:88755",
+   "wikidata": "Q357984",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/40/Kevin_De_Bruyne_USMNT_v_Belgium_Mar_28_2026-64_%28cropped%29.jpg",
+   "title": "Kevin De Bruyne USMNT v Belgium Mar 28 2026-64 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Kevin De Bruyne USMNT v Belgium Mar 28 2026-64 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b24f2e7b61a4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:91845",
+   "wikidata": "Q439722",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:BFA_2023_-2_Heung-Min_Son_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b0/BFA_2023_-2_Heung-Min_Son_%28cropped%29.jpg",
+   "title": "BFA 2023 -2 Heung-Min Son (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Ujishadow",
+   "attribution": "«BFA 2023 -2 Heung-Min Son (cropped).jpg», Ujishadow, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/24c125fedb99.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:93720",
+   "wikidata": "Q13306",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alexandre_Lacazette_at_Baku_before_2019_UEFA_Europe_League_Final.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/da/Alexandre_Lacazette_at_Baku_before_2019_UEFA_Europe_League_Final.jpg",
+   "title": "Alexandre Lacazette at Baku before 2019 UEFA Europe League Final.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Amir Hosseini",
+   "attribution": "«Alexandre Lacazette at Baku before 2019 UEFA Europe League Final.jpg», Amir Hosseini, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b70fabcb5ec6.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   }
