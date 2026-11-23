@@ -628,7 +628,7 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 - **Risposte sbagliate**: squadre dello stesso campionato (l'ultimo dei cinque in cui ha giocato, altrimenti il campionato nazionale per le squadre viste nelle coppe) con il peso più vicino. Per la silhouette, nessuna con una sagoma quasi uguale (sovrapposizione > 0,8); per i colori, solo squadre dai colori noti e **diversi** (distanza di palette > 55 in entrambe le direzioni), altrimenti la domanda avrebbe due risposte.
 - **Filtri**: tag `comp:` del campionato; per le squadre fuori dai cinque campionati, il torneo europeo in cui sono nel dataset (sempre incluso, §3.4). Il filtro anno non si applica.
 - **Soluzioni**: fino alla rivelazione Schermo e pulsantiere ricevono solo l'immagine trasformata (o i colori) e le quattro squadre; stemma originale, squadra, attribuzione (che nomina il file) e risposta arrivano solo alla rivelazione. I nomi dei file sono hash e non nominano la squadra.
-- **Perimetro reale**: STEMMA_COUNTS
+- **Perimetro reale**: al 2026-11-23: **117 stemmi** pubblicati su 347 squadre del dataset (i cinque campionati e le coppe europee; 117 hanno uno stemma su Wikidata, tutti con licenza utilizzabile: 96 pubblico dominio, 14 CC BY-SA, 4 CC0, 3 CC BY). Immagini pronte: 117 sfocati, 30 silhouette (29 scartate perché uguali ad altre sagome), 107 palette di colori, 0 senza scritte (gli SVG scaricati finora hanno le lettere già convertite in tracciati e gli altri SVG originali sono ancora da scaricare per i limiti di Wikimedia). Domande: **183** (100 sfocati, 59 colori, 24 silhouette, 0 senza scritte): le altre combinazioni non hanno tre squadre rivali valide (stesso campionato, colori noti e diversi, sagoma diversa).
 
 ---
 
@@ -1032,6 +1032,7 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 - **Dove compare**:
   - nella **rivelazione** delle domande su un solo calciatore: Il Mercato, Il Giramondo, La Maglia, «Di chi è questa stagione?» del Tiro Secco (formato largo, foto a sinistra). Se il giocatore non ha figurina resta la rivelazione di prima;
   - a **fine partita**, «LA FIGURINA DELLA PARTITA»: tra i giocatori delle domande della partita, quello con lo stile più raro e poi più gol + assist. È solo un premio visivo: nessuna collezione, moneta, scambio o mercato.
+- **Perimetro reale** (2026-11-23): **2534 figurine** (2070 classiche, 319 speciali, 145 leggendarie). Foto: 950 dei 1000 giocatori più noti hanno un'immagine su Wikidata; 945 con licenza utilizzabile (5 escluse: licenza non verificabile), ma solo **2** scaricate finora per i limiti di Wikimedia. Le altre figurine mostrano il segnaposto; `assets fetch` riprende il lotto da dove si è fermato.
 - **Dati**: `data/trivela_data/gen_cards.py` (dentro `pnpm data:generate`, o da solo con `uv run python -m trivela_data.gen_cards` sui pacchetti pubblicati) scrive 16 file `apps/web/public/data/cards/<id % 16>.json`. Li scarica solo lo Schermo, solo a rivelazione avvenuta o a fine partita; mai i telefoni.
 
 ---

@@ -1,6 +1,6 @@
 {
-  "version": "2026-11-20",
-  "generatedAt": "2026-11-20T13:46:38+00:00",
+  "version": "2026-11-23",
+  "generatedAt": "2026-11-23T00:26:00+00:00",
   "snapshot": "2026-07-06",
   "counts": {
     "tiro_secco": 7652,
@@ -13,7 +13,7 @@
     "maglia": 1500,
     "testa_a_testa": 1200,
     "bandiere": 1336,
-    "stemma": 65
+    "stemma": 183
   },
   "generators": {
     "tiro_secco": 101,
@@ -25,7 +25,8 @@
     "asta": 28,
     "maglia": 6,
     "testa_a_testa": 12,
-    "bandiere": 2
+    "bandiere": 2,
+    "stemma": 3
   },
   "sources": [
     {
@@ -36,9 +37,15 @@
     },
     {
       "family": "wikidata",
-      "label": "Wikidata (solo date di nascita degli allenatori)",
+      "label": "Wikidata (date di nascita degli allenatori; ID Transfermarkt per stemmi e foto)",
       "url": "https://www.wikidata.org",
       "licence": "CC0"
+    },
+    {
+      "family": "wikimedia",
+      "label": "Wikimedia Commons (stemmi e foto con licenza libera, vedi assets-manifest.json)",
+      "url": "https://commons.wikimedia.org",
+      "licence": "per file: CC0, pubblico dominio, CC BY, CC BY-SA"
     }
   ],
   "filters": {
@@ -90,6 +97,11 @@
     "bandiere": {
       "kept": 1336,
       "excluded_show": 1,
+      "excluded_not_notable": 0
+    },
+    "stemma": {
+      "kept": 183,
+      "excluded_show": 0,
       "excluded_not_notable": 0
     }
   }
