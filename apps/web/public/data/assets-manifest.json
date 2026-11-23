@@ -16,11 +16,11 @@
  ],
  "counts": {
   "stemmi": 108,
-  "foto": 25
+  "foto": 210
  },
  "excluded": {
   "foto: licenza unknown": 5,
-  "foto: non ancora scaricata": 920,
+  "foto: non ancora scaricata": 735,
   "silhouette: sagoma uguale a quella di altri stemmi": 29,
   "stemma: il file è una foto, non un logo": 5,
   "stemma: non è uno stemma (solo scritta o bandiera)": 4
@@ -2326,6 +2326,26 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:7600",
+   "wikidata": "Q43729",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Andr%C3%A9s_Iniesta_Argentina_v_Spain_19_July_2026-034_%28cropped%29.jpg",
+   "title": "Andrés Iniesta Argentina v Spain 19 July 2026-034 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Andrés Iniesta Argentina v Spain 19 July 2026-034 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3b8005eb3e21.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:8198",
    "wikidata": "Q11571",
    "source": "Wikimedia Commons",
@@ -2341,6 +2361,26 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/1c4c9fc5ca98.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:8806",
+   "wikidata": "Q17499",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2023_-_Cesc_Fabregas_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5b/2023_-_Cesc_Fabregas_%28cropped%29.jpg",
+   "title": "2023 - Cesc Fabregas (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Web Summit",
+   "attribution": "«2023 - Cesc Fabregas (cropped).jpg», Web Summit, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a2a4a69ec065.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2366,6 +2406,126 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:17259",
+   "wikidata": "Q107365",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Manuel_Neuer_Ecuador_v_Germany_25_June_2026-148.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b9/Manuel_Neuer_Ecuador_v_Germany_25_June_2026-148.jpg",
+   "title": "Manuel Neuer Ecuador v Germany 25 June 2026-148.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Manuel Neuer Ecuador v Germany 25 June 2026-148.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c46f3e25494a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:18922",
+   "wikidata": "Q1912",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Karim_Benzema_during_an_interview_in_2021_(2)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/96/Karim_Benzema_during_an_interview_in_2021_%282%29_%28cropped%29.jpg",
+   "title": "Karim Benzema during an interview in 2021 (2) (cropped).jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "Real Madrid YouTube channel",
+   "attribution": "«Karim Benzema during an interview in 2021 (2) (cropped).jpg», Real Madrid YouTube channel, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/727f268c4eda.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:18944",
+   "wikidata": "Q17507",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:GerardPique.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/GerardPique.jpg",
+   "title": "GerardPique.jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Vinod Divakaran",
+   "attribution": "«GerardPique.jpg», Vinod Divakaran, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b7f0c9151f45.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:25557",
+   "wikidata": "Q483309",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Sergio_Ramos_Interview_2021_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4b/Sergio_Ramos_Interview_2021_%28cropped%29.jpg",
+   "title": "Sergio Ramos Interview 2021 (cropped).jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "Real Madrid",
+   "attribution": "«Sergio Ramos Interview 2021 (cropped).jpg», Real Madrid, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/cdb575f886ae.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:26399",
+   "wikidata": "Q119562",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ag%C3%BCero_in_2018.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Ag%C3%BCero_in_2018.jpg",
+   "title": "Agüero in 2018.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Agüero in 2018.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/91b1cfe2697d.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:27992",
+   "wikidata": "Q483837",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/80/Luka_Modric_Croatia_v_Portugal_2_July_2026-055.jpg",
+   "title": "Luka Modric Croatia v Portugal 2 July 2026-055.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Luka Modric Croatia v Portugal 2 July 2026-055.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/0e86f1842ff8.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:28003",
    "wikidata": "Q615",
    "source": "Wikimedia Commons",
@@ -2381,6 +2541,26 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/b7dd95223dd0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:29241",
+   "wikidata": "Q210453",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Thiago_Silva_850_1582.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c8/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Thiago_Silva_850_1582.jpg",
+   "title": "20180610 FIFA Friendly Match Austria vs. Brazil Thiago Silva 850 1582.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180610 FIFA Friendly Match Austria vs. Brazil Thiago Silva 850 1582.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3663bc4aabcb.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2426,6 +2606,66 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:35207",
+   "wikidata": "Q152377",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_(DFB-Pokal_2023-24)_by_Sandro_Halank%E2%80%93126.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_%28DFB-Pokal_2023-24%29_by_Sandro_Halank%E2%80%93126.jpg",
+   "title": "2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–126.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Sandro Halank, Wikimedia Commons",
+   "attribution": "«2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–126.jpg», Sandro Halank, Wikimedia Commons, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a0e2c1c00367.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:35518",
+   "wikidata": "Q161069",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:David_Silva_2017.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a6/David_Silva_2017.jpg",
+   "title": "David Silva 2017.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«David Silva 2017.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a168fd7f58bd.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:37666",
+   "wikidata": "Q192671",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Chile_VS._Australia_(13)_2017-6-25_Arturo_Vidal.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Chile_VS._Australia_%2813%29_2017-6-25_Arturo_Vidal.jpg",
+   "title": "Chile VS. Australia (13) 2017-6-25 Arturo Vidal.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Дмитрий Садовников",
+   "attribution": "«Chile VS. Australia (13) 2017-6-25 Arturo Vidal.jpg», Дмитрий Садовников, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b0ff1bbe18dc.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:38253",
    "wikidata": "Q151269",
    "source": "Wikimedia Commons",
@@ -2441,6 +2681,46 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/77e72a2ef74d.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:39152",
+   "wikidata": "Q138172",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Radamel_Falcao_Garc%C3%ADa_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Radamel_Falcao_Garc%C3%ADa_%28cropped%29.jpg",
+   "title": "Radamel Falcao García (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Gilzetbase",
+   "attribution": "«Radamel Falcao García (cropped).jpg», Gilzetbase, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/685dffed0a52.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:39153",
+   "wikidata": "Q483846",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Higua%C3%ADn_20180626.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fe/Higua%C3%ADn_20180626.jpg",
+   "title": "Higuaín 20180626.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Higuaín 20180626.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e415420bb520.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2466,6 +2746,46 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:39728",
+   "wikidata": "Q110053",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_(DFB-Pokal_2023-24)_by_Sandro_Halank%E2%80%93103_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_%28DFB-Pokal_2023-24%29_by_Sandro_Halank%E2%80%93103_%28cropped%29.jpg",
+   "title": "2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–103 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Sandro Halank, Wikimedia Commons",
+   "attribution": "«2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–103 (cropped).jpg», Sandro Halank, Wikimedia Commons, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e5453755fd79.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:39983",
+   "wikidata": "Q208050",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Leonardo_Bonucci.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/62/20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Leonardo_Bonucci.jpg",
+   "title": "20150616 - Portugal - Italie - Genève - Leonardo Bonucci.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Clément Bucco-Lechat",
+   "attribution": "«20150616 - Portugal - Italie - Genève - Leonardo Bonucci.jpg», Clément Bucco-Lechat, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d9e126187e77.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:40433",
    "wikidata": "Q180553",
    "source": "Wikimedia Commons",
@@ -2481,6 +2801,66 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/bdea0cb0095b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:42460",
+   "wikidata": "Q161054",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ivan_Perisic_Croatia_v_Portugal_2_July_2026-033.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/Ivan_Perisic_Croatia_v_Portugal_2_July_2026-033.jpg",
+   "title": "Ivan Perisic Croatia v Portugal 2 July 2026-033.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Ivan Perisic Croatia v Portugal 2 July 2026-033.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/78cf7ddfada4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:44058",
+   "wikidata": "Q188997",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Wojciech_Szcz%C4%99sny.png",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Wojciech_Szcz%C4%99sny.png",
+   "title": "Wojciech Szczęsny.png",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "La Gazzetta dello Sport",
+   "attribution": "«Wojciech Szczęsny.png», La Gazzetta dello Sport, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/04df76616f02.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:44162",
+   "wikidata": "Q146907",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20150331_2025_AUT_BIH_2130_Miralem_Pjani%C4%87.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/20150331_2025_AUT_BIH_2130_Miralem_Pjani%C4%87.jpg",
+   "title": "20150331 2025 AUT BIH 2130 Miralem Pjanić.jpg",
+   "licence": "CC BY-SA 3.0 at",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/at/deed.en",
+   "author": "Ailura",
+   "attribution": "«20150331 2025 AUT BIH 2130 Miralem Pjanić.jpg», Ailura, CC BY-SA 3.0 at, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/bd7292c173ae.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2506,6 +2886,106 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:44501",
+   "wikidata": "Q38136",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Marcelo_850_1622.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Marcelo_850_1622.jpg",
+   "title": "20180610 FIFA Friendly Match Austria vs. Brazil Marcelo 850 1622.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180610 FIFA Friendly Match Austria vs. Brazil Marcelo 850 1622.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ffdbef158827.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:44779",
+   "wikidata": "Q459707",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Iran_and_Spain_match_at_the_FIFA_World_Cup_23.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5f/Iran_and_Spain_match_at_the_FIFA_World_Cup_23.jpg",
+   "title": "Iran and Spain match at the FIFA World Cup 23.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Mahdi Zare/Fars News Agency",
+   "attribution": "«Iran and Spain match at the FIFA World Cup 23.jpg», Mahdi Zare/Fars News Agency, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e4828a2cb242.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:45320",
+   "wikidata": "Q251683",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:NIG-ARG_(5).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/NIG-ARG_%285%29.jpg",
+   "title": "NIG-ARG (5).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«NIG-ARG (5).jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/cd55978d1ccc.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:48280",
+   "wikidata": "Q167790",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:PALMEIRAS_X_BOCA_JUNIORS_-_COPA_LIBERTADORES_2023_-_53286889335_(cropped_2).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0d/PALMEIRAS_X_BOCA_JUNIORS_-_COPA_LIBERTADORES_2023_-_53286889335_%28cropped_2%29.jpg",
+   "title": "PALMEIRAS X BOCA JUNIORS - COPA LIBERTADORES 2023 - 53286889335 (cropped 2).jpg",
+   "licence": "Public domain",
+   "licence_class": "pd",
+   "licence_url": "",
+   "author": "soccerdigital",
+   "attribution": "«PALMEIRAS X BOCA JUNIORS - COPA LIBERTADORES 2023 - 53286889335 (cropped 2).jpg», soccerdigital, Public domain, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a7e9bd5dd728.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:49499",
+   "wikidata": "Q372379",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20160604_AUT_NED_8839.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/20160604_AUT_NED_8839.jpg",
+   "title": "20160604 AUT NED 8839.jpg",
+   "licence": "CC BY-SA 3.0 at",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/at/deed.en",
+   "author": "Ailura",
+   "attribution": "«20160604 AUT NED 8839.jpg», Ailura, CC BY-SA 3.0 at, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/420b4aef52d1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:50202",
    "wikidata": "Q214204",
    "source": "Wikimedia Commons",
@@ -2521,6 +3001,66 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/5f3e30750f1e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:51471",
+   "wikidata": "Q701297",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mateo_Kovacic_Croatia_v_Portugal_2_July_2026-132.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Mateo_Kovacic_Croatia_v_Portugal_2_July_2026-132.jpg",
+   "title": "Mateo Kovacic Croatia v Portugal 2 July 2026-132.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Mateo Kovacic Croatia v Portugal 2 July 2026-132.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9ee38d7ab146.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:52769",
+   "wikidata": "Q73480",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bra-Cos_(21)_(cropped_2).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/25/Bra-Cos_%2821%29_%28cropped_2%29.jpg",
+   "title": "Bra-Cos (21) (cropped 2).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Bra-Cos (21) (cropped 2).jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8357c81546f7.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:53622",
+   "wikidata": "Q161089",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180602_FIFA_Friendly_Match_Austria_vs._Germany_%C4%B0lkay_G%C3%BCndo%C4%9Fan_850_0728.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/20180602_FIFA_Friendly_Match_Austria_vs._Germany_%C4%B0lkay_G%C3%BCndo%C4%9Fan_850_0728.jpg",
+   "title": "20180602 FIFA Friendly Match Austria vs. Germany İlkay Gündoğan 850 0728.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180602 FIFA Friendly Match Austria vs. Germany İlkay Gündoğan 850 0728.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6e6fb88f5a17.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2566,6 +3106,26 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:59016",
+   "wikidata": "Q31981",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_David_Alaba_850_1632.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_David_Alaba_850_1632.jpg",
+   "title": "20180610 FIFA Friendly Match Austria vs. Brazil David Alaba 850 1632.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180610 FIFA Friendly Match Austria vs. Brazil David Alaba 850 1632.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b1de0af295ad.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:59377",
    "wikidata": "Q150268",
    "source": "Wikimedia Commons",
@@ -2581,6 +3141,26 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/f8413a8154ff.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:60444",
+   "wikidata": "Q17493",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Thiago_Alcantara_13_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Thiago_Alcantara_13_%28cropped%29.jpg",
+   "title": "UEFA EURO qualifiers Sweden vs Spain 20191015 Thiago Alcantara 13 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Rolandhino1",
+   "attribution": "«UEFA EURO qualifiers Sweden vs Spain 20191015 Thiago Alcantara 13 (cropped).jpg», Rolandhino1, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a9bbec719fc3.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2686,6 +3266,26 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:73794",
+   "wikidata": "Q577481",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bar%C3%A7a_-_Napoli_-_20140806_-_14_-_Duvan_Zapata.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Bar%C3%A7a_-_Napoli_-_20140806_-_14_-_Duvan_Zapata.jpg",
+   "title": "Barça - Napoli - 20140806 - 14 - Duvan Zapata.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Clément Bucco-Lechat",
+   "attribution": "«Barça - Napoli - 20140806 - 14 - Duvan Zapata.jpg», Clément Bucco-Lechat, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ee6c07451fb0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:74229",
    "wikidata": "Q276091",
    "source": "Wikimedia Commons",
@@ -2701,6 +3301,26 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/3d65d2aeb82a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:74842",
+   "wikidata": "Q104454",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mario_G%C3%B6tze,_Germany_national_football_team_(07).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Mario_G%C3%B6tze%2C_Germany_national_football_team_%2807%29.jpg",
+   "title": "Mario Götze, Germany national football team (07).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Steindy (talk) 19:34, 27 June 2011 (UTC)",
+   "attribution": "«Mario Götze, Germany national football team (07).jpg», Steindy (talk) 19:34, 27 June 2011 (UTC), CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b6e709a06034.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   },
@@ -2766,6 +3386,66 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:85370",
+   "wikidata": "Q703269",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2012_2013_-_Sergi_Roberto.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8a/2012_2013_-_Sergi_Roberto.jpg",
+   "title": "2012 2013 - Sergi Roberto.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Castroquini",
+   "attribution": "«2012 2013 - Sergi Roberto.jpg», Castroquini, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a0c7acce75cf.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:86202",
+   "wikidata": "Q96755",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Antonio_Rudiger_Ecuador_v_Germany_25_June_2026-055_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Antonio_Rudiger_Ecuador_v_Germany_25_June_2026-055_%28cropped%29.jpg",
+   "title": "Antonio Rudiger Ecuador v Germany 25 June 2026-055 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Antonio Rudiger Ecuador v Germany 25 June 2026-055 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c41de3caf6ec.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:88103",
+   "wikidata": "Q368441",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:James_al_natural_-_Series,_02.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8c/James_al_natural_-_Series%2C_02.jpg",
+   "title": "James al natural - Series, 02.jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "Canal 10 Gold",
+   "attribution": "«James al natural - Series, 02.jpg», Canal 10 Gold, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/baf19ae766cf.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:88755",
    "wikidata": "Q357984",
    "source": "Wikimedia Commons",
@@ -2806,6 +3486,26 @@
   },
   {
    "kind": "foto",
+   "subject": "tm:p:93128",
+   "wikidata": "Q3192187",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kalidou_Koulibaly_France_v_Senegal_16_June_2026-370_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/ba/Kalidou_Koulibaly_France_v_Senegal_16_June_2026-370_%28cropped%29.jpg",
+   "title": "Kalidou Koulibaly France v Senegal 16 June 2026-370 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Kalidou Koulibaly France v Senegal 16 June 2026-370 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/39ba165baf44.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
    "subject": "tm:p:93720",
    "wikidata": "Q13306",
    "source": "Wikimedia Commons",
@@ -2821,6 +3521,3006 @@
    "modifiable": true,
    "files": {
     "ritratto": "photos/b70fabcb5ec6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:95424",
+   "wikidata": "Q59108",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kyle_Walker.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/01/Kyle_Walker.jpg",
+   "title": "Kyle Walker.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Kyle Walker.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b85f05ab16f9.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:102017",
+   "wikidata": "Q3810078",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2021_FIFA_Club_World_Cup_Final_-_01_(Jorginho_com_a_medalha_do_Mundial_de_Clubes).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e3/2021_FIFA_Club_World_Cup_Final_-_01_%28Jorginho_com_a_medalha_do_Mundial_de_Clubes%29.jpg",
+   "title": "2021 FIFA Club World Cup Final - 01 (Jorginho com a medalha do Mundial de Clubes).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "محمد امین انصاری",
+   "attribution": "«2021 FIFA Club World Cup Final - 01 (Jorginho com a medalha do Mundial de Clubes).jpg», محمد امین انصاری, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/fb185eb3353c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:102558",
+   "wikidata": "Q337623",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93505_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/94/2019-07-17_SG_Dynamo_Dresden_vs._Paris_Saint-Germain_by_Sandro_Halank%E2%80%93505_%28cropped%29.jpg",
+   "title": "2019-07-17 SG Dynamo Dresden vs. Paris Saint-Germain by Sandro Halank–505 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Sandro Halank, Wikimedia Commons",
+   "attribution": "«2019-07-17 SG Dynamo Dresden vs. Paris Saint-Germain by Sandro Halank–505 (cropped).jpg», Sandro Halank, Wikimedia Commons, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c9f3cbb4d1e4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:105470",
+   "wikidata": "Q18237361",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alisson_Becker_Brazil_V_Morocco_13_June_2026-117_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Alisson_Becker_Brazil_V_Morocco_13_June_2026-117_%28cropped%29.jpg",
+   "title": "Alisson Becker Brazil V Morocco 13 June 2026-117 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Alisson Becker Brazil V Morocco 13 June 2026-117 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3eb2b0ee2b95.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:105521",
+   "wikidata": "Q458101",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Ciro_Immobile_1.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/35/20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Ciro_Immobile_1.jpg",
+   "title": "20150616 - Portugal - Italie - Genève - Ciro Immobile 1.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Clément Bucco-Lechat",
+   "attribution": "«20150616 - Portugal - Italie - Genève - Ciro Immobile 1.jpg», Clément Bucco-Lechat, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/38b158699682.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:108390",
+   "wikidata": "Q73360",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Thibaut_Courtois_Belgium_v_USA_6_July_2026-076_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/Thibaut_Courtois_Belgium_v_USA_6_July_2026-076_%28cropped%29.jpg",
+   "title": "Thibaut Courtois Belgium v USA 6 July 2026-076 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Thibaut Courtois Belgium v USA 6 July 2026-076 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e1a101dc0f82.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:111196",
+   "wikidata": "Q195953",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Stefan_de_Vrij_in_2026.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/33/Stefan_de_Vrij_in_2026.jpg",
+   "title": "Stefan de Vrij in 2026.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Biso",
+   "attribution": "«Stefan de Vrij in 2026.jpg», Biso, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d6ac734ff6e6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:111455",
+   "wikidata": "Q514427",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Granit_Xhaka_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/01/Granit_Xhaka_%28cropped%29.jpg",
+   "title": "Granit Xhaka (cropped).jpg",
+   "licence": "CC BY-SA 2.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "author": "@cfcunofficial (Chelsea Debs) London from London, UK",
+   "attribution": "«Granit Xhaka (cropped).jpg», @cfcunofficial (Chelsea Debs) London from London, UK, CC BY-SA 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f2a5198e4f0a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:111961",
+   "wikidata": "Q247708",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Suso_(31931880485).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Suso_%2831931880485%29.jpg",
+   "title": "Suso (31931880485).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Doha Stadium Plus Qatar from Doha, Qatar",
+   "attribution": "«Suso (31931880485).jpg», Doha Stadium Plus Qatar from Doha, Qatar, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/83a94f125da9.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:121483",
+   "wikidata": "Q2058682",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jan_Oblak_2019.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a1/Jan_Oblak_2019.jpg",
+   "title": "Jan Oblak 2019.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Анна Нэсси",
+   "attribution": "«Jan Oblak 2019.jpg», Анна Нэсси, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/47e0a5e1af90.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:122153",
+   "wikidata": "Q129027",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Paul_Pogba_at_the_2025_Cannes_Film_Festival_02.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Paul_Pogba_at_the_2025_Cannes_Film_Festival_02.jpg",
+   "title": "Paul Pogba at the 2025 Cannes Film Festival 02.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Gabriel Hutchinson",
+   "attribution": "«Paul Pogba at the 2025 Cannes Film Festival 02.jpg», Gabriel Hutchinson, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9255f7f4db0e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:125781",
+   "wikidata": "Q455462",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Antoine_Griezmann_(51100409504)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/cf/Antoine_Griezmann_%2851100409504%29_%28cropped%29.jpg",
+   "title": "Antoine Griezmann (51100409504) (cropped).jpg",
+   "licence": "CC BY-SA 2.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "author": "Biser Todorov (User:Biso) from Sofia, Bulgaria",
+   "attribution": "«Antoine Griezmann (51100409504) (cropped).jpg», Biser Todorov (User:Biso) from Sofia, Bulgaria, CC BY-SA 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d768e83cc8f2.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:126414",
+   "wikidata": "Q763465",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:AUT_vs._TUR_2016-03-29_(342).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d7/AUT_vs._TUR_2016-03-29_%28342%29.jpg",
+   "title": "AUT vs. TUR 2016-03-29 (342).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Steindy (talk) 10:15, 11 April 2016 (UTC)",
+   "attribution": "«AUT vs. TUR 2016-03-29 (342).jpg», Steindy (talk) 10:15, 11 April 2016 (UTC), CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/55c4462cd40e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:126422",
+   "wikidata": "Q2470512",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Allan_Marques_Loureiro_in_Everton_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0b/Allan_Marques_Loureiro_in_Everton_%28cropped%29.jpg",
+   "title": "Allan Marques Loureiro in Everton (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Ardfern",
+   "attribution": "«Allan Marques Loureiro in Everton (cropped).jpg», Ardfern, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8583623e3445.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:126540",
+   "wikidata": "Q13308",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Samuel_Umtiti_2018.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Samuel_Umtiti_2018.jpg",
+   "title": "Samuel Umtiti 2018.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Samuel Umtiti 2018.jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f3b250709ac2.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:128220",
+   "wikidata": "Q248228",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:DK-Lazio_(3).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/58/DK-Lazio_%283%29.jpg",
+   "title": "DK-Lazio (3).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Олег Батрак",
+   "attribution": "«DK-Lazio (3).jpg», Олег Батрак, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c5c16f58eb32.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:128223",
+   "wikidata": "Q48770",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%81lvaro_Morata.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/%C3%81lvaro_Morata.jpg",
+   "title": "Álvaro Morata.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Álvaro Morata.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/09463578f9bc.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:131789",
+   "wikidata": "Q602525",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Roberto_Firmino_850_1557.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/00/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Roberto_Firmino_850_1557.jpg",
+   "title": "20180610 FIFA Friendly Match Austria vs. Brazil Roberto Firmino 850 1557.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180610 FIFA Friendly Match Austria vs. Brazil Roberto Firmino 850 1557.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7e50eabf10aa.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:132098",
+   "wikidata": "Q969725",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Harry_Kane_England_v_Ghana_23_June_2026-219_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Harry_Kane_England_v_Ghana_23_June_2026-219_%28cropped%29.jpg",
+   "title": "Harry Kane England v Ghana 23 June 2026-219 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Harry Kane England v Ghana 23 June 2026-219 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c7971ea2a91b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:134425",
+   "wikidata": "Q312157",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Raheem_Sterling_2018.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3f/Raheem_Sterling_2018.jpg",
+   "title": "Raheem Sterling 2018.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Raheem Sterling 2018.jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/aa7bae5c9c12.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:138927",
+   "wikidata": "Q127452",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Dani_Carvajal_10_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b6/UEFA_EURO_qualifiers_Sweden_vs_Spain_20191015_Dani_Carvajal_10_%28cropped%29.jpg",
+   "title": "UEFA EURO qualifiers Sweden vs Spain 20191015 Dani Carvajal 10 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Rolandhino1",
+   "attribution": "«UEFA EURO qualifiers Sweden vs Spain 20191015 Dani Carvajal 10 (cropped).jpg», Rolandhino1, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ce002ffcbc70.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:139208",
+   "wikidata": "Q133903",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20160604_AUT_NED_8876_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/20160604_AUT_NED_8876_%28cropped%29.jpg",
+   "title": "20160604 AUT NED 8876 (cropped).jpg",
+   "licence": "CC BY-SA 3.0 at",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0/at/deed.en",
+   "author": "Ailura",
+   "attribution": "«20160604 AUT NED 8876 (cropped).jpg», Ailura, CC BY-SA 3.0 at, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/4aad71054ac9.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:145988",
+   "wikidata": "Q713711",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Wilfried_Zaha_NYCFC_v_Charlotte_20_Sep_2025-022_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7d/Wilfried_Zaha_NYCFC_v_Charlotte_20_Sep_2025-022_%28cropped%29.jpg",
+   "title": "Wilfried Zaha NYCFC v Charlotte 20 Sep 2025-022 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Wilfried Zaha NYCFC v Charlotte 20 Sep 2025-022 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/10726bb84390.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:146854",
+   "wikidata": "Q137128",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Wissam_Ben_Yedder_Monaco_2019_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/Wissam_Ben_Yedder_Monaco_2019_%28cropped%29.jpg",
+   "title": "Wissam Ben Yedder Monaco 2019 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bigmatbasket",
+   "attribution": "«Wissam Ben Yedder Monaco 2019 (cropped).jpg», Bigmatbasket, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ae192228af1c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:148455",
+   "wikidata": "Q1354960",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Mohamed_Salah_Argentina_v_Egypt_7_July_2026-163_%28cropped%29.jpg",
+   "title": "Mohamed Salah Argentina v Egypt 7 July 2026-163 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Mohamed Salah Argentina v Egypt 7 July 2026-163 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/fabe9b89f9ed.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:148928",
+   "wikidata": "Q912172",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Sa%C3%BAl_%C3%91%C3%ADguez_2019.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/72/Sa%C3%BAl_%C3%91%C3%ADguez_2019.jpg",
+   "title": "Saúl Ñíguez 2019.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Anna Nessie",
+   "attribution": "«Saúl Ñíguez 2019.jpg», Anna Nessie, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7568f6cb9228.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:153084",
+   "wikidata": "Q520721",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Leon_Goretzka_Ecuador_v_Germany_25_June_2026-159.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/68/Leon_Goretzka_Ecuador_v_Germany_25_June_2026-159.jpg",
+   "title": "Leon Goretzka Ecuador v Germany 25 June 2026-159.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Leon Goretzka Ecuador v Germany 25 June 2026-159.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e923a00367b4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:156617",
+   "wikidata": "Q3845710",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marcelo_Brozovi%C4%87_2021_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c9/Marcelo_Brozovi%C4%87_2021_%28cropped%29.jpg",
+   "title": "Marcelo Brozović 2021 (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Marcelo Brozović 2021 (cropped).jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/82ceb18d0c94.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:159471",
+   "wikidata": "Q59490",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2019-06-11_Fu%C3%9Fball,_M%C3%A4nner,_L%C3%A4nderspiel,_Deutschland-Estland_StP_2075_LR10_by_Stepro.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/54/2019-06-11_Fu%C3%9Fball%2C_M%C3%A4nner%2C_L%C3%A4nderspiel%2C_Deutschland-Estland_StP_2075_LR10_by_Stepro.jpg",
+   "title": "2019-06-11 Fußball, Männer, Länderspiel, Deutschland-Estland StP 2075 LR10 by Stepro.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Steffen Prößdorf",
+   "attribution": "«2019-06-11 Fußball, Männer, Länderspiel, Deutschland-Estland StP 2075 LR10 by Stepro.jpg», Steffen Prößdorf, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/4302065cd69c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:161056",
+   "wikidata": "Q13865408",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Joshua_Kimmich_Ecuador_v_Germany_25_June_2026-149.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Joshua_Kimmich_Ecuador_v_Germany_25_June_2026-149.jpg",
+   "title": "Joshua Kimmich Ecuador v Germany 25 June 2026-149.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Joshua Kimmich Ecuador v Germany 25 June 2026-149.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/68617bf232c4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:164770",
+   "wikidata": "Q489039",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Liver-RM_(8)_(Varane).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Liver-RM_%288%29_%28Varane%29.jpg",
+   "title": "Liver-RM (8) (Varane).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Liver-RM (8) (Varane).jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/99fcda766e90.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:167799",
+   "wikidata": "Q11059683",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:H%C3%B8jbjerg_asse_om_2425.png",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e7/H%C3%B8jbjerg_asse_om_2425.png",
+   "title": "Højbjerg asse om 2425.png",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "Paté kroute",
+   "attribution": "«Højbjerg asse om 2425.png», Paté kroute, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8de179551f45.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:170527",
+   "wikidata": "Q3529022",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2020-03-10_Fu%C3%9Fball,_M%C3%A4nner,_UEFA_Champions_League_Achtelfinale,_RB_Leipzig_-_Tottenham_Hotspur_1DX_3684_by_Stepro.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fd/2020-03-10_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League_Achtelfinale%2C_RB_Leipzig_-_Tottenham_Hotspur_1DX_3684_by_Stepro.jpg",
+   "title": "2020-03-10 Fußball, Männer, UEFA Champions League Achtelfinale, RB Leipzig - Tottenham Hotspur 1DX 3684 by Stepro.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Steffen Prößdorf",
+   "attribution": "«2020-03-10 Fußball, Männer, UEFA Champions League Achtelfinale, RB Leipzig - Tottenham Hotspur 1DX 3684 by Stepro.jpg», Steffen Prößdorf, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/055974421305.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:171424",
+   "wikidata": "Q8338725",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mahrez_2021.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Mahrez_2021.jpg",
+   "title": "Mahrez 2021.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Jeanpierrekepseu",
+   "attribution": "«Mahrez 2021.jpg», Jeanpierrekepseu, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/044463a11b16.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:176553",
+   "wikidata": "Q3855340",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Aymeric_Laporte_France_v_Spain_7.24.26-033_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8d/Aymeric_Laporte_France_v_Spain_7.24.26-033_%28cropped%29.jpg",
+   "title": "Aymeric Laporte France v Spain 7.24.26-033 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Aymeric Laporte France v Spain 7.24.26-033 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/79651e57546f.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:177907",
+   "wikidata": "Q165772",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Harry_Maguire_2023_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/ab/Harry_Maguire_2023_%28cropped%29.jpg",
+   "title": "Harry Maguire 2023 (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "UK Prime Minister",
+   "attribution": "«Harry Maguire 2023 (cropped).jpg», UK Prime Minister, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/55580b1f4f35.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:181136",
+   "wikidata": "Q7197034",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Piotr_Zielinski_2018_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/df/Piotr_Zielinski_2018_%28cropped%29.jpg",
+   "title": "Piotr Zielinski 2018 (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Екатерина Лаут",
+   "attribution": "«Piotr Zielinski 2018 (cropped).jpg», Екатерина Лаут, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3db59fd043c1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:181767",
+   "wikidata": "Q39230",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marquinhos_Brazil_V_Morocco_13_June_2026-153_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4f/Marquinhos_Brazil_V_Morocco_13_June_2026-153_%28cropped%29.jpg",
+   "title": "Marquinhos Brazil V Morocco 13 June 2026-153 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Marquinhos Brazil V Morocco 13 June 2026-153 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3f7803aa3bbc.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:182712",
+   "wikidata": "Q6298063",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jo%C3%A3o_Cancelo_USMNT_v_Portugal_Mar_31_2026-30_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/28/Jo%C3%A3o_Cancelo_USMNT_v_Portugal_Mar_31_2026-30_%28cropped%29.jpg",
+   "title": "João Cancelo USMNT v Portugal Mar 31 2026-30 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«João Cancelo USMNT v Portugal Mar 31 2026-30 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/30d443d505e3.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:182877",
+   "wikidata": "Q2091463",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Anthony_Martial_27_September_2017_cropped.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/88/Anthony_Martial_27_September_2017_cropped.jpg",
+   "title": "Anthony Martial 27 September 2017 cropped.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Дмитрий Голубович",
+   "attribution": "«Anthony Martial 27 September 2017 cropped.jpg», Дмитрий Голубович, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/36723d8b9d1c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:182904",
+   "wikidata": "Q16236859",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Cl%C3%A9ment_Lenglet,_FC_Salzburg_vs._Atletico_Madrid_(2025-01-29_UEFA_Championsleague)_64_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/70/Cl%C3%A9ment_Lenglet%2C_FC_Salzburg_vs._Atletico_Madrid_%282025-01-29_UEFA_Championsleague%29_64_%28cropped%29.jpg",
+   "title": "Clément Lenglet, FC Salzburg vs. Atletico Madrid (2025-01-29 UEFA Championsleague) 64 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Werner100359",
+   "attribution": "«Clément Lenglet, FC Salzburg vs. Atletico Madrid (2025-01-29 UEFA Championsleague) 64 (cropped).jpg», Werner100359, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e0aa34f39ad0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:182913",
+   "wikidata": "Q18962",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Adrien_Rabiot_France_v_Senegal_16_June_2026-371_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a5/Adrien_Rabiot_France_v_Senegal_16_June_2026-371_%28cropped%29.jpg",
+   "title": "Adrien Rabiot France v Senegal 16 June 2026-371 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Adrien Rabiot France v Senegal 16 June 2026-371 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/fd434683e323.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:184892",
+   "wikidata": "Q27476",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:FRA-ARG_(6).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/44/FRA-ARG_%286%29.jpg",
+   "title": "FRA-ARG (6).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«FRA-ARG (6).jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/68e41a38a782.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:186590",
+   "wikidata": "Q2025900",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:John_Stones_England_v_Ghana_23_June_2026-038.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/76/John_Stones_England_v_Ghana_23_June_2026-038.jpg",
+   "title": "John Stones England v Ghana 23 June 2026-038.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«John Stones England v Ghana 23 June 2026-038.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e3469f5cde2e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:187492",
+   "wikidata": "Q3189078",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_(DFB-Pokal_2023-24)_by_Sandro_Halank%E2%80%93054_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/18/2023-08-12_TSV_Schott_Mainz_gegen_Borussia_Dortmund_%28DFB-Pokal_2023-24%29_by_Sandro_Halank%E2%80%93054_%28cropped%29.jpg",
+   "title": "2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–054 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Sandro Halank, Wikimedia Commons",
+   "attribution": "«2023-08-12 TSV Schott Mainz gegen Borussia Dortmund (DFB-Pokal 2023-24) by Sandro Halank–054 (cropped).jpg», Sandro Halank, Wikimedia Commons, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/01958537eb80.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:189441",
+   "wikidata": "Q194579",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Lucas_Ocampos_2022.jpeg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/34/Lucas_Ocampos_2022.jpeg",
+   "title": "Lucas Ocampos 2022.jpeg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "jmmuguerza",
+   "attribution": "«Lucas Ocampos 2022.jpeg», jmmuguerza, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/04399d24e937.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:192565",
+   "wikidata": "Q16499882",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Leroy_Sane_Ecuador_v_Germany_25_June_2026-004.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/6e/Leroy_Sane_Ecuador_v_Germany_25_June_2026-004.jpg",
+   "title": "Leroy Sane Ecuador v Germany 25 June 2026-004.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Leroy Sane Ecuador v Germany 25 June 2026-004.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6cdca9023d7e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:197747",
+   "wikidata": "Q795017",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alessio_Romagnoli_Luglio_2022.png",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4d/Alessio_Romagnoli_Luglio_2022.png",
+   "title": "Alessio Romagnoli Luglio 2022.png",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/deed.en",
+   "author": "Hadoken75",
+   "attribution": "«Alessio Romagnoli Luglio 2022.png», Hadoken75, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/1caf900ef005.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:198116",
+   "wikidata": "Q20204829",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_A_26_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/78/Norway_Italy_-_June_2025_A_26_%28cropped%29.jpg",
+   "title": "Norway Italy - June 2025 A 26 (cropped).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "MichaelEmilio",
+   "attribution": "«Norway Italy - June 2025 A 26 (cropped).jpg», MichaelEmilio, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6b6004a8720e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:200512",
+   "wikidata": "Q209942",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Sadio_Mane_France_v_Senegal_16_June_2026-450.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/92/Sadio_Mane_France_v_Senegal_16_June_2026-450.jpg",
+   "title": "Sadio Mane France v Senegal 16 June 2026-450.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Sadio Mane France v Senegal 16 June 2026-450.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/061cb1d598d1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:203460",
+   "wikidata": "Q16056053",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:ManCity20240722-017_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a4/ManCity20240722-017_%28cropped%29.jpg",
+   "title": "ManCity20240722-017 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Hameltion",
+   "attribution": "«ManCity20240722-017 (cropped).jpg», Hameltion, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d298af08f8aa.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:203496",
+   "wikidata": "Q14778629",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Fekir_2018_(cropped)2.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/92/Fekir_2018_%28cropped%292.jpg",
+   "title": "Fekir 2018 (cropped)2.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Fekir 2018 (cropped)2.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/5bf849e5768a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:204069",
+   "wikidata": "Q891520",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Milan_%C5%A0kriniar_37_Fenerbah%C3%A7e_20260805_(8)_(cropped).JPG",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8f/Milan_%C5%A0kriniar_37_Fenerbah%C3%A7e_20260805_%288%29_%28cropped%29.JPG",
+   "title": "Milan Škriniar 37 Fenerbahçe 20260805 (8) (cropped).JPG",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "User:Zafer",
+   "attribution": "«Milan Škriniar 37 Fenerbahçe 20260805 (8) (cropped).JPG», User:Zafer, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c2a26a20e788.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:205562",
+   "wikidata": "Q15081905",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Thomas_Lemar.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/38/Thomas_Lemar.jpg",
+   "title": "Thomas Lemar.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Thomas Lemar.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6207f1abbe02.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:206050",
+   "wikidata": "Q166317",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%AE%D0%B2%D0%B5%D0%BD%D1%82%D1%83%D1%81%C2%BB_0-2._20_%D0%BE%D0%BA%D1%82%D1%8F%D0%B1%D1%80%D1%8F_2020_%D0%B3%D0%BE%D0%B4%D0%B0_%E2%80%94_1153905_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b3/%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%AE%D0%B2%D0%B5%D0%BD%D1%82%D1%83%D1%81%C2%BB_0-2._20_%D0%BE%D0%BA%D1%82%D1%8F%D0%B1%D1%80%D1%8F_2020_%D0%B3%D0%BE%D0%B4%D0%B0_%E2%80%94_1153905_%28cropped%29.jpg",
+   "title": "Матч «Динамо» - «Ювентус» 0-2. 20 октября 2020 года — 1153905 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Olga Shcherbytska",
+   "attribution": "«Матч «Динамо» - «Ювентус» 0-2. 20 октября 2020 года — 1153905 (cropped).jpg», Olga Shcherbytska, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/788301f57bb1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:207929",
+   "wikidata": "Q10553748",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2020-03-10_Dele_Alli_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7e/2020-03-10_Dele_Alli_%28cropped%29.jpg",
+   "title": "2020-03-10 Dele Alli (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Steffen Prößdorf",
+   "attribution": "«2020-03-10 Dele Alli (cropped).jpg», Steffen Prößdorf, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6176a6512247.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:221322",
+   "wikidata": "Q15396247",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jose_Gaya_2015_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/Jose_Gaya_2015_%28cropped%29.jpg",
+   "title": "Jose Gaya 2015 (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Carla Cortés",
+   "attribution": "«Jose Gaya 2015 (cropped).jpg», Carla Cortés, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/6162677d10f6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:225693",
+   "wikidata": "Q641425",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Fabinho_Brazil_V_Morocco_13_June_2026-70.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Fabinho_Brazil_V_Morocco_13_June_2026-70.jpg",
+   "title": "Fabinho Brazil V Morocco 13 June 2026-70.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Fabinho Brazil V Morocco 13 June 2026-70.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/40e4be809714.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:230784",
+   "wikidata": "Q15963873",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Thomas_Partey_5_England_v_Ghana_at_2026_Fifa_World_Cup_by_YantsImages_02_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b7/Thomas_Partey_5_England_v_Ghana_at_2026_Fifa_World_Cup_by_YantsImages_02_%28cropped%29.jpg",
+   "title": "Thomas Partey 5 England v Ghana at 2026 Fifa World Cup by YantsImages 02 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "YantsImages",
+   "attribution": "«Thomas Partey 5 England v Ghana at 2026 Fifa World Cup by YantsImages 02 (cropped).jpg», YantsImages, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/41b1a4b37631.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:234803",
+   "wikidata": "Q15915040",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Andy_Robertson_Scotland_v_Bolivia_6_June_2026-43.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/9a/Andy_Robertson_Scotland_v_Bolivia_6_June_2026-43.jpg",
+   "title": "Andy Robertson Scotland v Bolivia 6 June 2026-43.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Andy Robertson Scotland v Bolivia 6 June 2026-43.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7ac3f9ed1b93.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:238223",
+   "wikidata": "Q17074511",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ederson_Moraes_31_Fenerbah%C3%A7e_20260805_(7)_(cropped).JPG",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e4/Ederson_Moraes_31_Fenerbah%C3%A7e_20260805_%287%29_%28cropped%29.JPG",
+   "title": "Ederson Moraes 31 Fenerbahçe 20260805 (7) (cropped).JPG",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "User:Zafer",
+   "attribution": "«Ederson Moraes 31 Fenerbahçe 20260805 (7) (cropped).JPG», User:Zafer, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/42b62e25b8ff.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:240306",
+   "wikidata": "Q4979316",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bruno_Fernandes_USMNT_v_Portugal_Mar_31_2026-27_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Bruno_Fernandes_USMNT_v_Portugal_Mar_31_2026-27_%28cropped%29.jpg",
+   "title": "Bruno Fernandes USMNT v Portugal Mar 31 2026-27 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Bruno Fernandes USMNT v Portugal Mar 31 2026-27 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9359ae4bfc9f.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:241641",
+   "wikidata": "Q15521306",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bernardo_Silva_Croatia_v_Portugal_2_July_2026-238.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d2/Bernardo_Silva_Croatia_v_Portugal_2_July_2026-238.jpg",
+   "title": "Bernardo Silva Croatia v Portugal 2 July 2026-238.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Bernardo Silva Croatia v Portugal 2 July 2026-238.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9c713bbbb632.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:243714",
+   "wikidata": "Q6413296",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kingsley_Coman_(2019)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Kingsley_Coman_%282019%29_%28cropped%29.jpg",
+   "title": "Kingsley Coman (2019) (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Sven Mandel",
+   "attribution": "«Kingsley Coman (2019) (cropped).jpg», Sven Mandel, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3e899dfc8a86.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:249565",
+   "wikidata": "Q14327453",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Youri_Tielemans_USMNT_v_Belgium_Mar_28_2026-20_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Youri_Tielemans_USMNT_v_Belgium_Mar_28_2026-20_%28cropped%29.jpg",
+   "title": "Youri Tielemans USMNT v Belgium Mar 28 2026-20 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Youri Tielemans USMNT v Belgium Mar 28 2026-20 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/27c6e12b0829.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:250845",
+   "wikidata": "Q13634114",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jos%C3%A9_Mar%C3%ADa_Gim%C3%A9nez_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d4/Jos%C3%A9_Mar%C3%ADa_Gim%C3%A9nez_%28cropped%29.jpg",
+   "title": "José María Giménez (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Анна Нэсси",
+   "attribution": "«José María Giménez (cropped).jpg», Анна Нэсси, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/fd290228b98b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:255508",
+   "wikidata": "Q18608497",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Inaki_Williams_England_v_Ghana_23_June_2026-154.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Inaki_Williams_England_v_Ghana_23_June_2026-154.jpg",
+   "title": "Inaki Williams England v Ghana 23 June 2026-154.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Inaki Williams England v Ghana 23 June 2026-154.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/98a921eea99e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:255942",
+   "wikidata": "Q20090225",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Nicol%C3%B2_Barella_in_2021.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Nicol%C3%B2_Barella_in_2021.jpg",
+   "title": "Nicolò Barella in 2021.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Biser Todorov",
+   "attribution": "«Nicolò Barella in 2021.jpg», Biser Todorov, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/1c3ff92d0894.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:258004",
+   "wikidata": "Q21621168",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ruben_Dias_Croatia_v_Portugal_2_July_2026-228_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b5/Ruben_Dias_Croatia_v_Portugal_2_July_2026-228_%28cropped%29.jpg",
+   "title": "Ruben Dias Croatia v Portugal 2 July 2026-228 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Ruben Dias Croatia v Portugal 2 July 2026-228 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/85b6ce033947.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:258923",
+   "wikidata": "Q22951255",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marcus_Rashford_England_v_Panama_27_June_26-047.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/bc/Marcus_Rashford_England_v_Panama_27_June_26-047.jpg",
+   "title": "Marcus Rashford England v Panama 27 June 26-047.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Marcus Rashford England v Panama 27 June 26-047.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/436f93c1e73e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:266302",
+   "wikidata": "Q15673000",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ser-Swi_(40).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Ser-Swi_%2840%29.jpg",
+   "title": "Ser-Swi (40).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Эдгар Брещанов",
+   "attribution": "«Ser-Swi (40).jpg», Эдгар Брещанов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/0a2c5917aaa8.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:266807",
+   "wikidata": "Q10855654",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:%C3%81ngel_Correa.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/86/%C3%81ngel_Correa.jpg",
+   "title": "Ángel Correa.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Ángel Correa.jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ce43471add09.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:281963",
+   "wikidata": "Q18924954",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Lucas_Hernandez_France_v_Senegal_16_June_2026-281.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/27/Lucas_Hernandez_France_v_Senegal_16_June_2026-281.jpg",
+   "title": "Lucas Hernandez France v Senegal 16 June 2026-281.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Lucas Hernandez France v Senegal 16 June 2026-281.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/2ff879e0e937.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:282411",
+   "wikidata": "Q21130285",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marcos_Llorente_France_v_Spain_7.24.26-020.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/09/Marcos_Llorente_France_v_Spain_7.24.26-020.jpg",
+   "title": "Marcos Llorente France v Spain 7.24.26-020.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Marcos Llorente France v Spain 7.24.26-020.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d2f21fda99ee.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:288230",
+   "wikidata": "Q20851003",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ousmane_Dembele_France_v_Senegal_16_June_2026-341_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Ousmane_Dembele_France_v_Senegal_16_June_2026-341_%28cropped%29.jpg",
+   "title": "Ousmane Dembele France v Senegal 16 June 2026-341 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Ousmane Dembele France v Senegal 16 June 2026-341 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/cc79fee0e257.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:294057",
+   "wikidata": "Q17517177",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:James_Maddison_pre-match_training_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/92/James_Maddison_pre-match_training_%28cropped%29.jpg",
+   "title": "James Maddison pre-match training (cropped).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "KrispyKrumpets",
+   "attribution": "«James Maddison pre-match training (cropped).jpg», KrispyKrumpets, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9028f35327ba.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:296622",
+   "wikidata": "Q16148978",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marco_Asensio_10_Fenerbah%C3%A7e_20260805_(4)_(cropped).JPG",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a9/Marco_Asensio_10_Fenerbah%C3%A7e_20260805_%284%29_%28cropped%29.JPG",
+   "title": "Marco Asensio 10 Fenerbahçe 20260805 (4) (cropped).JPG",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "User:Zafer",
+   "attribution": "«Marco Asensio 10 Fenerbahçe 20260805 (4) (cropped).JPG», User:Zafer, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d100a46b025f.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:309400",
+   "wikidata": "Q27310755",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kai_Havertz_Ecuador_v_Germany_25_June_2026-118.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/76/Kai_Havertz_Ecuador_v_Germany_25_June_2026-118.jpg",
+   "title": "Kai Havertz Ecuador v Germany 25 June 2026-118.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Kai Havertz Ecuador v Germany 25 June 2026-118.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/48fa0e8a330a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:314353",
+   "wikidata": "Q27569376",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Trent_Alexander-Arnold_2018_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Trent_Alexander-Arnold_2018_%28cropped%29.jpg",
+   "title": "Trent Alexander-Arnold 2018 (cropped).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Антон Зайцев",
+   "attribution": "«Trent Alexander-Arnold 2018 (cropped).jpg», Антон Зайцев, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ea47e7fccb19.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:315779",
+   "wikidata": "Q22279773",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Christian_Pulisic_USMNT_v_Belgium_Mar_28_2026-73_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/71/Christian_Pulisic_USMNT_v_Belgium_Mar_28_2026-73_%28cropped%29.jpg",
+   "title": "Christian Pulisic USMNT v Belgium Mar 28 2026-73 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Christian Pulisic USMNT v Belgium Mar 28 2026-73 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e5e5e5f96306.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:315853",
+   "wikidata": "Q28561068",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_A_36_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/6/65/Norway_Italy_-_June_2025_A_36_%28cropped%29.jpg",
+   "title": "Norway Italy - June 2025 A 36 (cropped).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "MichaelEmilio",
+   "attribution": "«Norway Italy - June 2025 A 36 (cropped).jpg», MichaelEmilio, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/36c6633f0c94.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:315858",
+   "wikidata": "Q20830808",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_B_33_-_Gianluigi_Donnarumma_(close-up).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Norway_Italy_-_June_2025_B_33_-_Gianluigi_Donnarumma_%28close-up%29.jpg",
+   "title": "Norway Italy - June 2025 B 33 - Gianluigi Donnarumma (close-up).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Original: MichaelEmilio / Derivative work: Danyele",
+   "attribution": "«Norway Italy - June 2025 B 33 - Gianluigi Donnarumma (close-up).jpg», Original: MichaelEmilio / Derivative work: Danyele, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/f2cb98bb5ef1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:316264",
+   "wikidata": "Q16902219",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Martin_Odegaard_Morocco_v_Norway_7_June_2026-56_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/36/Martin_Odegaard_Morocco_v_Norway_7_June_2026-56_%28cropped%29.jpg",
+   "title": "Martin Odegaard Morocco v Norway 7 June 2026-56 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Martin Odegaard Morocco v Norway 7 June 2026-56 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/65cca073e9e5.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:318528",
+   "wikidata": "Q19903718",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Marcus_Thuram_France_v_Senegal_16_June_2026-261_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Marcus_Thuram_France_v_Senegal_16_June_2026-261_%28cropped%29.jpg",
+   "title": "Marcus Thuram France v Senegal 16 June 2026-261 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Marcus Thuram France v Senegal 16 June 2026-261 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e4cb7fb7ea05.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:326031",
+   "wikidata": "Q26259982",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Matthijs_de_Ligt_2018.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/35/Matthijs_de_Ligt_2018.jpg",
+   "title": "Matthijs de Ligt 2018.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "ОЛЕГ БАТРАК",
+   "attribution": "«Matthijs de Ligt 2018.jpg», ОЛЕГ БАТРАК, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/0cf57b6a69e7.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:326330",
+   "wikidata": "Q19898898",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0%C2%BB_0-1._2_%D0%BD%D0%BE%D1%8F%D0%B1%D1%80%D1%8F_2021_%D0%B3%D0%BE%D0%B4%D0%B0._II_%E2%80%94_1289671_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/42/%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0%C2%BB_0-1._2_%D0%BD%D0%BE%D1%8F%D0%B1%D1%80%D1%8F_2021_%D0%B3%D0%BE%D0%B4%D0%B0._II_%E2%80%94_1289671_%28cropped%29.jpg",
+   "title": "Матч «Динамо» - «Барселона» 0-1. 2 ноября 2021 года. II — 1289671 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Yuliia Perekopaiko",
+   "attribution": "«Матч «Динамо» - «Барселона» 0-1. 2 ноября 2021 года. II — 1289671 (cropped).jpg», Yuliia Perekopaiko, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/1a53c84dc809.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:339808",
+   "wikidata": "Q23703372",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Theo_Hernandez_France_v_Sweden_6.30.26-245.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a6/Theo_Hernandez_France_v_Sweden_6.30.26-245.jpg",
+   "title": "Theo Hernandez France v Sweden 6.30.26-245.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Theo Hernandez France v Sweden 6.30.26-245.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/503ca1535900.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:341092",
+   "wikidata": "Q26704703",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Federico_Chiesa_vs_Zenit_2021-10-20_(cropped2).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/29/Federico_Chiesa_vs_Zenit_2021-10-20_%28cropped2%29.jpg",
+   "title": "Federico Chiesa vs Zenit 2021-10-20 (cropped2).jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Kirill Venediktov",
+   "attribution": "«Federico Chiesa vs Zenit 2021-10-20 (cropped2).jpg», Kirill Venediktov, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/05127a4222d2.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:342229",
+   "wikidata": "Q21621995",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kylian_Mbappe_France_v_Senegal_16_June_2026-391_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/95/Kylian_Mbappe_France_v_Senegal_16_June_2026-391_%28cropped%29.jpg",
+   "title": "Kylian Mbappe France v Senegal 16 June 2026-391 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Kylian Mbappe France v Senegal 16 June 2026-391 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/26fb0cf7f4d0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:343052",
+   "wikidata": "Q20641306",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Nicolas_Pepe_Cote_D%27Ivoire_v_Ecuador_14_June_2026-30.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Nicolas_Pepe_Cote_D%27Ivoire_v_Ecuador_14_June_2026-30.jpg",
+   "title": "Nicolas Pepe Cote D'Ivoire v Ecuador 14 June 2026-30.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Nicolas Pepe Cote D'Ivoire v Ecuador 14 June 2026-30.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7388126014c0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:344381",
+   "wikidata": "Q21693199",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2022-07-30_Fu%C3%9Fball,_M%C3%A4nner,_DFL-Supercup,_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_1DX_3321_by_Stepro_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/98/2022-07-30_Fu%C3%9Fball%2C_M%C3%A4nner%2C_DFL-Supercup%2C_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_1DX_3321_by_Stepro_%28cropped%29.jpg",
+   "title": "2022-07-30 Fußball, Männer, DFL-Supercup, RB Leipzig - FC Bayern München 1DX 3321 by Stepro (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Steffen Prößdorf",
+   "attribution": "«2022-07-30 Fußball, Männer, DFL-Supercup, RB Leipzig - FC Bayern München 1DX 3321 by Stepro (cropped).jpg», Steffen Prößdorf, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/66f026508e1e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:344695",
+   "wikidata": "Q20723878",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Dayot_Upamecano_France_v_Senegal_16_June_2026-402_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Dayot_Upamecano_France_v_Senegal_16_June_2026-402_%28cropped%29.jpg",
+   "title": "Dayot Upamecano France v Senegal 16 June 2026-402 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Dayot Upamecano France v Senegal 16 June 2026-402 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ee25893450c5.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:346483",
+   "wikidata": "Q38000669",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mountbrightonoct3_2019_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/32/Mountbrightonoct3_2019_%28cropped%29.jpg",
+   "title": "Mountbrightonoct3 2019 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Brian Minkoff London-Pixels",
+   "attribution": "«Mountbrightonoct3 2019 (cropped).jpg», Brian Minkoff London-Pixels, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/270cdba8bd14.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:350219",
+   "wikidata": "Q18637930",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Fabian_Ruiz_Argentina_v_Spain_19_July_2026-315_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Fabian_Ruiz_Argentina_v_Spain_19_July_2026-315_%28cropped%29.jpg",
+   "title": "Fabian Ruiz Argentina v Spain 19 July 2026-315 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Fabian Ruiz Argentina v Spain 19 July 2026-315 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/0d49c790a88c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:351478",
+   "wikidata": "Q21195147",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Mikel_Oyarzabal_France_v_Spain_7.24.26-161_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/20/Mikel_Oyarzabal_France_v_Spain_7.24.26-161_%28cropped%29.jpg",
+   "title": "Mikel Oyarzabal France v Spain 7.24.26-161 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Mikel Oyarzabal France v Spain 7.24.26-161 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/bd8475be4eb6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:353366",
+   "wikidata": "Q19599124",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Benjamin_Pavard_20180709.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5a/Benjamin_Pavard_20180709.jpg",
+   "title": "Benjamin Pavard 20180709.jpg",
+   "licence": "CC BY-SA 3.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/3.0",
+   "author": "Кирилл Венедиктов",
+   "attribution": "«Benjamin Pavard 20180709.jpg», Кирилл Венедиктов, CC BY-SA 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/95ea6b4572a1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:357164",
+   "wikidata": "Q30055335",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Rafael_Leao_Croatia_v_Portugal_2_July_2026-187_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ef/Rafael_Leao_Croatia_v_Portugal_2_July_2026-187_%28cropped%29.jpg",
+   "title": "Rafael Leao Croatia v Portugal 2 July 2026-187 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Rafael Leao Croatia v Portugal 2 July 2026-187 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b68ea2005ffd.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:357498",
+   "wikidata": "Q23762815",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Du%C5%A1an_Vlahovi%C4%87_20261002_(1)_(cropped).JPG",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/26/Du%C5%A1an_Vlahovi%C4%87_20261002_%281%29_%28cropped%29.JPG",
+   "title": "Dušan Vlahović 20261002 (1) (cropped).JPG",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "User:Zafer",
+   "attribution": "«Dušan Vlahović 20261002 (1) (cropped).JPG», User:Zafer, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/5cd065a3f042.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:357565",
+   "wikidata": "Q20994118",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Rodri_France_v_Spain_7.24.26-096.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Rodri_France_v_Spain_7.24.26-096.jpg",
+   "title": "Rodri France v Spain 7.24.26-096.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Rodri France v Spain 7.24.26-096.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d4e40d570370.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:357662",
+   "wikidata": "Q30007142",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Declan_Rice_England_v_Ghana_23_June_2026-150_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/a0/Declan_Rice_England_v_Ghana_23_June_2026-150_%28cropped%29.jpg",
+   "title": "Declan Rice England v Ghana 23 June 2026-150 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Declan Rice England v Ghana 23 June 2026-150 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/2eefadd326e5.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:363205",
+   "wikidata": "Q19708656",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Gabriel_Jesus_850_1688.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/87/20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Gabriel_Jesus_850_1688.jpg",
+   "title": "20180610 FIFA Friendly Match Austria vs. Brazil Gabriel Jesus 850 1688.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Granada",
+   "attribution": "«20180610 FIFA Friendly Match Austria vs. Brazil Gabriel Jesus 850 1688.jpg», Granada, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/95a959e741dc.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:369081",
+   "wikidata": "Q19509544",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Federico_Valverde_2021_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/73/Federico_Valverde_2021_%28cropped%29.jpg",
+   "title": "Federico Valverde 2021 (cropped).jpg",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "Real Madrid",
+   "attribution": "«Federico Valverde 2021 (cropped).jpg», Real Madrid, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/dd7010d229b3.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:371998",
+   "wikidata": "Q28973866",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/10/Vin%C3%ADcius_J%C3%BAnior_Brazil_V_Morocco_13_June_2026-207_%28cropped%29.jpg",
+   "title": "Vinícius Júnior Brazil V Morocco 13 June 2026-207 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Vinícius Júnior Brazil V Morocco 13 June 2026-207 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8c9e57d0e4c4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:378710",
+   "wikidata": "Q20806743",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Richarlison_%C3%A9_homenageado_na_ALES_(10.July.2019)_08_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/7a/Richarlison_%C3%A9_homenageado_na_ALES_%2810.July.2019%29_08_%28cropped%29.jpg",
+   "title": "Richarlison é homenageado na ALES (10.July.2019) 08 (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Assembleia Legislativa do Espírito Santo",
+   "attribution": "«Richarlison é homenageado na ALES (10.July.2019) 08 (cropped).jpg», Assembleia Legislativa do Espírito Santo, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/1f39c7904080.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:397033",
+   "wikidata": "Q43402334",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_B_03.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Norway_Italy_-_June_2025_B_03.jpg",
+   "title": "Norway Italy - June 2025 B 03.jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "MichaelEmilio",
+   "attribution": "«Norway Italy - June 2025 B 03.jpg», MichaelEmilio, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a36f8f75e9ce.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:398073",
+   "wikidata": "Q26932598",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Achraf_Hakimi_Morocco_v_Norway_7_June_2026-16.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/56/Achraf_Hakimi_Morocco_v_Norway_7_June_2026-16.jpg",
+   "title": "Achraf Hakimi Morocco v Norway 7 June 2026-16.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Achraf Hakimi Morocco v Norway 7 June 2026-16.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a151e91d2dae.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:401173",
+   "wikidata": "Q30148558",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Manchester_United_v_Liverpool,_22_August_2022_(33)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/43/Manchester_United_v_Liverpool%2C_22_August_2022_%2833%29_%28cropped%29.jpg",
+   "title": "Manchester United v Liverpool, 22 August 2022 (33) (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Ardfern",
+   "attribution": "«Manchester United v Liverpool, 22 August 2022 (33) (cropped).jpg», Ardfern, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/28986d914df8.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:401923",
+   "wikidata": "Q25253293",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Victor-osimhen-nigeria-2024-3-4.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/34/Victor-osimhen-nigeria-2024-3-4.jpg",
+   "title": "Victor-osimhen-nigeria-2024-3-4.jpg",
+   "licence": "Public domain",
+   "licence_class": "pd",
+   "licence_url": "",
+   "author": "Fédération Guinéenne Football",
+   "attribution": "«Victor-osimhen-nigeria-2024-3-4.jpg», Fédération Guinéenne Football, Public domain, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b908be0faaf6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:406625",
+   "wikidata": "Q21484126",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Lautaro_Martinez_Argentina_v_Spain_19_July_2026-049_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/e9/Lautaro_Martinez_Argentina_v_Spain_19_July_2026-049_%28cropped%29.jpg",
+   "title": "Lautaro Martinez Argentina v Spain 19 July 2026-049 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Lautaro Martinez Argentina v Spain 19 July 2026-049 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e12b5e229a98.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:406635",
+   "wikidata": "Q30729096",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2023-10-04_Fu%C3%9Fball,_M%C3%A4nner,_UEFA_Champions_League,_RB_Leipzig_-_Manchester_City_FC_1DX_2613,_Phil_Foden.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/53/2023-10-04_Fu%C3%9Fball%2C_M%C3%A4nner%2C_UEFA_Champions_League%2C_RB_Leipzig_-_Manchester_City_FC_1DX_2613%2C_Phil_Foden.jpg",
+   "title": "2023-10-04 Fußball, Männer, UEFA Champions League, RB Leipzig - Manchester City FC 1DX 2613, Phil Foden.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Steffen Prößdorf",
+   "attribution": "«2023-10-04 Fußball, Männer, UEFA Champions League, RB Leipzig - Manchester City FC 1DX 2613, Phil Foden.jpg», Steffen Prößdorf, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/2cae10549cb1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:411295",
+   "wikidata": "Q28861547",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Raphinha_Brazil_V_Morocco_13_June_2026-133_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/b/b4/Raphinha_Brazil_V_Morocco_13_June_2026-133_%28cropped%29.jpg",
+   "title": "Raphinha Brazil V Morocco 13 June 2026-133 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Raphinha Brazil V Morocco 13 June 2026-133 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ea5b01a2fa87.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:411975",
+   "wikidata": "Q47170176",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jules_Kounde_France_v_Senegal_16_June_2026-449_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/e/ee/Jules_Kounde_France_v_Senegal_16_June_2026-449_%28cropped%29.jpg",
+   "title": "Jules Kounde France v Senegal 16 June 2026-449 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Jules Kounde France v Senegal 16 June 2026-449 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c6fc04a47c86.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:412363",
+   "wikidata": "Q42728914",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Rodrygo_2023_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/05/Rodrygo_2023_%28cropped%29.jpg",
+   "title": "Rodrygo 2023 (cropped).jpg",
+   "licence": "CC BY-SA 2.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/2.0",
+   "author": "Junta de Andalucía",
+   "attribution": "«Rodrygo 2023 (cropped).jpg», Junta de Andalucía, CC BY-SA 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/662b317f7fbb.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:413039",
+   "wikidata": "Q49561427",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bryan_Mbeumo_00-02-31.18.png",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/78/Bryan_Mbeumo_00-02-31.18.png",
+   "title": "Bryan Mbeumo 00-02-31.18.png",
+   "licence": "CC BY 3.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0",
+   "author": "AFC Bournemouth",
+   "attribution": "«Bryan Mbeumo 00-02-31.18.png», AFC Bournemouth, CC BY 3.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9e4ef67c1f29.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:413112",
+   "wikidata": "Q46951844",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Aurelien_Tchouameni_France_v_Senegal_16_June_2026-447_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c0/Aurelien_Tchouameni_France_v_Senegal_16_June_2026-447_%28cropped%29.jpg",
+   "title": "Aurelien Tchouameni France v Senegal 16 June 2026-447 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Aurelien Tchouameni France v Senegal 16 June 2026-447 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/17ff2414de4c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:418560",
+   "wikidata": "Q28967995",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Erling_Haaland_France_v_Norway_26_June_26-008_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/08/Erling_Haaland_France_v_Norway_26_June_26-008_%28cropped%29.jpg",
+   "title": "Erling Haaland France v Norway 26 June 26-008 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Erling Haaland France v Norway 26 June 26-008 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e80132e72d5e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:423440",
+   "wikidata": "Q63384759",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Martin_Zubimendi_Argentina_v_Spain_19_July_2026-012.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Martin_Zubimendi_Argentina_v_Spain_19_July_2026-012.jpg",
+   "title": "Martin Zubimendi Argentina v Spain 19 July 2026-012.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Martin Zubimendi Argentina v Spain 19 July 2026-012.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b5a82d4d0f39.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:424204",
+   "wikidata": "Q23540953",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alphonso_Davies_Canada_v_Qatar_18_June_2026-007_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/27/Alphonso_Davies_Canada_v_Qatar_18_June_2026-007_%28cropped%29.jpg",
+   "title": "Alphonso Davies Canada v Qatar 18 June 2026-007 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Alphonso Davies Canada v Qatar 18 June 2026-007 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/c4f76ed14aab.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:433177",
+   "wikidata": "Q59306386",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bukayo_Saka_England_v_Ghana_23_June_2026-057_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/2f/Bukayo_Saka_England_v_Ghana_23_June_2026-057_%28cropped%29.jpg",
+   "title": "Bukayo Saka England v Ghana 23 June 2026-057 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Bukayo Saka England v Ghana 23 June 2026-057 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b1f7ac5f4ce1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:435338",
+   "wikidata": "Q25175970",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Gabriel_Magalhaes_Brazil_V_Morocco_13_June_2026-132_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Gabriel_Magalhaes_Brazil_V_Morocco_13_June_2026-132_%28cropped%29.jpg",
+   "title": "Gabriel Magalhaes Brazil V Morocco 13 June 2026-132 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Gabriel Magalhaes Brazil V Morocco 13 June 2026-132 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/748ac29468d2.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:447661",
+   "wikidata": "Q28363823",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Douglas_Luiz_April_2026_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Douglas_Luiz_April_2026_%28cropped%29.jpg",
+   "title": "Douglas Luiz April 2026 (cropped).jpg",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "MintyGel",
+   "attribution": "«Douglas Luiz April 2026 (cropped).jpg», MintyGel, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e91042c99101.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:451276",
+   "wikidata": "Q30134278",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Dominik_Szoboszlai_04012026_(1).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/52/Dominik_Szoboszlai_04012026_%281%29.jpg",
+   "title": "Dominik Szoboszlai 04012026 (1).jpg",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "Timmy96",
+   "attribution": "«Dominik Szoboszlai 04012026 (1).jpg», Timmy96, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/318abda9140b.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:462250",
+   "wikidata": "Q27049064",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Joao_Felix_Croatia_v_Portugal_2_July_2026-007.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Joao_Felix_Croatia_v_Portugal_2_July_2026-007.jpg",
+   "title": "Joao Felix Croatia v Portugal 2 July 2026-007.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Joao Felix Croatia v Portugal 2 July 2026-007.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/60b67e30aba1.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:475959",
+   "wikidata": "Q73400656",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Josko_Gvardiol_Croatia_v_Portugal_2_July_2026-262.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/58/Josko_Gvardiol_Croatia_v_Portugal_2_July_2026-262.jpg",
+   "title": "Josko Gvardiol Croatia v Portugal 2 July 2026-262.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Josko Gvardiol Croatia v Portugal 2 July 2026-262.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/985999a2d422.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:478573",
+   "wikidata": "Q56257870",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:2022-07-30_Fu%C3%9Fball,_M%C3%A4nner,_DFL-Supercup,_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_1DX_3342_by_Stepro_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/3e/2022-07-30_Fu%C3%9Fball%2C_M%C3%A4nner%2C_DFL-Supercup%2C_RB_Leipzig_-_FC_Bayern_M%C3%BCnchen_1DX_3342_by_Stepro_%28cropped%29.jpg",
+   "title": "2022-07-30 Fußball, Männer, DFL-Supercup, RB Leipzig - FC Bayern München 1DX 3342 by Stepro (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "crop by Sepguilherme",
+   "attribution": "«2022-07-30 Fußball, Männer, DFL-Supercup, RB Leipzig - FC Bayern München 1DX 3342 by Stepro (cropped).jpg», crop by Sepguilherme, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a5ffca351eff.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:480692",
+   "wikidata": "Q28531111",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:FC_RB_Salzburg_gegen_FC_Bayern_M%C3%BCnchen_(2026-01-06_Testspiel)_40_(Luiz_D%C3%ADaz).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c7/FC_RB_Salzburg_gegen_FC_Bayern_M%C3%BCnchen_%282026-01-06_Testspiel%29_40_%28Luiz_D%C3%ADaz%29.jpg",
+   "title": "FC RB Salzburg gegen FC Bayern München (2026-01-06 Testspiel) 40 (Luiz Díaz).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Werner100359",
+   "attribution": "«FC RB Salzburg gegen FC Bayern München (2026-01-06 Testspiel) 40 (Luiz Díaz).jpg», Werner100359, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b139578d2612.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:487469",
+   "wikidata": "Q66818509",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Vitinha_USMNT_v_Portugal_Mar_31_2026-50_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Vitinha_USMNT_v_Portugal_Mar_31_2026-50_%28cropped%29.jpg",
+   "title": "Vitinha USMNT v Portugal Mar 31 2026-50 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Vitinha USMNT v Portugal Mar 31 2026-50 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7fcf5956683a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:487969",
+   "wikidata": "Q59655998",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Randal_Kolo_Muani_2020.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d8/Randal_Kolo_Muani_2020.jpg",
+   "title": "Randal Kolo Muani 2020.jpg",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "Supporterhéninois",
+   "attribution": "«Randal Kolo Muani 2020.jpg», Supporterhéninois, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/17510045f31e.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:495666",
+   "wikidata": "Q56868118",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:William_Saliba_France_v_Senegal_16_June_2026-336_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/c/c2/William_Saliba_France_v_Senegal_16_June_2026-336_%28cropped%29.jpg",
+   "title": "William Saliba France v Senegal 16 June 2026-336 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«William Saliba France v Senegal 16 June 2026-336 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/adf96ad91f5a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:502670",
+   "wikidata": "Q61780902",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Kvaratskhelia_asse_psg_2425.png",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Kvaratskhelia_asse_psg_2425.png",
+   "title": "Kvaratskhelia asse psg 2425.png",
+   "licence": "CC0",
+   "licence_class": "cc0",
+   "licence_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+   "author": "Paté kroute",
+   "attribution": "«Kvaratskhelia asse psg 2425.png», Paté kroute, CC0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/9a6be70c1e3a.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:517894",
+   "wikidata": "Q35831063",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Matheus_Cunha_Brazil_V_Morocco_13_June_2026-178_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/3/31/Matheus_Cunha_Brazil_V_Morocco_13_June_2026-178_%28cropped%29.jpg",
+   "title": "Matheus Cunha Brazil V Morocco 13 June 2026-178 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Matheus Cunha Brazil V Morocco 13 June 2026-178 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/43d9ca9f5697.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:520624",
+   "wikidata": "Q58323172",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Bruno_Guimaraes_Brazil_V_Morocco_13_June_2026-78_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/70/Bruno_Guimaraes_Brazil_V_Morocco_13_June_2026-78_%28cropped%29.jpg",
+   "title": "Bruno Guimaraes Brazil V Morocco 13 June 2026-78 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Bruno Guimaraes Brazil V Morocco 13 June 2026-78 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/ef680d572292.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:534033",
+   "wikidata": "Q33297140",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Alexis_Mac_Allister_Argentina_v_Spain_19_July_2026-162_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/db/Alexis_Mac_Allister_Argentina_v_Spain_19_July_2026-162_%28cropped%29.jpg",
+   "title": "Alexis Mac Allister Argentina v Spain 19 July 2026-162 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Alexis Mac Allister Argentina v Spain 19 July 2026-162 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b35cd44bf001.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:568177",
+   "wikidata": "Q99760796",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Cole_Palmer_2025_FIFA_Club_World_Cup_Final.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Cole_Palmer_2025_FIFA_Club_World_Cup_Final.jpg",
+   "title": "Cole Palmer 2025 FIFA Club World Cup Final.jpg",
+   "licence": "Public domain",
+   "licence_class": "pd",
+   "licence_url": "",
+   "author": "The White House",
+   "attribution": "«Cole Palmer 2025 FIFA Club World Cup Final.jpg», The White House, Public domain, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/e61b470229a6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:576024",
+   "wikidata": "Q59381180",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Julian_Alvarez_Argentina_v_Spain_19_July_2026-052_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0c/Julian_Alvarez_Argentina_v_Spain_19_July_2026-052_%28cropped%29.jpg",
+   "title": "Julian Alvarez Argentina v Spain 19 July 2026-052 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Julian Alvarez Argentina v Spain 19 July 2026-052 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/206ebbe027c8.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:580195",
+   "wikidata": "Q96072055",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/44/Jamal_Musiala_Ecuador_v_Germany_25_June_2026-174_%28cropped%29.jpg",
+   "title": "Jamal Musiala Ecuador v Germany 25 June 2026-174 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Jamal Musiala Ecuador v Germany 25 June 2026-174 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8f1718a1317c.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:581678",
+   "wikidata": "Q66241169",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Jude_Bellingham_England_v_Ghana_23_June_2026-061_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/2/23/Jude_Bellingham_England_v_Ghana_23_June_2026-061_%28cropped%29.jpg",
+   "title": "Jude Bellingham England v Ghana 23 June 2026-061 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Jude Bellingham England v Ghana 23 June 2026-061 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/b73dcda875b0.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:598577",
+   "wikidata": "Q94699949",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/7/70/Florian_Wirtz_Ecuador_v_Germany_25_June_2026-181_%28cropped%29.jpg",
+   "title": "Florian Wirtz Ecuador v Germany 25 June 2026-181 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Florian Wirtz Ecuador v Germany 25 June 2026-181 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/d2ad248c38b3.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:607223",
+   "wikidata": "Q64736321",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Rayan_Cherki_France_v_Norway_26_June_26-114.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/9/97/Rayan_Cherki_France_v_Norway_26_June_26-114.jpg",
+   "title": "Rayan Cherki France v Norway 26 June 26-114.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Rayan Cherki France v Norway 26 June 26-114.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/8810c635a822.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:636703",
+   "wikidata": "Q117312887",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ferm%C3%ADn_L%C3%B3pez_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/5/5c/Ferm%C3%ADn_L%C3%B3pez_%28cropped%29.jpg",
+   "title": "Fermín López (cropped).jpg",
+   "licence": "CC BY 4.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/4.0",
+   "author": "Biso",
+   "attribution": "«Fermín López (cropped).jpg», Biso, CC BY 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a70b6e2dd1a4.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:640428",
+   "wikidata": "Q62960177",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Ofrenda_de_la_Liga_y_la_Champions-13-L.Mill%C3%A1n_(52109790215)_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/05/Ofrenda_de_la_Liga_y_la_Champions-13-L.Mill%C3%A1n_%2852109790215%29_%28cropped%29.jpg",
+   "title": "Ofrenda de la Liga y la Champions-13-L.Millán (52109790215) (cropped).jpg",
+   "licence": "CC BY 2.0",
+   "licence_class": "cc-by",
+   "licence_url": "https://creativecommons.org/licenses/by/2.0",
+   "author": "Fotografías Archimadrid.es",
+   "attribution": "«Ofrenda de la Liga y la Champions-13-L.Millán (52109790215) (cropped).jpg», Fotografías Archimadrid.es, CC BY 2.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3e33edd30831.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:646740",
+   "wikidata": "Q108111889",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Gavi_France_v_Spain_7.24.26-275_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/4/43/Gavi_France_v_Spain_7.24.26-275_%28cropped%29.jpg",
+   "title": "Gavi France v Spain 7.24.26-275 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Gavi France v Spain 7.24.26-275 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/3415d46ebbba.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:648195",
+   "wikidata": "Q96105248",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Enzo_Fernandez_Argentina_v_Spain_19_July_2026-050_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/10/Enzo_Fernandez_Argentina_v_Spain_19_July_2026-050_%28cropped%29.jpg",
+   "title": "Enzo Fernandez Argentina v Spain 19 July 2026-050 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Enzo Fernandez Argentina v Spain 19 July 2026-050 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/4e7c876f38d6.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:655488",
+   "wikidata": "Q61460651",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Gabriel_Martinelli_Brazil_V_Morocco_13_June_2026-144.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/81/Gabriel_Martinelli_Brazil_V_Morocco_13_June_2026-144.jpg",
+   "title": "Gabriel Martinelli Brazil V Morocco 13 June 2026-144.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Gabriel Martinelli Brazil V Morocco 13 June 2026-144.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/5f3939fc0210.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:670681",
+   "wikidata": "Q113551733",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Joao_Neves_Croatia_v_Portugal_2_July_2026-102_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Joao_Neves_Croatia_v_Portugal_2_July_2026-102_%28cropped%29.jpg",
+   "title": "Joao Neves Croatia v Portugal 2 July 2026-102 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Joao Neves Croatia v Portugal 2 July 2026-102 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/72536508a278.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:683840",
+   "wikidata": "Q66606355",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Pedri_France_v_Spain_7.24.26-245.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/1c/Pedri_France_v_Spain_7.24.26-245.jpg",
+   "title": "Pedri France v Spain 7.24.26-245.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Pedri France v Spain 7.24.26-245.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/7d82ab50a2ee.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:687626",
+   "wikidata": "Q87715532",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Moises_Caicedo_Ecuador_v_Germany_25_June_2026-051_(cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Moises_Caicedo_Ecuador_v_Germany_25_June_2026-051_%28cropped%29.jpg",
+   "title": "Moises Caicedo Ecuador v Germany 25 June 2026-051 (cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Moises Caicedo Ecuador v Germany 25 June 2026-051 (cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/30b44c7c863d.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:709726",
+   "wikidata": "Q100602910",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Hugo_Ekitike_(PSG_2023).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/a/ac/Hugo_Ekitike_%28PSG_2023%29.jpg",
+   "title": "Hugo Ekitike (PSG 2023).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Liondartois",
+   "attribution": "«Hugo Ekitike (PSG 2023).jpg», Liondartois, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/a7acda547796.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:914562",
+   "wikidata": "Q112170256",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Desire_Doue_France_v_Norway_26_June_26-032.jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Desire_Doue_France_v_Norway_26_June_26-032.jpg",
+   "title": "Desire Doue France v Norway 26 June 26-032.jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Desire Doue France v Norway 26 June 26-032.jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/63519ae89575.png"
+   },
+   "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
+  },
+  {
+   "kind": "foto",
+   "subject": "tm:p:937958",
+   "wikidata": "Q113704154",
+   "source": "Wikimedia Commons",
+   "page": "https://commons.wikimedia.org/wiki/File:Lamine_Yamal_Argentina_v_Spain_19_July_2026-214_(new_cropped).jpg",
+   "original_url": "https://upload.wikimedia.org/wikipedia/commons/d/d6/Lamine_Yamal_Argentina_v_Spain_19_July_2026-214_%28new_cropped%29.jpg",
+   "title": "Lamine Yamal Argentina v Spain 19 July 2026-214 (new cropped).jpg",
+   "licence": "CC BY-SA 4.0",
+   "licence_class": "cc-by-sa",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0",
+   "author": "Bryan Berlin",
+   "attribution": "«Lamine Yamal Argentina v Spain 19 July 2026-214 (new cropped).jpg», Bryan Berlin, CC BY-SA 4.0, via Wikimedia Commons",
+   "trademark": false,
+   "modifiable": true,
+   "files": {
+    "ritratto": "photos/909277a28c20.png"
    },
    "status": "verificato: ID Transfermarkt su Wikidata, licenza di Commons"
   }
