@@ -47,7 +47,7 @@ try {
         await p.waitForTimeout(1300);
         if (g === games[0]) await p.screenshot({ path: `${OUT}/${vp}-intro.png` });
         await p.getByText("VIA! ▶").click();
-        await p.waitForTimeout(g === "mercato" || g === "giramondo" ? 12500 : 900);
+        await p.waitForTimeout(g === "mercato" || g === "giramondo" || g === "figurina" ? 12500 : 900);
         if (g === "formazione") {
           await p.locator(".btn.p1").click();
           await p.waitForTimeout(600);

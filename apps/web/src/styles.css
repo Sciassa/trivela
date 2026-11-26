@@ -1023,5 +1023,47 @@ canvas.voxel { display: block; image-rendering: pixelated; }
 .pcard.wide .pc-name { font-size: 22px; }
 .match-prize { display: flex; flex-direction: column; align-items: center; gap: 12px; }
 .match-prize .px { font-size: 14px; color: var(--accent); }
-.match-over-row { display: flex; gap: 48px; align-items: center; justify-content: center; }
 @media (prefers-reduced-motion: reduce) { .pcard { animation: none; } .pc-shine { display: none; } }
+
+/* Indovina la Figurina (SPEC §4.16): the covered card, photo in big pixels on the left, one line per clue */
+.fig-card { display: flex; gap: 22px; align-items: stretch; padding: 16px; background: linear-gradient(#1c1640, #0b0820); border: 6px solid #ffb347; box-shadow: 8px 8px 0 #000; }
+.fig-photo { position: relative; display: grid; place-items: center; flex: none; width: 270px; height: 360px; overflow: hidden; background: repeating-conic-gradient(#0c0c26 0 25%, #12123a 0 50%) 0 0 / 24px 24px; border: 4px solid #050510; }
+.fig-photo img { width: 100%; height: 100%; image-rendering: pixelated; animation: fig-in .5s ease-out; }
+.fig-photo .px { font-size: 96px; color: #ffb347; }
+@keyframes fig-in { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+.fig-lines { display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1; }
+.fig-name { font-size: 26px; color: #ffb347; padding: 6px 4px 4px; letter-spacing: 6px; }
+.fig-line { display: grid; grid-template-columns: 92px 1fr; align-items: center; gap: 14px; min-height: 56px; padding: 6px 12px; font-size: 28px; line-height: 1.05; background: linear-gradient(var(--panel2), var(--panel)); border: 4px solid var(--line); }
+.fig-line .pts { font-family: var(--pixel); font-size: 15px; color: var(--bg); background: #ffb347; padding: 8px 4px; text-align: center; }
+.fig-line.hidden { color: var(--line); background: #0a0a20; }
+.fig-line.hidden .pts { background: var(--line); }
+.fig-line.shown { animation: flip .4s cubic-bezier(.22,.8,.3,1); }
+.fig-line.current { border-color: #ffb347; }
+.fig-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.fig-label { font-family: var(--pixel); font-size: 11px; color: #b9a8e6; }
+.fig-value { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) { .fig-photo img, .fig-line.shown { animation: none; } }
+
+/* The five games of a classic match: drawn, chosen together or drafted (SPEC §5.4) */
+.games-choice .game-pick.choose { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.game-pick.choose button { position: relative; min-height: 72px; }
+.game-pick.choose button.on { background: #22220e; padding-right: 52px; }
+.game-pick.choose button.by-p1 { box-shadow: inset 0 0 0 4px var(--p1); }
+.game-pick.choose button.by-p2 { box-shadow: inset 0 0 0 4px var(--p2); }
+.game-pick.choose button:disabled { opacity: .35; }
+.game-pick.choose .pick-n { position: absolute; top: 6px; right: 8px; font-family: var(--pixel); font-size: 16px; color: var(--bg); background: var(--game); padding: 6px 8px; }
+.game-pick.choose button.by-p1 .pick-n { background: var(--p1); }
+.game-pick.choose button.by-p2 .pick-n { background: var(--p2); }
+.game-pick .picked-by, .draw-card .picked-by { display: block; font-family: var(--pixel); font-size: 11px; color: var(--dim); overflow-wrap: anywhere; }
+.game-pick.choose button.by-p1 .picked-by { color: var(--p1); }
+.game-pick.choose button.by-p2 .picked-by { color: var(--p2); }
+.game-pick.choose button.nope { animation: nope .3s ease-in-out; }
+@keyframes nope { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.draft-banner { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; font-family: var(--pixel); font-size: 13px; line-height: 1.6; background: var(--panel); border: 3px solid var(--accent); }
+.draft-banner.p1 { border-color: var(--p1); }
+.draft-banner.p2 { border-color: var(--p2); }
+.draft-banner .draft-draw { color: var(--dim); }
+.draw-card .picked-by { font-size: 12px; }
+.draw-card:has(.picked-by) { gap: 10px; }
+.draft-start { display: flex; align-items: center; justify-content: center; min-height: 196px; font-size: 22px; line-height: 1.6; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .game-pick.choose button.nope { animation: none; } }

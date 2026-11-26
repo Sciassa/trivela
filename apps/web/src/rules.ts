@@ -74,6 +74,12 @@ export const GAME_CATALOG: Record<GameId, GameInfo> = {
     color: "#a3e635",
     rules: ["2 stemmi a testa, trasformati: senza scritte, sfocati, in silhouette o nei loro colori.", "Di quale squadra è? Quattro risposte, 20 secondi.", "+2 se esatta, poi lo stemma vero."],
   },
+  figurina: {
+    name: "INDOVINA LA FIGURINA",
+    short: "LA FIGURINA",
+    color: "#ffb347",
+    rules: ["2 figurine coperte: la foto è a quadrettoni.", "A ogni indizio si scopre una riga e la foto si fa più nitida.", "Prenotati e scrivi chi è: 12-9-6-3-1 punti."],
+  },
 };
 
 /** Games in catalogue order (the order of `GAME_IDS`), for menus and pickers. */

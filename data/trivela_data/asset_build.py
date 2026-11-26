@@ -18,12 +18,28 @@ from pathlib import Path
 
 from PIL import Image, ImageFilter
 
-from .assets import ASSET_CACHE, PUBLIC, SOURCES, cached, crest_source, crest_svg, strip_html
+from .assets import (
+    ASSET_CACHE,
+    LOGO_CACHE,
+    LOGO_REPO,
+    LOGOS_MAP,
+    PUBLIC,
+    SOURCES,
+    cached,
+    crest_source,
+    crest_svg,
+    strip_html,
+)
 from .paths import ROOT
 
 STATIC = ROOT / "static"
 SIZE = 128  # crests: drawn pixelated on the board, so a small canvas is enough and keeps the 8-bit look
 SIL_FILL = (255, 233, 168, 255)
+# logos whose outline is the club's initials (a monogram) or keeps lettering joined to the shape: their silhouette reads the
+# answer; checked by eye on the whole set of silhouettes (SPEC §4.15)
+MONOGRAM = {506: "J (Juventus)", 527: "LS (Lausanne-Sport)", 121: "D (Dynamo Mosca)", 3948: "USG (Union SG)", 1322: "FKJ (Jablonec)",
+            607: "V (Venezia)", 3527: "M (Motor Lublin)", 1186: "T (Torpedo Mosca)", 71985: "A (Akron Tolyatti)",
+            127: "PADERBORN attaccato alla sagoma (SC Paderborn)"}
 # files on the logo property that are not a crest, checked by eye on the whole set (SPEC §4.15): never asked
 NOT_A_CREST = {
     12: "solo la scritta del nome (AS Roma)",
@@ -88,6 +104,43 @@ def plain_shape(bits: list[int], n: int = 24) -> bool:
     return iou(bits, box) > 0.9 or iou(bits, disc) > 0.9
 
 
+def shape_only(img: Image.Image) -> Image.Image | None:
+    """The crest without its lettering, for the silhouette: only the big connected parts of the outline stay. Letters are
+    many small parts, and a silhouette that keeps them reads the club's name («FC NANTES»). None when the lettering is a
+    good part of the crest (a wordmark): its silhouette would be the name itself."""
+    a = img.getchannel("A").point(lambda v: 255 if v > 128 else 0)
+    w, h = a.size
+    px = a.load()
+    seen = bytearray(w * h)
+    parts: list[list[tuple[int, int]]] = []
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] and not seen[y * w + x]:
+                seen[y * w + x] = 1
+                stack, part = [(x, y)], []
+                while stack:
+                    i, j = stack.pop()
+                    part.append((i, j))
+                    for k, m in ((i + 1, j), (i - 1, j), (i, j + 1), (i, j - 1)):
+                        if 0 <= k < w and 0 <= m < h and px[k, m] and not seen[m * w + k]:
+                            seen[m * w + k] = 1
+                            stack.append((k, m))
+                parts.append(part)
+    total = sum(len(p) for p in parts) or 1
+    keep = [p for p in parts if len(p) >= 0.08 * total]
+    small = [p for p in parts if len(p) < 0.08 * total]
+    if sum(len(p) for p in keep) < 0.85 * total or len(small) > 6:
+        return None
+    out = Image.new("L", (w, h), 0)
+    op = out.load()
+    for p in keep:
+        for i, j in p:
+            op[i, j] = 255
+    shape = img.copy()
+    shape.putalpha(out)
+    return shape
+
+
 def palette(img: Image.Image) -> list[tuple[str, float]]:
     """The characteristic colours: the shares of a 5-colour reduction of the fully opaque pixels away from the edges
     (anti-aliased borders blend two colours into a third one that is not in the crest), near colours merged."""
@@ -148,17 +201,34 @@ def no_text(svg_path: Path) -> Image.Image | None:
     return b
 
 
-def photo(path: Path) -> Image.Image:
-    """A 60x80 pixel portrait: a 3:4 crop from the upper part of the photo (where the face is), 32 colours."""
+def portrait(path: Path) -> Image.Image:
+    """A 3:4 crop from the upper part of the photo, where the face is."""
     img = Image.open(path).convert("RGB")
     w, h = img.size
     if w / h > 0.75:
         cw = int(h * 0.75)
-        img = img.crop(((w - cw) // 2, 0, (w - cw) // 2 + cw, h))
-    else:
-        img = img.crop((0, 0, w, int(w / 0.75)))
-    img = img.resize((60, 80), Image.Resampling.LANCZOS)
+        return img.crop(((w - cw) // 2, 0, (w - cw) // 2 + cw, h))
+    return img.crop((0, 0, w, int(w / 0.75)))
+
+
+def photo(path: Path) -> Image.Image:
+    """A 60x80 pixel portrait, 32 colours."""
+    img = portrait(path).resize((60, 80), Image.Resampling.LANCZOS)
     return img.quantize(colors=32, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
+
+
+# Indovina la Figurina (SPEC §4.16): the photo in big pixels, sharper at each clue. The app scales them up `pixelated`.
+FRAMES = ((3, 4), (6, 8), (9, 12), (15, 20), (30, 40))
+
+
+def frames(path: Path) -> list[Image.Image]:
+    """Each frame is the average colour of its blocks (a box filter), so it shows tones and shapes, never a detail."""
+    img = portrait(path)
+    out = []
+    for w, h in FRAMES:
+        f = img.resize((w, h), Image.Resampling.BOX)
+        out.append(f.quantize(colors=min(32, w * h), method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB"))
+    return out
 
 
 def attribution(c: dict) -> str:
@@ -180,7 +250,54 @@ def build() -> None:
         img.save(PUBLIC / rel, optimize=True)
         return rel
 
+    def add_crest(tm: str, raw: Image.Image, k: str, svg: Path | None, rec: dict) -> dict:
+        """The published crest and its variants (all of them derivatives: only for files that may be modified)."""
+        files = {"originale": publish(fit(raw), "crests", k)}
+        rec = {"club": int(tm), "original": files["originale"], "variants": {}, **rec}
+        base = fit(raw)
+        blur = base.convert("RGBa").filter(ImageFilter.GaussianBlur(7)).convert("RGBA")
+        rec["variants"]["blur"] = files["sfocato"] = publish(blur, "crests", key(k, "blur"))
+        if real_alpha(raw):
+            bits = mask_bits(base)
+            rec["mask"] = "".join(map(str, bits))
+            shape = shape_only(base)
+            if int(tm) in MONOGRAM:
+                excluded["silhouette: iniziali o scritta attaccata alla sagoma"] += 1
+            elif shape is None:
+                excluded["silhouette: il logo è quasi tutto scritta"] += 1
+            elif not plain_shape(mask_bits(shape)):
+                sil_todo.append((tm, k, shape, mask_bits(shape), files))
+        if svg is not None:
+            nt = no_text(svg)
+            if nt is not None:
+                rec["variants"]["notext"] = files["senza scritte"] = publish(fit(nt), "crests", key(k, "notext"))
+        pal = palette(base) if real_alpha(raw) else []  # without transparency the background would be a «colour»
+        if len(pal) >= 2:
+            rec["variants"]["colors"] = pal  # colours are drawn by the app as pixel bands: no image is derived
+        crests[tm] = rec
+        return files
+
+    # the logos of football-logos (user's decision, SPEC §0.8): they replace the Commons crest of the same club
+    logos = json.loads(LOGOS_MAP.read_text(encoding="utf-8")) if LOGOS_MAP.exists() else {"logos": []}
+    for row in logos["logos"]:
+        f = LOGO_CACHE / row["file"]
+        if not f.exists():
+            excluded["logo: non ancora scaricato (assets logos)"] += 1
+            continue
+        tm = str(row["tm"])
+        raw = Image.open(f).convert("RGBA")
+        k = key("football-logos", row["tm"], hashlib.sha1(f.read_bytes()).hexdigest())
+        page = f"{LOGO_REPO}/blob/{logos['commit']}/{row['file']}".replace(" ", "%20")
+        credit = f"Logo: {row['team']}, raccolta luukhopman/football-logos su GitHub (licenza non dichiarata)"
+        files = add_crest(tm, raw, k, None, {"source": "football-logos", "page": page, "licence": "none", "attribution": credit})
+        assets.append({"kind": "stemma", "subject": f"tm:c:{tm}", "wikidata": None, "source": "luukhopman/football-logos (GitHub)",
+                       "page": page, "original_url": page.replace("/blob/", "/raw/"), "title": row["file"], "licence": "non dichiarata",
+                       "licence_class": "none", "licence_url": None, "author": "luukhopman/football-logos (raccolta)", "attribution": credit,
+                       "trademark": True, "modifiable": True, "files": files,
+                       "status": f"decisione dell'utente (SPEC §0.8, v16): nessuna licenza; abbinato all'ID Transfermarkt ({row['match']})"})
     for tm, r in sorted(src["crests"].items(), key=lambda kv: int(kv[0])):
+        if tm in crests:
+            continue  # the club has its football-logos logo
         c = r.get("commons")
         if not c:
             excluded["stemma: file non trovato su Commons"] += 1
@@ -202,27 +319,12 @@ def build() -> None:
             continue
         raw = Image.open(f).convert("RGBA")
         k = key(r["qid"], c["sha1"])
-        files = {"originale": publish(fit(raw), "crests", k)}
-        rec = {"club": int(tm), "qid": r["qid"], "original": files["originale"], "variants": {}, "licence": c["class"],
-               "attribution": attribution(c)}
+        meta = {"source": "commons", "page": f"https://www.wikidata.org/wiki/{r['qid']}", "licence": c["class"], "attribution": attribution(c)}
         if c["modifiable"]:
-            base = fit(raw)
-            blur = base.convert("RGBa").filter(ImageFilter.GaussianBlur(7)).convert("RGBA")
-            rec["variants"]["blur"] = files["sfocato"] = publish(blur, "crests", key(k, "blur"))
-            if real_alpha(raw):
-                bits = mask_bits(base)
-                rec["mask"] = "".join(map(str, bits))
-                if not plain_shape(bits):
-                    sil_todo.append((tm, k, base, bits, files))
-            svg = crest_svg(c, offline=True)
-            if svg is not None:
-                nt = no_text(svg)
-                if nt is not None:
-                    rec["variants"]["notext"] = files["senza scritte"] = publish(fit(nt), "crests", key(k, "notext"))
-            pal = palette(base) if real_alpha(raw) else []  # without transparency the background would be a «colour»
-            if len(pal) >= 2:
-                rec["variants"]["colors"] = pal  # colours are drawn by the app as pixel bands: no image is derived
-        crests[tm] = rec
+            files = add_crest(tm, raw, k, crest_svg(c, offline=True), meta)
+        else:
+            files = {"originale": publish(fit(raw), "crests", k)}
+            crests[tm] = {"club": int(tm), "original": files["originale"], "variants": {}, **meta}
         assets.append(manifest_entry("stemma", f"tm:c:{tm}", r, c, files))
     # a silhouette tells the club only if its outline is its own: the common shields and badges look all alike
     masks = {tm: [int(x) for x in r["mask"]] for tm, r in crests.items() if r.get("mask")}
@@ -248,21 +350,26 @@ def build() -> None:
             excluded["foto: non ancora scaricata"] += 1
             continue
         try:
-            img = photo(p)
+            img, steps = photo(p), frames(p)
         except Exception:  # noqa: BLE001 - an unreadable file is skipped, never guessed
             excluded["foto: file illeggibile"] += 1
             continue
         rel = publish(img, "photos", key(r["qid"], c["sha1"]))
-        photos[tm] = {"file": rel, "credit": f"Foto: {strip_html(c['author'])} · {c['licence']} · Wikimedia Commons (rielaborata)"}
-        assets.append(manifest_entry("foto", f"tm:p:{tm}", r, c, {"ritratto": rel}))
+        mosaic = [publish(f, "photos", key(r["qid"], c["sha1"], "frame", k)) for k, f in enumerate(steps)]
+        photos[tm] = {"file": rel, "frames": mosaic, "page": c["page"],
+                      "credit": f"Foto: {strip_html(c['author'])} · {c['licence']} · Wikimedia Commons (rielaborata)"}
+        assets.append(manifest_entry("foto", f"tm:p:{tm}", r, c, {"ritratto": rel, **{f"mosaico {k + 1}": m for k, m in enumerate(mosaic)}}))
     manifest = {
         "about": "Stemmi e foto pubblicati da TRIVELA: fonte, licenza e autore di ogni file (SPEC §0.8). Le versioni trasformate "
-                 "(sfocato, silhouette, senza scritte, ritratto in pixel) sono opere derivate: restano sotto la licenza "
+                 "(sfocato, silhouette, senza scritte, ritratto e mosaici in pixel) sono opere derivate: restano sotto la licenza "
                  "dell'originale. I marchi restano dei rispettivi titolari e sono usati solo per indicare la squadra.",
         "sources": [{"label": "Wikidata", "url": "https://www.wikidata.org", "use": "ID Transfermarkt (P7223, P2446), stemma (P154), immagine (P18)",
                      "licence": "CC0"},
                     {"label": "Wikimedia Commons", "url": "https://commons.wikimedia.org", "use": "file, licenza e autore (imageinfo, extmetadata)",
-                     "licence": "per file"}],
+                     "licence": "per file"},
+                    {"label": "luukhopman/football-logos (GitHub)", "url": LOGO_REPO, "use": "loghi delle squadre, abbinati a mano agli ID "
+                     "Transfermarkt (data/static/logos_map.json); sostituiscono lo stemma di Commons della stessa squadra",
+                     "licence": "non dichiarata: usati per decisione dell'utente (SPEC §0.8)"}],
         "counts": {"stemmi": len(crests), "foto": len(photos)},
         "excluded": dict(sorted(excluded.items())),
         "assets": assets,

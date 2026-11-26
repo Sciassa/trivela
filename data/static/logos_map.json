@@ -1,0 +1,3895 @@
+{
+ "about": "Loghi delle squadre dal repository GitHub luukhopman/football-logos (nessuna licenza dichiarata), usati per decisione dell'utente (SPEC §0.8, v16). Ogni file è abbinato all'ID Transfermarkt della squadra: proposta automatica sui nomi del dataset e dello stesso campionato, poi ricontrollata a occhio sull'intero insieme; i casi incerti sono stati corretti a mano o lasciati fuori. La build legge solo questa tabella, mai i nomi.",
+ "repo": "https://github.com/luukhopman/football-logos",
+ "commit": "2a3978f0b4730645c205d855a4bda54c161183e9",
+ "logos": [
+  {
+   "tm": 3,
+   "file": "logos/Germany - Bundesliga/1.FC Köln.png",
+   "team": "1.FC Köln",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5,
+   "file": "logos/Italy - Serie A/AC Milan.png",
+   "team": "AC Milan",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 10,
+   "file": "history/2021-22/Germany - Bundesliga/Arminia Bielefeld.png",
+   "team": "Arminia Bielefeld",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11,
+   "file": "logos/England - Premier League/Arsenal FC.png",
+   "team": "Arsenal FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 12,
+   "file": "logos/Italy - Serie A/AS Roma.png",
+   "team": "AS Roma",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 13,
+   "file": "logos/Spain - LaLiga/Atlético de Madrid.png",
+   "team": "Atlético de Madrid",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 14,
+   "file": "logos/Austria - Bundesliga/Austria Vienna.png",
+   "team": "Austria Vienna",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 15,
+   "file": "logos/Germany - Bundesliga/Bayer 04 Leverkusen.png",
+   "team": "Bayer 04 Leverkusen",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 16,
+   "file": "logos/Germany - Bundesliga/Borussia Dortmund.png",
+   "team": "Borussia Dortmund",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 18,
+   "file": "logos/Germany - Bundesliga/Borussia Mönchengladbach.png",
+   "team": "Borussia Mönchengladbach",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 24,
+   "file": "logos/Germany - Bundesliga/Eintracht Frankfurt.png",
+   "team": "Eintracht Frankfurt",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 26,
+   "file": "logos/Switzerland - Super League/FC Basel 1893.png",
+   "team": "FC Basel 1893",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 27,
+   "file": "logos/Germany - Bundesliga/Bayern Munich.png",
+   "team": "Bayern Munich",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 29,
+   "file": "logos/England - Premier League/Everton FC.png",
+   "team": "Everton FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 31,
+   "file": "logos/England - Premier League/Liverpool FC.png",
+   "team": "Liverpool FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 33,
+   "file": "logos/Germany - Bundesliga/FC Schalke 04.png",
+   "team": "FC Schalke 04",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 35,
+   "file": "history/2025-26/Germany - Bundesliga/FC St. Pauli.png",
+   "team": "FC St. Pauli",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 36,
+   "file": "logos/Türkiye - Süper Lig/Fenerbahce.png",
+   "team": "Fenerbahce",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 39,
+   "file": "logos/Germany - Bundesliga/1.FSV Mainz 05.png",
+   "team": "1.FSV Mainz 05",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 40,
+   "file": "history/2021-22/France - Ligue 1/G. Bordeaux.png",
+   "team": "G. Bordeaux",
+   "league_folder": "France - Ligue 1",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 41,
+   "file": "logos/Germany - Bundesliga/Hamburger SV.png",
+   "team": "Hamburger SV",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 43,
+   "file": "logos/Scotland - Scottish Premiership/Heart of Midlothian FC.png",
+   "team": "Heart of Midlothian FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 44,
+   "file": "history/2022-23/Germany - Bundesliga/Hertha BSC.png",
+   "team": "Hertha BSC",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 46,
+   "file": "logos/Italy - Serie A/Inter Milan.png",
+   "team": "Inter Milan",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 47,
+   "file": "logos/Greece - Super League 1/Iraklis Thessaloniki.png",
+   "team": "Iraklis Thessaloniki",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 53,
+   "file": "logos/Serbia - Super liga Srbije/OFK Beograd.png",
+   "team": "OFK Beograd",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 58,
+   "file": "logos/Belgium - Jupiler Pro League/RSC Anderlecht.png",
+   "team": "RSC Anderlecht",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 60,
+   "file": "logos/Germany - Bundesliga/SC Freiburg.png",
+   "team": "SC Freiburg",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 61,
+   "file": "logos/Switzerland - Super League/Servette FC.png",
+   "team": "Servette FC",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 62,
+   "file": "logos/Czech Republic - Chance Liga/SK Slavia Prague.png",
+   "team": "SK Slavia Prague",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 65,
+   "file": "history/2021-22/Germany - Bundesliga/Greuther Fürth.png",
+   "team": "Greuther Fürth",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 76,
+   "file": "logos/Norway - Eliteserien/Vålerenga Fotball Elite.png",
+   "team": "Vålerenga Fotball Elite",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 79,
+   "file": "logos/Germany - Bundesliga/VfB Stuttgart.png",
+   "team": "VfB Stuttgart",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 80,
+   "file": "history/2024-25/Germany - Bundesliga/VfL Bochum.png",
+   "team": "VfL Bochum",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 82,
+   "file": "history/2025-26/Germany - Bundesliga/VfL Wolfsburg.png",
+   "team": "VfL Wolfsburg",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 86,
+   "file": "logos/Germany - Bundesliga/SV Werder Bremen.png",
+   "team": "SV Werder Bremen",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 88,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Widzew Lodz.png",
+   "team": "Widzew Lodz",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 89,
+   "file": "logos/Germany - Bundesliga/1.FC Union Berlin.png",
+   "team": "1.FC Union Berlin",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 105,
+   "file": "history/2023-24/Germany - Bundesliga/SV Darmstadt 98.png",
+   "team": "SV Darmstadt 98",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 114,
+   "file": "logos/Türkiye - Süper Lig/Besiktas JK.png",
+   "team": "Besiktas JK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 120,
+   "file": "logos/Türkiye - Süper Lig/Kocaelispor.png",
+   "team": "Kocaelispor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 121,
+   "file": "logos/Russia - Premier Liga/Dynamo Moscow.png",
+   "team": "Dynamo Moscow",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 122,
+   "file": "logos/Austria - Bundesliga/SK Sturm Graz.png",
+   "team": "SK Sturm Graz",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 124,
+   "file": "logos/Scotland - Scottish Premiership/Rangers FC.png",
+   "team": "Rangers FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 126,
+   "file": "logos/Türkiye - Süper Lig/Caykur Rizespor.png",
+   "team": "Caykur Rizespor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 127,
+   "file": "logos/Germany - Bundesliga/SC Paderborn 07.png",
+   "team": "SC Paderborn 07",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 130,
+   "file": "logos/Italy - Serie A/Parma Calcio 1913.png",
+   "team": "Parma Calcio 1913",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 131,
+   "file": "logos/Spain - LaLiga/FC Barcelona.png",
+   "team": "FC Barcelona",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 132,
+   "file": "history/2025-26/Netherlands - Eredivisie/NAC Breda.png",
+   "team": "NAC Breda",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 133,
+   "file": "logos/Netherlands - Eredivisie/SC Cambuur Leeuwarden.png",
+   "team": "SC Cambuur Leeuwarden",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 141,
+   "file": "logos/Türkiye - Süper Lig/Galatasaray.png",
+   "team": "Galatasaray",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 144,
+   "file": "logos/Croatia - SuperSport HNL/HNK Rijeka.png",
+   "team": "HNK Rijeka",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 148,
+   "file": "logos/England - Premier League/Tottenham Hotspur.png",
+   "team": "Tottenham Hotspur",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 150,
+   "file": "logos/Spain - LaLiga/Real Betis Balompié.png",
+   "team": "Real Betis Balompié",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 152,
+   "file": "logos/Türkiye - Süper Lig/Samsunspor.png",
+   "team": "Samsunspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 157,
+   "file": "logos/Belgium - Jupiler Pro League/KAA Gent.png",
+   "team": "KAA Gent",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 159,
+   "file": "logos/Serbia - Super liga Srbije/Red Star Belgrade.png",
+   "team": "Red Star Belgrade",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 162,
+   "file": "logos/France - Ligue 1/AS Monaco.png",
+   "team": "AS Monaco",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 167,
+   "file": "logos/Germany - Bundesliga/FC Augsburg.png",
+   "team": "FC Augsburg",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 168,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Zaglebie Lubin.png",
+   "team": "Zaglebie Lubin",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 170,
+   "file": "logos/Austria - Bundesliga/Rapid Vienna.png",
+   "team": "Rapid Vienna",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 172,
+   "file": "logos/Belgium - Jupiler Pro League/Royal Charleroi SC.png",
+   "team": "Royal Charleroi SC",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 173,
+   "file": "logos/Denmark - Superliga/Odense Boldklub.png",
+   "team": "Odense Boldklub",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 180,
+   "file": "history/2024-25/England - Premier League/Southampton FC.png",
+   "team": "Southampton FC",
+   "league_folder": "England - Premier League",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 190,
+   "file": "logos/Denmark - Superliga/FC Copenhagen.png",
+   "team": "FC Copenhagen",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 195,
+   "file": "logos/Norway - Eliteserien/Rosenborg BK.png",
+   "team": "Rosenborg BK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 197,
+   "file": "logos/Czech Republic - Chance Liga/AC Sparta Prague.png",
+   "team": "AC Sparta Prague",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 200,
+   "file": "logos/Netherlands - Eredivisie/FC Utrecht.png",
+   "team": "FC Utrecht",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 202,
+   "file": "logos/Netherlands - Eredivisie/FC Groningen.png",
+   "team": "FC Groningen",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 206,
+   "file": "logos/Denmark - Superliga/Bröndby IF.png",
+   "team": "Bröndby IF",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 223,
+   "file": "history/2024-25/Croatia - SuperSport HNL/HNK Sibenik.png",
+   "team": "HNK Sibenik",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 232,
+   "file": "logos/Russia - Premier Liga/Spartak Moscow.png",
+   "team": "Spartak Moscow",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 234,
+   "file": "logos/Netherlands - Eredivisie/Feyenoord Rotterdam.png",
+   "team": "Feyenoord Rotterdam",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 235,
+   "file": "history/2024-25/Netherlands - Eredivisie/RKC Waalwijk.png",
+   "team": "RKC Waalwijk",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 237,
+   "file": "history/2025-26/Spain - LaLiga/RCD Mallorca.png",
+   "team": "RCD Mallorca",
+   "league_folder": "Spain - LaLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 238,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Lech Poznan.png",
+   "team": "Lech Poznan",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 239,
+   "file": "logos/Norway - Eliteserien/Viking FK.png",
+   "team": "Viking FK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 242,
+   "file": "history/2025-26/Switzerland - Super League/FC Winterthur.png",
+   "team": "FC Winterthur",
+   "league_folder": "Switzerland - Super League",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 244,
+   "file": "logos/France - Ligue 1/Olympique Marseille.png",
+   "team": "Olympique Marseille",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 252,
+   "file": "logos/Italy - Serie A/Genoa CFC.png",
+   "team": "Genoa CFC",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 255,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Legia Warszawa.png",
+   "team": "Legia Warszawa",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 257,
+   "file": "logos/Switzerland - Super League/FC St. Gallen 1879.png",
+   "team": "FC St. Gallen 1879",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 260,
+   "file": "logos/Switzerland - Super League/FC Zürich.png",
+   "team": "FC Zürich",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 265,
+   "file": "logos/Greece - Super League 1/Panathinaikos.png",
+   "team": "Panathinaikos",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 266,
+   "file": "logos/Austria - Bundesliga/SV Ried.png",
+   "team": "SV Ried",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 267,
+   "file": "logos/Norway - Eliteserien/IK Start.png",
+   "team": "IK Start",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 269,
+   "file": "history/2024-25/Germany - Bundesliga/Holstein Kiel.png",
+   "team": "Holstein Kiel",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 272,
+   "file": "logos/Sweden - Allsvenskan/AIK.png",
+   "team": "AIK",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 273,
+   "file": "logos/France - Ligue 1/Stade Rennais FC.png",
+   "team": "Stade Rennais FC",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 276,
+   "file": "history/2025-26/Italy - Serie A/Hellas Verona.png",
+   "team": "Hellas Verona",
+   "league_folder": "Italy - Serie A",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 281,
+   "file": "logos/England - Premier League/Manchester City.png",
+   "team": "Manchester City",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 289,
+   "file": "logos/England - Premier League/Sunderland AFC.png",
+   "team": "Sunderland AFC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 290,
+   "file": "logos/France - Ligue 1/AJ Auxerre.png",
+   "team": "AJ Auxerre",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 294,
+   "file": "logos/Portugal - Liga Portugal/SL Benfica.png",
+   "team": "SL Benfica",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 301,
+   "file": "logos/Romania - SuperLiga/FCSB.png",
+   "team": "FCSB",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 306,
+   "file": "logos/Netherlands - Eredivisie/SC Heerenveen.png",
+   "team": "SC Heerenveen",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 312,
+   "file": "logos/Romania - SuperLiga/FC Dinamo 1948.png",
+   "team": "FC Dinamo 1948",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 316,
+   "file": "logos/Austria - Bundesliga/Grazer AK 1902.png",
+   "team": "Grazer AK 1902",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 317,
+   "file": "logos/Netherlands - Eredivisie/FC Twente Enschede.png",
+   "team": "FC Twente Enschede",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 321,
+   "file": "logos/Switzerland - Super League/FC Sion.png",
+   "team": "FC Sion",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 322,
+   "file": "history/2024-25/Switzerland - Super League/Yverdon Sport FC.png",
+   "team": "Yverdon Sport FC",
+   "league_folder": "Switzerland - Super League",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 324,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Pogon Szczecin.png",
+   "team": "Pogon Szczecin",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 327,
+   "file": "logos/Croatia - SuperSport HNL/NK Osijek.png",
+   "team": "NK Osijek",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 331,
+   "file": "logos/Spain - LaLiga/CA Osasuna.png",
+   "team": "CA Osasuna",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 336,
+   "file": "logos/Portugal - Liga Portugal/Sporting CP.png",
+   "team": "Sporting CP",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 338,
+   "file": "logos/Ukraine - Premier Liga/Dynamo Kyiv.png",
+   "team": "Dynamo Kyiv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 347,
+   "file": "history/2025-26/France - Ligue 1/FC Metz.png",
+   "team": "FC Metz",
+   "league_folder": "France - Ligue 1",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 350,
+   "file": "history/2023-24/England - Premier League/Sheffield United.png",
+   "team": "Sheffield United",
+   "league_folder": "England - Premier League",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 353,
+   "file": "logos/Norway - Eliteserien/Lillestrøm SK.png",
+   "team": "Lillestrøm SK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 354,
+   "file": "logos/Belgium - Jupiler Pro League/KV Mechelen.png",
+   "team": "KV Mechelen",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 366,
+   "file": "history/2024-25/Spain - LaLiga/Real Valladolid CF.png",
+   "team": "Real Valladolid CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 367,
+   "file": "logos/Spain - LaLiga/Rayo Vallecano.png",
+   "team": "Rayo Vallecano",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 368,
+   "file": "logos/Spain - LaLiga/Sevilla FC.png",
+   "team": "Sevilla FC",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 369,
+   "file": "logos/Denmark - Superliga/Lyngby Boldklub.png",
+   "team": "Lyngby Boldklub",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 370,
+   "file": "logos/Scotland - Scottish Premiership/Aberdeen FC.png",
+   "team": "Aberdeen FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 371,
+   "file": "logos/Scotland - Scottish Premiership/Celtic FC.png",
+   "team": "Celtic FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 377,
+   "file": "logos/Czech Republic - Chance Liga/FC Banik Ostrava.png",
+   "team": "FC Banik Ostrava",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 379,
+   "file": "history/2025-26/England - Premier League/West Ham United.png",
+   "team": "West Ham United",
+   "league_folder": "England - Premier League",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 380,
+   "file": "history/2023-24/Italy - Serie A/US Salernitana 1919.png",
+   "team": "US Salernitana 1919",
+   "league_folder": "Italy - Serie A",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 383,
+   "file": "logos/Netherlands - Eredivisie/PSV Eindhoven.png",
+   "team": "PSV Eindhoven",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 385,
+   "file": "logos/Netherlands - Eredivisie/Fortuna Sittard.png",
+   "team": "Fortuna Sittard",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 398,
+   "file": "logos/Italy - Serie A/SS Lazio.png",
+   "team": "SS Lazio",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 399,
+   "file": "logos/England - Premier League/Leeds United.png",
+   "team": "Leeds United",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 403,
+   "file": "logos/Netherlands - Eredivisie/Willem II Tilburg.png",
+   "team": "Willem II Tilburg",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 405,
+   "file": "logos/England - Premier League/Aston Villa.png",
+   "team": "Aston Villa",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 409,
+   "file": "logos/Austria - Bundesliga/Red Bull Salzburg.png",
+   "team": "Red Bull Salzburg",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 410,
+   "file": "logos/Italy - Serie A/Udinese Calcio.png",
+   "team": "Udinese Calcio",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 413,
+   "file": "logos/Austria - Bundesliga/LASK.png",
+   "team": "LASK",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 415,
+   "file": "logos/France - Ligue 1/FC Toulouse.png",
+   "team": "FC Toulouse",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 416,
+   "file": "logos/Italy - Serie A/Torino FC.png",
+   "team": "Torino FC",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 417,
+   "file": "logos/France - Ligue 1/OGC Nice.png",
+   "team": "OGC Nice",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 418,
+   "file": "logos/Spain - LaLiga/Real Madrid.png",
+   "team": "Real Madrid",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 419,
+   "file": "logos/Croatia - SuperSport HNL/GNK Dinamo Zagreb.png",
+   "team": "GNK Dinamo Zagreb",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 428,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Górnik Zabrze.png",
+   "team": "Górnik Zabrze",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 430,
+   "file": "logos/Italy - Serie A/ACF Fiorentina.png",
+   "team": "ACF Fiorentina",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 434,
+   "file": "logos/Switzerland - Super League/FC Luzern.png",
+   "team": "FC Luzern",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 441,
+   "file": "history/2021-22/Greece - Super League 1/Apollon Smyrnis.png",
+   "team": "Apollon Smyrnis",
+   "league_folder": "Greece - Super League 1",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 443,
+   "file": "history/2025-26/Denmark - Superliga/Vejle Boldklub.png",
+   "team": "Vejle Boldklub",
+   "league_folder": "Denmark - Superliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 447,
+   "file": "logos/Croatia - SuperSport HNL/HNK Hajduk Split.png",
+   "team": "HNK Hajduk Split",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 448,
+   "file": "logos/Serbia - Super liga Srbije/FK Vojvodina Novi Sad.png",
+   "team": "FK Vojvodina Novi Sad",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 449,
+   "file": "logos/Türkiye - Süper Lig/Trabzonspor.png",
+   "team": "Trabzonspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 450,
+   "file": "history/2025-26/Czech Republic - Chance Liga/FK Dukla Prague.png",
+   "team": "FK Dukla Prague",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 452,
+   "file": "logos/Switzerland - Super League/BSC Young Boys.png",
+   "team": "BSC Young Boys",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 455,
+   "file": "logos/Romania - SuperLiga/FC Rapid 1923.png",
+   "team": "FC Rapid 1923",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 456,
+   "file": "history/2025-26/Croatia - SuperSport HNL/HNK Vukovar 1991.png",
+   "team": "HNK Vukovar 1991",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 465,
+   "file": "logos/Scotland - Scottish Premiership/St. Mirren FC.png",
+   "team": "St. Mirren FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 467,
+   "file": "logos/Netherlands - Eredivisie/NEC Nijmegen.png",
+   "team": "NEC Nijmegen",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 468,
+   "file": "logos/Netherlands - Eredivisie/Sparta Rotterdam.png",
+   "team": "Sparta Rotterdam",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 472,
+   "file": "history/2024-25/Spain - LaLiga/UD Las Palmas.png",
+   "team": "UD Las Palmas",
+   "league_folder": "Spain - LaLiga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 475,
+   "file": "logos/Belgium - Jupiler Pro League/Sint-Truidense VV.png",
+   "team": "Sint-Truidense VV",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 496,
+   "file": "logos/Sweden - Allsvenskan/Malmö FF.png",
+   "team": "Malmö FF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 499,
+   "file": "history/2023-24/Netherlands - Eredivisie/Vitesse Arnhem.png",
+   "team": "Vitesse Arnhem",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 501,
+   "file": "logos/Norway - Eliteserien/FK BodøGlimt.png",
+   "team": "FK BodøGlimt",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 504,
+   "file": "logos/Switzerland - Super League/Grasshopper Club Zurich.png",
+   "team": "Grasshopper Club Zurich",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 506,
+   "file": "logos/Italy - Serie A/Juventus FC.png",
+   "team": "Juventus FC",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 511,
+   "file": "logos/Scotland - Scottish Premiership/Dundee FC.png",
+   "team": "Dundee FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 520,
+   "file": "logos/Belgium - Jupiler Pro League/Cercle Brugge.png",
+   "team": "Cercle Brugge",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 527,
+   "file": "logos/Switzerland - Super League/FC Lausanne-Sport.png",
+   "team": "FC Lausanne-Sport",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 533,
+   "file": "logos/Germany - Bundesliga/TSG 1899 Hoffenheim.png",
+   "team": "TSG 1899 Hoffenheim",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 543,
+   "file": "history/2025-26/England - Premier League/Wolverhampton Wanderers.png",
+   "team": "Wolverhampton Wanderers",
+   "league_folder": "England - Premier League",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 553,
+   "file": "history/2022-23/Greece - Super League 1/Ionikos Nikeas.png",
+   "team": "Ionikos Nikeas",
+   "league_folder": "Greece - Super League 1",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 583,
+   "file": "logos/France - Ligue 1/Paris Saint-Germain.png",
+   "team": "Paris Saint-Germain",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 589,
+   "file": "history/2025-26/Türkiye - Süper Lig/Antalyaspor.png",
+   "team": "Antalyaspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 599,
+   "file": "logos/Croatia - SuperSport HNL/NK Varazdin.png",
+   "team": "NK Varazdin",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 601,
+   "file": "logos/Belgium - Jupiler Pro League/KV Kortrijk.png",
+   "team": "KV Kortrijk",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 605,
+   "file": "logos/Greece - Super League 1/Aris Thessaloniki.png",
+   "team": "Aris Thessaloniki",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 607,
+   "file": "logos/Italy - Serie A/Venezia FC.png",
+   "team": "Venezia FC",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 610,
+   "file": "logos/Netherlands - Eredivisie/Ajax Amsterdam.png",
+   "team": "Ajax Amsterdam",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 618,
+   "file": "history/2024-25/France - Ligue 1/AS Saint-Étienne.png",
+   "team": "AS Saint-Étienne",
+   "league_folder": "France - Ligue 1",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 621,
+   "file": "logos/Spain - LaLiga/Athletic Bilbao.png",
+   "team": "Athletic Bilbao",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 631,
+   "file": "logos/England - Premier League/Chelsea FC.png",
+   "team": "Chelsea FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 653,
+   "file": "logos/Greece - Super League 1/OFI Crete.png",
+   "team": "OFI Crete",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 660,
+   "file": "logos/Ukraine - Premier Liga/Shakhtar Donetsk.png",
+   "team": "Shakhtar Donetsk",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 667,
+   "file": "logos/France - Ligue 1/RC Strasbourg Alsace.png",
+   "team": "RC Strasbourg Alsace",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 669,
+   "file": "logos/Serbia - Super liga Srbije/FK Partizan Belgrade.png",
+   "team": "FK Partizan Belgrade",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 677,
+   "file": "logos/England - Premier League/Ipswich Town.png",
+   "team": "Ipswich Town",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 678,
+   "file": "logos/Denmark - Superliga/Aarhus GF.png",
+   "team": "Aarhus GF",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 681,
+   "file": "logos/Spain - LaLiga/Real Sociedad.png",
+   "team": "Real Sociedad",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 683,
+   "file": "logos/Greece - Super League 1/Olympiacos Piraeus.png",
+   "team": "Olympiacos Piraeus",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 687,
+   "file": "logos/Norway - Eliteserien/Molde FK.png",
+   "team": "Molde FK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 697,
+   "file": "logos/Czech Republic - Chance Liga/FC Slovan Liberec.png",
+   "team": "FC Slovan Liberec",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 703,
+   "file": "logos/England - Premier League/Nottingham Forest.png",
+   "team": "Nottingham Forest",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 714,
+   "file": "logos/Spain - LaLiga/RCD Espanyol Barcelona.png",
+   "team": "RCD Espanyol Barcelona",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 715,
+   "file": "logos/Czech Republic - Chance Liga/Bohemians Prague 1905.png",
+   "team": "Bohemians Prague 1905",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 720,
+   "file": "logos/Portugal - Liga Portugal/FC Porto.png",
+   "team": "FC Porto",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 723,
+   "file": "history/2024-25/Netherlands - Eredivisie/Almere City FC.png",
+   "team": "Almere City FC",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 724,
+   "file": "history/2025-26/Netherlands - Eredivisie/FC Volendam.png",
+   "team": "FC Volendam",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 738,
+   "file": "logos/France - Ligue 1/Le Havre AC.png",
+   "team": "Le Havre AC",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 749,
+   "file": "history/2024-25/Italy - Serie A/FC Empoli.png",
+   "team": "FC Empoli",
+   "league_folder": "Italy - Serie A",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 759,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Slask Wroclaw.png",
+   "team": "Slask Wroclaw",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 762,
+   "file": "logos/England - Premier League/Newcastle United.png",
+   "team": "Newcastle United",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 788,
+   "file": "history/2025-26/Serbia - Super liga Srbije/FK Napredak Krusevac.png",
+   "team": "FK Napredak Krusevac",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 798,
+   "file": "logos/Netherlands - Eredivisie/Excelsior Rotterdam.png",
+   "team": "Excelsior Rotterdam",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 800,
+   "file": "logos/Italy - Serie A/Atalanta BC.png",
+   "team": "Atalanta BC",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 801,
+   "file": "logos/Sweden - Allsvenskan/IFK Göteborg.png",
+   "team": "IFK Göteborg",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 814,
+   "file": "logos/Czech Republic - Chance Liga/FK Teplice.png",
+   "team": "FK Teplice",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 820,
+   "file": "logos/Türkiye - Süper Lig/Genclerbirligi Ankara.png",
+   "team": "Genclerbirligi Ankara",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 826,
+   "file": "logos/France - Ligue 1/RC Lens.png",
+   "team": "RC Lens",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 865,
+   "file": "logos/Denmark - Superliga/FC Midtjylland.png",
+   "team": "FC Midtjylland",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 868,
+   "file": "history/2023-24/Türkiye - Süper Lig/MKE Ankaragücü.png",
+   "team": "MKE Ankaragücü",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 873,
+   "file": "logos/England - Premier League/Crystal Palace.png",
+   "team": "Crystal Palace",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 897,
+   "file": "logos/Spain - LaLiga/Deportivo A Coruña.png",
+   "team": "Deportivo A Coruña",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 903,
+   "file": "logos/Scotland - Scottish Premiership/Hibernian FC.png",
+   "team": "Hibernian FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 924,
+   "file": "history/2023-24/Türkiye - Süper Lig/Istanbulspor.png",
+   "team": "Istanbulspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 931,
+   "file": "logos/England - Premier League/Fulham FC.png",
+   "team": "Fulham FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 932,
+   "file": "logos/Russia - Premier Liga/Lokomotiv Moscow.png",
+   "team": "Lokomotiv Moscow",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 938,
+   "file": "logos/Switzerland - Super League/FC Thun.png",
+   "team": "FC Thun",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 940,
+   "file": "logos/Spain - LaLiga/Celta de Vigo.png",
+   "team": "Celta de Vigo",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 941,
+   "file": "logos/Czech Republic - Chance Liga/FC Viktoria Plzen.png",
+   "team": "FC Viktoria Plzen",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 952,
+   "file": "logos/Romania - SuperLiga/UTA Arad.png",
+   "team": "UTA Arad",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 964,
+   "file": "logos/Russia - Premier Liga/Zenit St. Petersburg.png",
+   "team": "Zenit St. Petersburg",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 968,
+   "file": "logos/Belgium - Jupiler Pro League/KVC Westerlo.png",
+   "team": "KVC Westerlo",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 969,
+   "file": "history/2024-25/France - Ligue 1/Montpellier HSC.png",
+   "team": "Montpellier HSC",
+   "league_folder": "France - Ligue 1",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 979,
+   "file": "logos/Portugal - Liga Portugal/Moreirense FC.png",
+   "team": "Moreirense FC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 982,
+   "file": "logos/Portugal - Liga Portugal/CD Nacional.png",
+   "team": "CD Nacional",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 985,
+   "file": "logos/England - Premier League/Manchester United.png",
+   "team": "Manchester United",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 987,
+   "file": "logos/Scotland - Scottish Premiership/Motherwell FC.png",
+   "team": "Motherwell FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 989,
+   "file": "logos/England - Premier League/AFC Bournemouth.png",
+   "team": "AFC Bournemouth",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 995,
+   "file": "history/2025-26/France - Ligue 1/FC Nantes.png",
+   "team": "FC Nantes",
+   "league_folder": "France - Ligue 1",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 999,
+   "file": "logos/Croatia - SuperSport HNL/NK Istra 1961.png",
+   "team": "NK Istra 1961",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1003,
+   "file": "history/2024-25/England - Premier League/Leicester City.png",
+   "team": "Leicester City",
+   "league_folder": "England - Premier League",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1005,
+   "file": "logos/Italy - Serie A/US Lecce.png",
+   "team": "US Lecce",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1010,
+   "file": "history/2021-22/England - Premier League/Watford FC.png",
+   "team": "Watford FC",
+   "league_folder": "England - Premier League",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1011,
+   "file": "logos/Sweden - Allsvenskan/Halmstads BK.png",
+   "team": "Halmstads BK",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1025,
+   "file": "logos/Italy - Serie A/Bologna FC 1909.png",
+   "team": "Bologna FC 1909",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1031,
+   "file": "history/2023-24/England - Premier League/Luton Town.png",
+   "team": "Luton Town",
+   "league_folder": "England - Premier League",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1038,
+   "file": "history/2022-23/Italy - Serie A/UC Sampdoria.png",
+   "team": "UC Sampdoria",
+   "league_folder": "Italy - Serie A",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1041,
+   "file": "logos/France - Ligue 1/Olympique Lyon.png",
+   "team": "Olympique Lyon",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1044,
+   "file": "logos/Sweden - Allsvenskan/Djurgårdens IF.png",
+   "team": "Djurgårdens IF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1047,
+   "file": "logos/Italy - Serie A/Como 1907.png",
+   "team": "Como 1907",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1049,
+   "file": "logos/Spain - LaLiga/Valencia CF.png",
+   "team": "Valencia CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1050,
+   "file": "logos/Spain - LaLiga/Villarreal CF.png",
+   "team": "Villarreal CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1053,
+   "file": "history/2024-25/Denmark - Superliga/Aalborg BK.png",
+   "team": "Aalborg BK",
+   "league_folder": "Denmark - Superliga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1057,
+   "file": "history/2025-26/Norway - Eliteserien/Bryne FK.png",
+   "team": "Bryne FK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1059,
+   "file": "logos/Sweden - Allsvenskan/Hammarby IF.png",
+   "team": "Hammarby IF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1063,
+   "file": "logos/Denmark - Superliga/Viborg FF.png",
+   "team": "Viborg FF",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1075,
+   "file": "logos/Portugal - Liga Portugal/SC Braga.png",
+   "team": "SC Braga",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1082,
+   "file": "logos/France - Ligue 1/LOSC Lille.png",
+   "team": "LOSC Lille",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1083,
+   "file": "logos/Russia - Premier Liga/FC Rostov.png",
+   "team": "FC Rostov",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1084,
+   "file": "logos/Spain - LaLiga/Málaga CF.png",
+   "team": "Málaga CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1090,
+   "file": "logos/Netherlands - Eredivisie/AZ Alkmaar.png",
+   "team": "AZ Alkmaar",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1091,
+   "file": "logos/Greece - Super League 1/PAOK Thessaloniki.png",
+   "team": "PAOK Thessaloniki",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 1092,
+   "file": "logos/Sweden - Allsvenskan/IF Brommapojkarna.png",
+   "team": "IF Brommapojkarna",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1095,
+   "file": "logos/France - Ligue 1/ESTAC Troyes.png",
+   "team": "ESTAC Troyes",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1096,
+   "file": "logos/Belgium - Jupiler Pro League/Royal Antwerp FC.png",
+   "team": "Royal Antwerp FC",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1100,
+   "file": "logos/Norway - Eliteserien/SK Brann.png",
+   "team": "SK Brann",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1101,
+   "file": "logos/Sweden - Allsvenskan/IF Elfsborg.png",
+   "team": "IF Elfsborg",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1108,
+   "file": "logos/Spain - LaLiga/Deportivo Alavés.png",
+   "team": "Deportivo Alavés",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1109,
+   "file": "logos/Sweden - Allsvenskan/BK Häcken.png",
+   "team": "BK Häcken",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1118,
+   "file": "logos/Sweden - Allsvenskan/Örgryte IS.png",
+   "team": "Örgryte IS",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1123,
+   "file": "history/2021-22/England - Premier League/Norwich.png",
+   "team": "Norwich",
+   "league_folder": "England - Premier League",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1124,
+   "file": "logos/Russia - Premier Liga/Fakel Voronezh.png",
+   "team": "Fakel Voronezh",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1132,
+   "file": "history/2025-26/England - Premier League/Burnley FC.png",
+   "team": "Burnley FC",
+   "league_folder": "England - Premier League",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1147,
+   "file": "history/2022-23/France - Ligue 1/AC Ajaccio.png",
+   "team": "AC Ajaccio",
+   "league_folder": "France - Ligue 1",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1148,
+   "file": "logos/England - Premier League/Brentford FC.png",
+   "team": "Brentford FC",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1158,
+   "file": "logos/France - Ligue 1/FC Lorient.png",
+   "team": "FC Lorient",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1177,
+   "file": "logos/Denmark - Superliga/Silkeborg IF.png",
+   "team": "Silkeborg IF",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1184,
+   "file": "logos/Belgium - Jupiler Pro League/KRC Genk.png",
+   "team": "KRC Genk",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1186,
+   "file": "history/2025-26/Russia - Premier Liga/Torpedo Moscow.png",
+   "team": "Torpedo Moscow",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1191,
+   "file": "logos/Scotland - Scottish Premiership/Falkirk FC.png",
+   "team": "Falkirk FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1236,
+   "file": "history/2025-26/Sweden - Allsvenskan/Östers IF.png",
+   "team": "Östers IF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1237,
+   "file": "logos/England - Premier League/Brighton & Hove Albion.png",
+   "team": "Brighton & Hove Albion",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1241,
+   "file": "history/2025-26/Scotland - Scottish Premiership/Livingston FC.png",
+   "team": "Livingston FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1244,
+   "file": "history/2024-25/Spain - LaLiga/CD Leganés.png",
+   "team": "CD Leganés",
+   "league_folder": "Spain - LaLiga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1245,
+   "file": "history/2023-24/Belgium - Jupiler Pro League/KAS Eupen.png",
+   "team": "KAS Eupen",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1268,
+   "file": "logos/Netherlands - Eredivisie/ADO Den Haag.png",
+   "team": "ADO Den Haag",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1269,
+   "file": "logos/Netherlands - Eredivisie/PEC Zwolle.png",
+   "team": "PEC Zwolle",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1283,
+   "file": "history/2022-23/Netherlands - Eredivisie/FC Emmen.png",
+   "team": "FC Emmen",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1293,
+   "file": "logos/Norway - Eliteserien/Tromsø IL.png",
+   "team": "Tromsø IL",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1301,
+   "file": "logos/Portugal - Liga Portugal/CS Marítimo.png",
+   "team": "CS Marítimo",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1304,
+   "file": "history/2025-26/Netherlands - Eredivisie/Heracles Almelo.png",
+   "team": "Heracles Almelo",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1321,
+   "file": "history/2024-25/Czech Republic - Chance Liga/SK Dynamo Ceske Budejovice.png",
+   "team": "SK Dynamo Ceske Budejovice",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1322,
+   "file": "logos/Czech Republic - Chance Liga/FK Jablonec.png",
+   "team": "FK Jablonec",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1390,
+   "file": "logos/Italy - Serie A/Cagliari Calcio.png",
+   "team": "Cagliari Calcio",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1420,
+   "file": "logos/France - Ligue 1/Angers SCO.png",
+   "team": "Angers SCO",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1421,
+   "file": "history/2024-25/France - Ligue 1/Stade Reims.png",
+   "team": "Stade Reims",
+   "league_folder": "France - Ligue 1",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1434,
+   "file": "logos/Netherlands - Eredivisie/SC Telstar.png",
+   "team": "SC Telstar",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1435,
+   "file": "logos/Netherlands - Eredivisie/Go Ahead Eagles.png",
+   "team": "Go Ahead Eagles",
+   "league_folder": "Netherlands - Eredivisie",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1465,
+   "file": "logos/Portugal - Liga Portugal/GD Estoril Praia.png",
+   "team": "GD Estoril Praia",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1467,
+   "file": "logos/Türkiye - Süper Lig/Göztepe.png",
+   "team": "Göztepe",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1496,
+   "file": "logos/Czech Republic - Chance Liga/FK Pardubice.png",
+   "team": "FK Pardubice",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1519,
+   "file": "logos/Scotland - Scottish Premiership/Dundee United FC.png",
+   "team": "Dundee United FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1531,
+   "file": "logos/Spain - LaLiga/Elche CF.png",
+   "team": "Elche CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1894,
+   "file": "history/2023-24/Denmark - Superliga/Hvidovre IF.png",
+   "team": "Hvidovre IF",
+   "league_folder": "Denmark - Superliga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 1897,
+   "file": "logos/Czech Republic - Chance Liga/FC Hradec Kralove.png",
+   "team": "FC Hradec Kralove",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2036,
+   "file": "history/2025-26/Germany - Bundesliga/1.FC Heidenheim 1846.png",
+   "team": "1.FC Heidenheim 1846",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2118,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Wisla Plock.png",
+   "team": "Wisla Plock",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2157,
+   "file": "history/2025-26/Austria - Bundesliga/FC Blau-Weiss Linz.png",
+   "team": "FC Blau-Weiss Linz",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2239,
+   "file": "history/2025-26/Italy - Serie A/US Cremonese.png",
+   "team": "US Cremonese",
+   "league_folder": "Italy - Serie A",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2282,
+   "file": "logos/Belgium - Jupiler Pro League/Club Brugge KV.png",
+   "team": "Club Brugge KV",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2293,
+   "file": "logos/Türkiye - Süper Lig/Konyaspor.png",
+   "team": "Konyaspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2300,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Jagiellonia Bialystok.png",
+   "team": "Jagiellonia Bialystok",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2311,
+   "file": "logos/Czech Republic - Chance Liga/SK Sigma Olomouc.png",
+   "team": "SK Sigma Olomouc",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2362,
+   "file": "logos/Croatia - SuperSport HNL/Slaven Belupo Koprivnica.png",
+   "team": "Slaven Belupo Koprivnica",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2375,
+   "file": "history/2021-22/Türkiye - Süper Lig/Altay SK.png",
+   "team": "Altay SK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2381,
+   "file": "history/2024-25/Türkiye - Süper Lig/Sivasspor.png",
+   "team": "Sivasspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2410,
+   "file": "logos/Russia - Premier Liga/CSKA Moscow.png",
+   "team": "CSKA Moscow",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2414,
+   "file": "logos/Denmark - Superliga/AC Horsens.png",
+   "team": "AC Horsens",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2420,
+   "file": "logos/Portugal - Liga Portugal/Vitória Guimarães SC.png",
+   "team": "Vitória Guimarães SC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2423,
+   "file": "logos/Portugal - Liga Portugal/CD Santa Clara.png",
+   "team": "CD Santa Clara",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2424,
+   "file": "logos/Portugal - Liga Portugal/Gil Vicente FC.png",
+   "team": "Gil Vicente FC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2425,
+   "file": "logos/Portugal - Liga Portugal/Rio Ave FC.png",
+   "team": "Rio Ave FC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2431,
+   "file": "logos/Portugal - Liga Portugal/CF Estrela Amadora.png",
+   "team": "CF Estrela Amadora",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2441,
+   "file": "logos/Greece - Super League 1/AEK Athens.png",
+   "team": "AEK Athens",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2446,
+   "file": "logos/Austria - Bundesliga/WSG Tirol.png",
+   "team": "WSG Tirol",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2457,
+   "file": "history/2021-22/Portugal - Liga Portugal/Belenenses SAD.png",
+   "team": "Belenenses SAD",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2021-22",
+   "match": "a mano"
+  },
+  {
+   "tm": 2497,
+   "file": "history/2025-26/Spain - LaLiga/Real Oviedo.png",
+   "team": "Real Oviedo",
+   "league_folder": "Spain - LaLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2503,
+   "file": "history/2024-25/Portugal - Liga Portugal/Boavista FC.png",
+   "team": "Boavista FC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2521,
+   "file": "logos/Portugal - Liga Portugal/FC Alverca.png",
+   "team": "FC Alverca",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2553,
+   "file": "logos/Scotland - Scottish Premiership/Kilmarnock FC.png",
+   "team": "Kilmarnock FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2578,
+   "file": "logos/Scotland - Scottish Premiership/St. Johnstone FC.png",
+   "team": "St. Johnstone FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2671,
+   "file": "history/2023-24/Greece - Super League 1/PAS Giannina.png",
+   "team": "PAS Giannina",
+   "league_folder": "Greece - Super League 1",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2672,
+   "file": "logos/Greece - Super League 1/Levadiakos.png",
+   "team": "Levadiakos",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2687,
+   "file": "history/2023-24/Spain - LaLiga/Cádiz CF.png",
+   "team": "Cádiz CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2696,
+   "file": "logos/Russia - Premier Liga/Krylya Sovetov Samara.png",
+   "team": "Krylya Sovetov Samara",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2698,
+   "file": "logos/Russia - Premier Liga/Rubin Kazan.png",
+   "team": "Rubin Kazan",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2715,
+   "file": "history/2022-23/Belgium - Jupiler Pro League/RFC Seraing.png",
+   "team": "RFC Seraing",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2719,
+   "file": "logos/Sweden - Allsvenskan/Mjällby AIF.png",
+   "team": "Mjällby AIF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2727,
+   "file": "logos/Belgium - Jupiler Pro League/Oud-Heverlee Leuven.png",
+   "team": "Oud-Heverlee Leuven",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2740,
+   "file": "history/2024-25/Ukraine - Premier Liga/Vorskla Poltava.png",
+   "team": "Vorskla Poltava",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2741,
+   "file": "logos/Russia - Premier Liga/Baltika Kaliningrad.png",
+   "team": "Baltika Kaliningrad",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 2759,
+   "file": "history/2024-25/Scotland - Scottish Premiership/Ross County FC.png",
+   "team": "Ross County FC",
+   "league_folder": "Scotland - Scottish Premiership",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2761,
+   "file": "history/2025-26/Norway - Eliteserien/FK Haugesund.png",
+   "team": "FK Haugesund",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2778,
+   "file": "logos/Denmark - Superliga/FC Nordsjaelland.png",
+   "team": "FC Nordsjaelland",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2790,
+   "file": "logos/Switzerland - Super League/FC Lugano.png",
+   "team": "FC Lugano",
+   "league_folder": "Switzerland - Super League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2817,
+   "file": "history/2025-26/Norway - Eliteserien/Strømsgodset IF.png",
+   "team": "Strømsgodset IF",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2832,
+   "file": "logos/Türkiye - Süper Lig/Gaziantep FK.png",
+   "team": "Gaziantep FK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2844,
+   "file": "history/2025-26/Sweden - Allsvenskan/IFK Norrköping.png",
+   "team": "IFK Norrköping",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2861,
+   "file": "history/2022-23/Belgium - Jupiler Pro League/KV Oostende.png",
+   "team": "KV Oostende",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2919,
+   "file": "logos/Italy - Serie A/AC Monza.png",
+   "team": "AC Monza",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 2995,
+   "file": "history/2022-23/Portugal - Liga Portugal/FC Paços de Ferreira.png",
+   "team": "FC Paços de Ferreira",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3008,
+   "file": "logos/England - Premier League/Hull City.png",
+   "team": "Hull City",
+   "league_folder": "England - Premier League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3057,
+   "file": "logos/Belgium - Jupiler Pro League/Standard Liège.png",
+   "team": "Standard Liège",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3060,
+   "file": "logos/Greece - Super League 1/Atromitos Athens.png",
+   "team": "Atromitos Athens",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3062,
+   "file": "history/2024-25/Greece - Super League 1/Athens Kallithea.png",
+   "team": "Athens Kallithea",
+   "league_folder": "Greece - Super League 1",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3137,
+   "file": "history/2025-26/Serbia - Super liga Srbije/FK TSC Backa Topola.png",
+   "team": "FK TSC Backa Topola",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3205,
+   "file": "history/2025-26/Türkiye - Süper Lig/Kayserispor.png",
+   "team": "Kayserispor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3209,
+   "file": "history/2023-24/Türkiye - Süper Lig/Pendikspor.png",
+   "team": "Pendikspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3268,
+   "file": "logos/Portugal - Liga Portugal/Casa Pia AC.png",
+   "team": "Casa Pia AC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3302,
+   "file": "history/2023-24/Spain - LaLiga/UD Almería.png",
+   "team": "UD Almería",
+   "league_folder": "Spain - LaLiga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3325,
+   "file": "history/2023-24/Portugal - Liga Portugal/GD Chaves.png",
+   "team": "GD Chaves",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3329,
+   "file": "logos/Portugal - Liga Portugal/FC Famalicão.png",
+   "team": "FC Famalicão",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3368,
+   "file": "logos/Spain - LaLiga/Levante UD.png",
+   "team": "Levante UD",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3385,
+   "file": "history/2025-26/Greece - Super League 1/Panserraikos.png",
+   "team": "Panserraikos",
+   "league_folder": "Greece - Super League 1",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3508,
+   "file": "logos/Belgium - Jupiler Pro League/Zulte Waregem.png",
+   "team": "Zulte Waregem",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3522,
+   "file": "history/2022-23/Italy - Serie A/Spezia Calcio.png",
+   "team": "Spezia Calcio",
+   "league_folder": "Italy - Serie A",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3524,
+   "file": "history/2023-24/France - Ligue 1/Clermont Foot 63.png",
+   "team": "Clermont Foot 63",
+   "league_folder": "France - Ligue 1",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3527,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Motor Lublin.png",
+   "team": "Motor Lublin",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3551,
+   "file": "logos/Austria - Bundesliga/SCR Altach.png",
+   "team": "SCR Altach",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3592,
+   "file": "logos/Ukraine - Premier Liga/Kryvbas Kryvyi Rig.png",
+   "team": "Kryvbas Kryvyi Rig",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3622,
+   "file": "history/2025-26/Sweden - Allsvenskan/IFK Värnamo.png",
+   "team": "IFK Värnamo",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3641,
+   "file": "logos/Sweden - Allsvenskan/Degerfors IF.png",
+   "team": "Degerfors IF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3654,
+   "file": "logos/Sweden - Allsvenskan/Kalmar FF.png",
+   "team": "Kalmar FF",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3709,
+   "file": "logos/Spain - LaLiga/Getafe CF.png",
+   "team": "Getafe CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3719,
+   "file": "history/2024-25/Russia - Premier Liga/FC Khimki.png",
+   "team": "FC Khimki",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3725,
+   "file": "logos/Russia - Premier Liga/Akhmat Grozny.png",
+   "team": "Akhmat Grozny",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3729,
+   "file": "history/2021-22/Russia - Premier Liga/Arsenal Tula.png",
+   "team": "Arsenal Tula",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3837,
+   "file": "logos/Norway - Eliteserien/Fredrikstad FK.png",
+   "team": "Fredrikstad FK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3840,
+   "file": "history/2024-25/Türkiye - Süper Lig/Adana Demirspor.png",
+   "team": "Adana Demirspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3901,
+   "file": "logos/Belgium - Jupiler Pro League/RAAL La Louvière.png",
+   "team": "RAAL La Louvière",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3911,
+   "file": "logos/France - Ligue 1/Stade Brestois 29.png",
+   "team": "Stade Brestois 29",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3948,
+   "file": "logos/Belgium - Jupiler Pro League/Union Saint-Gilloise.png",
+   "team": "Union Saint-Gilloise",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 3999,
+   "file": "history/2024-25/Greece - Super League 1/PAS Lamia 1964.png",
+   "team": "PAS Lamia 1964",
+   "league_folder": "Greece - Super League 1",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4000,
+   "file": "history/2025-26/Poland - PKO BP Ekstraklasa/Lechia Gdansk.png",
+   "team": "Lechia Gdansk",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4172,
+   "file": "history/2025-26/Italy - Serie A/Pisa Sporting Club.png",
+   "team": "Pisa Sporting Club",
+   "league_folder": "Italy - Serie A",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4294,
+   "file": "history/2024-25/Portugal - Liga Portugal/SC Farense.png",
+   "team": "SC Farense",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4309,
+   "file": "logos/Norway - Eliteserien/Hamarkameratene.png",
+   "team": "Hamarkameratene",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4441,
+   "file": "logos/Austria - Bundesliga/Wolfsberger AC.png",
+   "team": "Wolfsberger AC",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4467,
+   "file": "logos/Austria - Bundesliga/TSV Hartberg.png",
+   "team": "TSV Hartberg",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4603,
+   "file": "history/2025-26/Greece - Super League 1/AE Larisa.png",
+   "team": "AE Larisa",
+   "league_folder": "Greece - Super League 1",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4633,
+   "file": "logos/Serbia - Super liga Srbije/FK Novi Pazar.png",
+   "team": "FK Novi Pazar",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4645,
+   "file": "logos/Serbia - Super liga Srbije/FK Radnicki 1923 Kragujevac.png",
+   "team": "FK Radnicki 1923 Kragujevac",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 4959,
+   "file": "logos/Romania - SuperLiga/SC Otelul Galati.png",
+   "team": "SC Otelul Galati",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5202,
+   "file": "logos/Sweden - Allsvenskan/Västerås SK.png",
+   "team": "Västerås SK",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5544,
+   "file": "logos/Czech Republic - Chance Liga/1.FC Slovacko.png",
+   "team": "1.FC Slovacko",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5545,
+   "file": "logos/Czech Republic - Chance Liga/FC Zlin.png",
+   "team": "FC Zlin",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5546,
+   "file": "logos/Czech Republic - Chance Liga/FK Mlada Boleslav.png",
+   "team": "FK Mlada Boleslav",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5619,
+   "file": "logos/Norway - Eliteserien/Aalesunds FK.png",
+   "team": "Aalesunds FK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5689,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Cracovia.png",
+   "team": "Cracovia",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5724,
+   "file": "logos/Denmark - Superliga/Randers FC.png",
+   "team": "Randers FC",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5776,
+   "file": "history/2025-26/Denmark - Superliga/FC Fredericia.png",
+   "team": "FC Fredericia",
+   "league_folder": "Denmark - Superliga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 5817,
+   "file": "logos/Denmark - Superliga/Sönderjyske Fodbold.png",
+   "team": "Sönderjyske Fodbold",
+   "league_folder": "Denmark - Superliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6107,
+   "file": "history/2025-26/Poland - PKO BP Ekstraklasa/Arka Gdynia.png",
+   "team": "Arka Gdynia",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6110,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Korona Kielce.png",
+   "team": "Korona Kielce",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6112,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Piast Gliwice.png",
+   "team": "Piast Gliwice",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6195,
+   "file": "logos/Italy - Serie A/SSC Napoli.png",
+   "team": "SSC Napoli",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6399,
+   "file": "logos/Norway - Eliteserien/Sandefjord Fotball.png",
+   "team": "Sandefjord Fotball",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6418,
+   "file": "logos/Greece - Super League 1/Panetolikos.png",
+   "team": "Panetolikos",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6429,
+   "file": "logos/Romania - SuperLiga/FC Universitatea Cluj.png",
+   "team": "FC Universitatea Cluj",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6456,
+   "file": "logos/Poland - PKO BP Ekstraklasa/GKS Katowice.png",
+   "team": "GKS Katowice",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6574,
+   "file": "logos/Italy - Serie A/US Sassuolo.png",
+   "team": "US Sassuolo",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6621,
+   "file": "logos/Serbia - Super liga Srbije/FK Cukaricki.png",
+   "team": "FK Cukaricki",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6622,
+   "file": "logos/Serbia - Super liga Srbije/FK Mladost Lucani.png",
+   "team": "FK Mladost Lucani",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6646,
+   "file": "history/2025-26/Türkiye - Süper Lig/Fatih Karagümrük.png",
+   "team": "Fatih Karagümrük",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6676,
+   "file": "logos/Greece - Super League 1/Asteras Aktor.png",
+   "team": "Asteras Aktor",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 6890,
+   "file": "logos/Türkiye - Süper Lig/Basaksehir FK.png",
+   "team": "Basaksehir FK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6912,
+   "file": "history/2023-24/Portugal - Liga Portugal/FC Vizela.png",
+   "team": "FC Vizela",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6992,
+   "file": "logos/Ukraine - Premier Liga/Chornomorets Odesa.png",
+   "team": "Chornomorets Odesa",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 6993,
+   "file": "history/2021-22/Ukraine - Premier Liga/FK Mariupol.png",
+   "team": "FK Mariupol",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7009,
+   "file": "logos/Sweden - Allsvenskan/GAIS.png",
+   "team": "GAIS",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7154,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Radomiak Radom.png",
+   "team": "Radomiak Radom",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7160,
+   "file": "logos/Türkiye - Süper Lig/Eyüpspor.png",
+   "team": "Eyüpspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7179,
+   "file": "history/2025-26/Portugal - Liga Portugal/CD Tondela.png",
+   "team": "CD Tondela",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7378,
+   "file": "history/2023-24/Portugal - Liga Portugal/Portimonense SC.png",
+   "team": "Portimonense SC",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7567,
+   "file": "logos/Serbia - Super liga Srbije/FK Radnicki Nis.png",
+   "team": "FK Radnicki Nis",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7769,
+   "file": "logos/Romania - SuperLiga/CFR Cluj.png",
+   "team": "CFR Cluj",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7775,
+   "file": "history/2024-25/Türkiye - Süper Lig/Hatayspor.png",
+   "team": "Hatayspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 7945,
+   "file": "logos/Sweden - Allsvenskan/IK Sirius.png",
+   "team": "IK Sirius",
+   "league_folder": "Sweden - Allsvenskan",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 8024,
+   "file": "logos/Portugal - Liga Portugal/FC Arouca.png",
+   "team": "FC Arouca",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 8818,
+   "file": "logos/Romania - SuperLiga/FC Botosani.png",
+   "team": "FC Botosani",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 8819,
+   "file": "history/2025-26/Serbia - Super liga Srbije/FK Javor-Matis Ivanjica.png",
+   "team": "FK Javor-Matis Ivanjica",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 8970,
+   "file": "logos/Italy - Serie A/Frosinone Calcio.png",
+   "team": "Frosinone Calcio",
+   "league_folder": "Italy - Serie A",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 9010,
+   "file": "history/2025-26/Belgium - Jupiler Pro League/FCV Dender EH.png",
+   "team": "FCV Dender EH",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 9465,
+   "file": "logos/Romania - SuperLiga/Petrolul Ploiesti.png",
+   "team": "Petrolul Ploiesti",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 9644,
+   "file": "logos/Poland - PKO BP Ekstraklasa/Raków Częstochowa.png",
+   "team": "Raków Częstochowa",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 10004,
+   "file": "logos/France - Ligue 1/Paris FC.png",
+   "team": "Paris FC",
+   "league_folder": "France - Ligue 1",
+   "season": "2026-27",
+   "match": "a mano"
+  },
+  {
+   "tm": 10217,
+   "file": "logos/Norway - Eliteserien/Sarpsborg 08 FF.png",
+   "team": "Sarpsborg 08 FF",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 10484,
+   "file": "logos/Türkiye - Süper Lig/Kasimpasa.png",
+   "team": "Kasimpasa",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 10690,
+   "file": "logos/Ukraine - Premier Liga/Zorya Lugansk.png",
+   "team": "Zorya Lugansk",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11127,
+   "file": "history/2023-24/Russia - Premier Liga/Ural Yekaterinburg.png",
+   "team": "Ural Yekaterinburg",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11194,
+   "file": "logos/Croatia - SuperSport HNL/NK Lokomotiva Zagreb.png",
+   "team": "NK Lokomotiva Zagreb",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11282,
+   "file": "logos/Türkiye - Süper Lig/Alanyaspor.png",
+   "team": "Alanyaspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11380,
+   "file": "history/2024-25/Romania - SuperLiga/FC Buzău.png",
+   "team": "FC Buzău",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 11688,
+   "file": "history/2022-23/Türkiye - Süper Lig/Giresunspor.png",
+   "team": "Giresunspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 12321,
+   "file": "history/2025-26/Spain - LaLiga/Girona FC.png",
+   "team": "Girona FC",
+   "league_folder": "Spain - LaLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 13726,
+   "file": "history/2025-26/Czech Republic - Chance Liga/MFK Karvina.png",
+   "team": "MFK Karvina",
+   "league_folder": "Czech Republic - Chance Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 14589,
+   "file": "logos/Russia - Premier Liga/FC Orenburg.png",
+   "team": "FC Orenburg",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 15276,
+   "file": "history/2025-26/Serbia - Super liga Srbije/FK Spartak Subotica.png",
+   "team": "FK Spartak Subotica",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 15906,
+   "file": "history/2025-26/Poland - PKO BP Ekstraklasa/Bruk-Bet Termalica Nieciecza.png",
+   "team": "Bruk-Bet Termalica Nieciecza",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 16239,
+   "file": "history/2021-22/Ukraine - Premier Liga/Desna.png",
+   "team": "Desna",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 16704,
+   "file": "logos/Russia - Premier Liga/FC Krasnodar.png",
+   "team": "FC Krasnodar",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 16795,
+   "file": "history/2023-24/Spain - LaLiga/Granada CF.png",
+   "team": "Granada CF",
+   "league_folder": "Spain - LaLiga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 18105,
+   "file": "history/2022-23/Ukraine - Premier Liga/PFK Lviv.png",
+   "team": "PFK Lviv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 18303,
+   "file": "history/2025-26/Ukraine - Premier Liga/FC Oleksandriya.png",
+   "team": "FC Oleksandriya",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 19789,
+   "file": "history/2021-22/Türkiye - Süper Lig/Y. Malatyaspor.png",
+   "team": "Y. Malatyaspor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 20887,
+   "file": "history/2024-25/Serbia - Super liga Srbije/FK Jedinstvo Ub.png",
+   "team": "FK Jedinstvo Ub",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 21101,
+   "file": "logos/Norway - Eliteserien/Kristiansund BK.png",
+   "team": "Kristiansund BK",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 22431,
+   "file": "history/2024-25/Poland - PKO BP Ekstraklasa/Stal Mielec.png",
+   "team": "Stal Mielec",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 23184,
+   "file": "logos/Norway - Eliteserien/KFUM-Kameratene Oslo.png",
+   "team": "KFUM-Kameratene Oslo",
+   "league_folder": "Norway - Eliteserien",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 23826,
+   "file": "logos/Germany - Bundesliga/RB Leipzig.png",
+   "team": "RB Leipzig",
+   "league_folder": "Germany - Bundesliga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 24245,
+   "file": "history/2022-23/Türkiye - Süper Lig/Ümraniyespor.png",
+   "team": "Ümraniyespor",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 24575,
+   "file": "logos/Croatia - SuperSport HNL/HNK Gorica.png",
+   "team": "HNK Gorica",
+   "league_folder": "Croatia - SuperSport HNL",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 26459,
+   "file": "logos/Ukraine - Premier Liga/NK Veres Rivne.png",
+   "team": "NK Veres Rivne",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 28095,
+   "file": "history/2021-22/Russia - Premier Liga/Ufa.png",
+   "team": "Ufa",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2021-22",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 28643,
+   "file": "logos/Belgium - Jupiler Pro League/SK Beveren.png",
+   "team": "SK Beveren",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 28760,
+   "file": "history/2024-25/Austria - Bundesliga/SK Austria Klagenfurt.png",
+   "team": "SK Austria Klagenfurt",
+   "league_folder": "Austria - Bundesliga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 28893,
+   "file": "history/2024-25/Poland - PKO BP Ekstraklasa/Puszcza Niepolomice.png",
+   "team": "Puszcza Niepolomice",
+   "league_folder": "Poland - PKO BP Ekstraklasa",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 29700,
+   "file": "history/2025-26/Romania - SuperLiga/AFC Unirea 04 Slobozia.png",
+   "team": "AFC Unirea 04 Slobozia",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 29831,
+   "file": "logos/Romania - SuperLiga/FCV Farul Constanta.png",
+   "team": "FCV Farul Constanta",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 30120,
+   "file": "logos/Greece - Super League 1/AE Kifisia.png",
+   "team": "AE Kifisia",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 32113,
+   "file": "logos/Serbia - Super liga Srbije/FK IMT Belgrad.png",
+   "team": "FK IMT Belgrad",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 33328,
+   "file": "logos/Serbia - Super liga Srbije/FK Radnik Surdulica.png",
+   "team": "FK Radnik Surdulica",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 33966,
+   "file": "history/2024-25/Romania - SuperLiga/ACSM Politehnica Iasi.png",
+   "team": "ACSM Politehnica Iasi",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 36922,
+   "file": "history/2024-25/Serbia - Super liga Srbije/FK Tekstilac Odzaci.png",
+   "team": "FK Tekstilac Odzaci",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 37255,
+   "file": "logos/Romania - SuperLiga/FK Csikszereda Miercurea Ciuc.png",
+   "team": "FK Csikszereda Miercurea Ciuc",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 37624,
+   "file": "history/2025-26/Romania - SuperLiga/FC Metaloglobus Bucharest.png",
+   "team": "FC Metaloglobus Bucharest",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 39097,
+   "file": "logos/Ukraine - Premier Liga/Obolon Kyiv.png",
+   "team": "Obolon Kyiv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 39722,
+   "file": "logos/Türkiye - Süper Lig/Erzurumspor FK.png",
+   "team": "Erzurumspor FK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 40812,
+   "file": "logos/Romania - SuperLiga/Universitatea Craiova.png",
+   "team": "Universitatea Craiova",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 41231,
+   "file": "history/2025-26/Russia - Premier Liga/FC Sochi.png",
+   "team": "FC Sochi",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 41274,
+   "file": "history/2024-25/Belgium - Jupiler Pro League/Beerschot VA.png",
+   "team": "Beerschot VA",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 41278,
+   "file": "logos/Romania - SuperLiga/ACSC FC Arges.png",
+   "team": "ACSC FC Arges",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 44006,
+   "file": "history/2024-25/Türkiye - Süper Lig/Bodrum FK.png",
+   "team": "Bodrum FK",
+   "league_folder": "Türkiye - Süper Lig",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 48332,
+   "file": "logos/Ukraine - Premier Liga/Kolos Kovalivka.png",
+   "team": "Kolos Kovalivka",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 48726,
+   "file": "history/2025-26/Ukraine - Premier Liga/Rukh Lviv.png",
+   "team": "Rukh Lviv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 49364,
+   "file": "history/2024-25/Ukraine - Premier Liga/Ingulets Petrove.png",
+   "team": "Ingulets Petrove",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2024-25",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 49702,
+   "file": "history/2025-26/Russia - Premier Liga/FC Pari Nizhniy Novgorod.png",
+   "team": "FC Pari Nizhniy Novgorod",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2025-26",
+   "match": "a mano"
+  },
+  {
+   "tm": 53646,
+   "file": "logos/Ukraine - Premier Liga/Polissya Zhytomyr.png",
+   "team": "Polissya Zhytomyr",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 54189,
+   "file": "history/2023-24/Belgium - Jupiler Pro League/RWD Molenbeek.png",
+   "team": "RWD Molenbeek",
+   "league_folder": "Belgium - Jupiler Pro League",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 54585,
+   "file": "logos/Romania - SuperLiga/Sepsi OSK Sf. Gheorghe.png",
+   "team": "Sepsi OSK Sf. Gheorghe",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 55686,
+   "file": "history/2025-26/Ukraine - Premier Liga/Metalist 1925 Kharkiv.png",
+   "team": "Metalist 1925 Kharkiv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 58049,
+   "file": "history/2025-26/Romania - SuperLiga/FC Hermannstadt.png",
+   "team": "FC Hermannstadt",
+   "league_folder": "Romania - SuperLiga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 59358,
+   "file": "logos/Serbia - Super liga Srbije/FK Zeleznicar Pancevo.png",
+   "team": "FK Zeleznicar Pancevo",
+   "league_folder": "Serbia - Super liga Srbije",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 60551,
+   "file": "history/2023-24/Ukraine - Premier Liga/SK Dnipro-1.png",
+   "team": "SK Dnipro-1",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 60949,
+   "file": "logos/Greece - Super League 1/Volos NFC.png",
+   "team": "Volos NFC",
+   "league_folder": "Greece - Super League 1",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 61825,
+   "file": "history/2023-24/Ukraine - Premier Liga/FK Minaj.png",
+   "team": "FK Minaj",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2023-24",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 63007,
+   "file": "logos/Ukraine - Premier Liga/LNZ Cherkasy.png",
+   "team": "LNZ Cherkasy",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 71985,
+   "file": "logos/Russia - Premier Liga/Akron Tolyatti.png",
+   "team": "Akron Tolyatti",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 75231,
+   "file": "logos/Russia - Premier Liga/Dinamo Makhachkala.png",
+   "team": "Dinamo Makhachkala",
+   "league_folder": "Russia - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 81401,
+   "file": "history/2025-26/Ukraine - Premier Liga/SC Poltava.png",
+   "team": "SC Poltava",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 83678,
+   "file": "history/2022-23/Ukraine - Premier Liga/Metalist Kharkiv.png",
+   "team": "Metalist Kharkiv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2022-23",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 84122,
+   "file": "logos/Ukraine - Premier Liga/Epicentr Kamyanets-Podilskyi.png",
+   "team": "Epicentr Kamyanets-Podilskyi",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 85465,
+   "file": "logos/Ukraine - Premier Liga/Karpaty Lviv.png",
+   "team": "Karpaty Lviv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 86209,
+   "file": "logos/Ukraine - Premier Liga/Livyi Bereg Kyiv.png",
+   "team": "Livyi Bereg Kyiv",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 87883,
+   "file": "logos/Ukraine - Premier Liga/FC Kudrivka.png",
+   "team": "FC Kudrivka",
+   "league_folder": "Ukraine - Premier Liga",
+   "season": "2026-27",
+   "match": "automatico, ricontrollato"
+  },
+  {
+   "tm": 110302,
+   "file": "history/2025-26/Portugal - Liga Portugal/Avs Futebol.png",
+   "team": "Avs Futebol",
+   "league_folder": "Portugal - Liga Portugal",
+   "season": "2025-26",
+   "match": "automatico, ricontrollato"
+  }
+ ]
+}

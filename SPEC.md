@@ -1,7 +1,7 @@
 # TRIVELA — Specifica di prodotto e architettura
 
 > Documento di riferimento del progetto. Ogni decisione di design o architettura che cambia va aggiornata qui **prima** di essere implementata.
-> Stato: **v16 — 11 giochi (con il primo gioco visivo, Indovina lo Stemma), figurine dei giocatori, stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
+> Stato: **v16 — 12 giochi (con due giochi visivi, Indovina lo Stemma e Indovina la Figurina), stanze senza server, tastiera di gioco, timer a scelta, interfaccia «tramonto pixel» pensata per il telefono in orizzontale (vedi §0.6, che prevale sulle sezioni precedenti). Vincolo: tutto gratuito.**
 
 ---
 
@@ -178,7 +178,11 @@ Decisione del committente (novembre 2026): semplificazione radicale. **Tutti i g
 
 > **v16** (novembre 2026), Fase 2: asset calcistici.
 > - Nuova decisione sulle fonti (§0.8): **stemmi e foto** solo da Wikidata + Wikimedia Commons, con la licenza di ogni file verificata; API-Football e TheSportsDB valutate e scartate.
-> - Nuovo gioco **Indovina lo Stemma** (§4.15), con una soglia di domande dedicata ai giochi visivi; **figurine dei giocatori** (§14.3) nelle rivelazioni e come premio di fine partita.
+> - Nuovo gioco **Indovina lo Stemma** (§4.15), con una soglia di domande dedicata ai giochi visivi.
+> - Nuovo gioco **Indovina la Figurina** (§4.16): la figurina di un calciatore (§14.3) coperta, con la foto a quadrettoni che si fa più nitida a ogni indizio. Le figurine **non compaiono più** nelle rivelazioni degli altri giochi né a fine partita: decisione dell'utente, le figurine sono un gioco e basta.
+> - **Loghi di football-logos** (§0.8, decisione dell'utente): Indovina lo Stemma usa i loghi del repository GitHub `luukhopman/football-logos`, che non dichiara una licenza, abbinati a mano agli ID Transfermarkt. Il gioco passa da 108 a **504 stemmi** e da 163 a **991 domande**, con 23 campionati.
+> - **Scelta dei giochi** nella Partita Classica (§5.4): casuali come prima, scelti insieme a mano, oppure **draft** (uno a testa a turno; chi sceglie per primo è sorteggiato, l'altro inizia la partita).
+> - Correzione (invariante 5): prima della rivelazione le domande arrivano a Schermo e pulsantiere **senza fonti né entità**. Le fonti nominavano la risposta («Transfermarkt: <giocatore>») nel Tiro Secco, nel Mercato e nel Giramondo, e gli ID delle entità si traducono in nomi con l'indice dei nomi.
 
 > **v15** (novembre 2026):
 > - **Le Statistiche** e **La Stagione dei Campioni** non sono più giochi: la prima era troppo difficile (un nome da scrivere partendo da tre numeri), la seconda aveva buone domande ma non bastava per un gioco intero. Le loro domande sono ora **tre famiglie del Tiro Secco** (§4.1): «Di chi è questa stagione?» (la scheda, ora a quattro risposte e solo con stagioni memorabili), «Stagione dei campioni» e la nuova «Chi ne ha fatti di più?» (gol, assist, gialli). I giochi tornano **10**; §4.12 e §4.13 restano vuoti;
@@ -268,6 +272,11 @@ L'utente ha autorizzato fonti esterne gratuite **solo per asset grafici** (stemm
 - **Fonti accettate**:
   - **Wikidata** (CC0) per l'identità: una squadra si abbina **solo** con il suo ID Transfermarkt (`P7223`), un giocatore solo con il suo (`P2446`), mai per nome; l'ID deve portare a un solo elemento e l'elemento a un solo ID. Lo stemma è la dichiarazione `P154` in uso (rango preferito, altrimenti l'unica senza data di fine); la foto è l'immagine `P18`, solo se è una.
   - **Wikimedia Commons** per file, licenza e autore (`imageinfo` + `extmetadata`).
+- **Eccezione decisa dall'utente (v16): i loghi di `luukhopman/football-logos`**. Il repository GitHub raccoglie circa 400 loghi di squadre di 25 campionati europei (PNG 139×181) e **non dichiara una licenza** né la provenienza delle immagini. L'utente ha scelto di usarli lo stesso, **sotto la propria responsabilità**, sapendo che il sito è pubblico e che i titolari possono chiederne la rimozione. Regole:
+  - solo **loghi di squadre**, solo per Indovina lo Stemma; sostituiscono lo stemma di Commons della stessa squadra (le altre squadre restano con quello di Commons);
+  - ogni file è abbinato all'**ID Transfermarkt** della squadra in una tabella versionata, `data/static/logos_map.json`: proposta automatica sui nomi del dataset nello stesso campionato, poi controllo a occhio dell'intero insieme (logo e nome della squadra affiancati); i casi incerti corretti a mano o lasciati fuori. La build legge solo la tabella, mai i nomi. Restano fuori le squadre che non sono nel dataset (es. i campionati di Bulgaria, Israele, Ungheria);
+  - nel manifest ogni logo ha fonte, pagina del file nel repository (al commit usato), licenza «non dichiarata», marchio sì e lo stato «decisione dell'utente»; l'attribuzione compare alla rivelazione e nella pagina «Fonti dei dati»;
+  - il repository si scarica con `cd data && uv run python -m trivela_data.assets logos` (clone in `data/cache/assets/football-logos/`, non versionato), poi `assets build`.
 - **Fonti scartate**: **API-Football** (`media.api-sports.io`), perché i loghi sono distribuiti con l'API, senza una licenza per file da poter verificare; **TheSportsDB**, perché le immagini sono caricate dagli utenti e i diritti restano dei titolari, senza una licenza per file. Senza una licenza verificabile non si pubblica (§17).
 - **Licenze** (classificazione automatica da `extmetadata`, `data/trivela_data/assets.py`):
 
@@ -284,8 +293,8 @@ L'utente ha autorizzato fonti esterne gratuite **solo per asset grafici** (stemm
   - `cd data && uv run python -m trivela_data.assets fetch [--photos N] [--download M] [--refresh]`: identità e licenze (salvate in `data/static/assets_sources.json`), poi i file, in cache in `data/cache/assets/` (non versionata). Si scaricano solo i file pubblicabili: prima le miniature PNG da 250 px degli stemmi, poi gli SVG originali che servono alla variante senza scritte, infine le foto dei giocatori più noti (miniature da 330 px). Rilanciato, riprende da dove si era fermato; identità e licenze si rileggono solo con `--refresh`.
   - `cd data && uv run python -m trivela_data.assets build`: offline; scrive `apps/web/public/crests/`, `apps/web/public/photos/`, `apps/web/public/data/assets-manifest.json`, `data/static/crests.json` e `data/static/photos.json`. Poi `pnpm data:generate` e `node tools/flags.mjs`.
 - **Rate limit**: un client Wikimedia senza contatto nell'User-Agent ha circa **600 kB al minuto**. La pipeline va più piano: dopo ogni file aspetta in proporzione al suo peso (circa 9 kB/s), almeno 12 secondi (circa 5 file al minuto, sotto il limite di raffica); rispetta `Retry-After`; raggruppa 50 file per chiamata API; usa solo larghezze standard delle miniature. I file passano da `curl` (HTTP/2) con l'User-Agent della pipeline, mai travestito da browser: il client HTTP/1.1 di Python riceveva 429 a qualunque ritmo. Chi vuole limiti più larghi può aggiungere a mano un contatto con `TRIVELA_UA_CONTACT`; la pipeline non lo compila mai da sola.
-- **Peso e PWA**: stemmi in PNG da 128 px, foto ridotte a ritratti da 60×80 pixel a 32 colori (pochi kB l'uno). Le cartelle `crests/` e `photos/` e i dati `data/` (manifest, figurine) sono **fuori dalla precache**: si scaricano solo quando servono e restano in una cache a runtime (`trivela-assets`, 300 file al massimo).
-- **Soglia dei giochi visivi**: le domande dipendono dagli asset con licenza. Un gioco visivo ha una soglia propria (Indovina lo Stemma: **150**) invece di 1000, e non si gonfia mai con copie: una domanda per stemma e per variante.
+- **Peso e PWA**: stemmi in PNG da 128 px, foto ridotte a ritratti da 60×80 pixel a 32 colori (pochi kB l'uno). Per Indovina la Figurina, la stessa foto anche in cinque mosaici da 3×4 a 30×40 (§4.16). Le cartelle `crests/` e `photos/` e i dati `data/` (pacchetti, manifest) sono **fuori dalla precache**: si scaricano solo quando servono e restano in una cache a runtime (`trivela-assets`, 300 file al massimo).
+- **Soglia dei giochi visivi**: le domande dipendono dagli asset con licenza. Un gioco visivo ha una soglia propria (Indovina lo Stemma: **150**; Indovina la Figurina: **300**) invece di 1000, e non si gonfia mai con copie: una domanda per stemma e per variante.
 
 ### 0.7 Identità visiva e menu principale (v6)
 
@@ -387,6 +396,7 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 | Testa a Testa | ❌ | Statistiche su finestre complete o su dati anagrafici: come le classifiche |
 | Le Bandiere | ✅ | Stagione della partita ≥ ANNO |
 | Indovina lo Stemma | ❌ | Lo stemma è quello in uso oggi: non appartiene a una stagione |
+| Indovina la Figurina | ✅ | L'ultima stagione del giocatore nel dataset è ≥ ANNO (come Il Giramondo: la figurina può mostrare una stagione precedente) |
 
 "Stagione ≥ ANNO": la stagione 2015/16 vale come 2015. I dati partono dal 2012/13: se il filtro lascia troppe poche domande a un gioco, quel gioco esce dal sorteggio.
 
@@ -403,13 +413,13 @@ Regola generale: **elenchi e classifiche usano tutte le stagioni e ignorano il f
 
 Due formati su **un solo gioco scelto** dall'elenco degli 8, accanto alla partita completa e al torneo.
 
-- **Sfida Rapida (1 contro 1)**: stesse regole e stessi dispositivi della partita classica (schermo singolo, Schermo + pulsantiere, con Regia, filtri anno e campionati). Il gioco scelto si gioca per **3 round a testa**: 6 domande per Tiro Secco e Maglia (a turni alternati), 6 profili per Mercato e Giramondo, 6 categorie per l'Asta; per **Decina, Dischetto, Formazione e Testa a Testa** (un solo elenco o una sola catena per volta) 3 giri consecutivi, ognuno con un elenco o una catena diversi. Chi è in svantaggio inizia ogni giro. Nella sala d'attesa si sceglie il formato e il gioco. Se i filtri lasciano troppe poche domande, la partita non parte e dice cosa allargare.
-- **Allenamento (1 giocatore)**: un solo schermo, un solo giocatore, **nessun turno e nessun avversario**. 6 domande (4 profili per Mercato e Giramondo, 3 categorie per l'Asta; un elenco per Decina, Dischetto e Formazione). Differenze: nel Mercato e Giramondo non c'è nessuno da battere sul pulsante e un errore chiude il profilo; nella Decina si hanno 2 errori; nel Dischetto 5 tiri; nell'Asta si dichiara la puntata e basta (niente rilanci), un fallimento non regala punti a nessuno; la Formazione ha una sola squadra. Non c'è vincitore: a fine sessione compaiono i punti e «ANCORA».
+- **Sfida Rapida (1 contro 1)**: stesse regole e stessi dispositivi della partita classica (schermo singolo, Schermo + pulsantiere, con Regia, filtri anno e campionati). Il gioco scelto si gioca per **3 round a testa**: 6 domande per Tiro Secco e Maglia (a turni alternati), 6 profili per Mercato, Giramondo e Figurina, 6 categorie per l'Asta; per **Decina, Dischetto, Formazione e Testa a Testa** (un solo elenco o una sola catena per volta) 3 giri consecutivi, ognuno con un elenco o una catena diversi. Chi è in svantaggio inizia ogni giro. Nella sala d'attesa si sceglie il formato e il gioco. Se i filtri lasciano troppe poche domande, la partita non parte e dice cosa allargare.
+- **Allenamento (1 giocatore)**: un solo schermo, un solo giocatore, **nessun turno e nessun avversario**. 6 domande (4 profili per Mercato, Giramondo e Figurina, 3 categorie per l'Asta; un elenco per Decina, Dischetto e Formazione). Differenze: nel Mercato, nel Giramondo e nella Figurina non c'è nessuno da battere sul pulsante e un errore chiude il profilo; nella Decina si hanno 2 errori; nel Dischetto 5 tiri; nell'Asta si dichiara la puntata e basta (niente rilanci), un fallimento non regala punti a nessuno; la Formazione ha una sola squadra. Non c'è vincitore: a fine sessione compaiono i punti e «ANCORA».
 - Nel motore: `MatchConfig.rounds` (Sfida Rapida) e `MatchConfig.solo` (Allenamento) con `forcedGames` di un solo gioco; `singleGamePlan` decide i giri e le istanze; il contenuto è per slot, non per gioco.
 
 ### 3.6 Risposta sbagliata in rosso
 
-In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **rosso** cosa si è risposto («Anna ha risposto: Galatasaray»; in Allenamento «Hai risposto: …»), perché lo vedano tutti. Vale per le opzioni (Tiro Secco, Anomalia, Frame), i numeri della Maglia, i nomi di Mercato, Giramondo, Decina, Dischetto, Formazione e Asta. Non c'è nulla da mostrare per un tempo scaduto o per un verdetto dato a voce dal conduttore. L'etichetta **ESATTO!** compare solo per una risposta del tutto giusta: la Formazione parziale mostra «3/5 TROVATI».
+In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **rosso** cosa si è risposto («Anna ha risposto: Galatasaray»; in Allenamento «Hai risposto: …»), perché lo vedano tutti. Vale per le opzioni (Tiro Secco, Anomalia, Frame), i numeri della Maglia, i nomi di Mercato, Giramondo, Figurina, Decina, Dischetto, Formazione e Asta. Non c'è nulla da mostrare per un tempo scaduto o per un verdetto dato a voce dal conduttore. L'etichetta **ESATTO!** compare solo per una risposta del tutto giusta: la Formazione parziale mostra «3/5 TROVATI».
 
 ### 3.7 Uscite discrete (v6)
 
@@ -420,11 +430,11 @@ In **tutti i giochi**, quando si risponde in modo errato lo Schermo scrive in **
 ### 3.8 Timer a scelta e tempo extra per scrivere (v7)
 
 - **Timer ON** (predefinito): ogni risposta ha il suo tempo (§4). Quando il tempo di una risposta **da scrivere** arriva a zero, la manche **non si chiude**: parte un **tempo extra di 10 secondi**, rosso e lampeggiante («TEMPO SCADUTO · FINISCI DI SCRIVERE!»), che serve solo a finire di digitare. La risposta inviata in quei 10 secondi vale come le altre; allo scadere del tempo extra l'errore è definitivo.
-  - Vale per: Decina, Dischetto, la risposta dopo la prenotazione in Mercato e Giramondo, Formazione, la prova dell'Asta.
+  - Vale per: Decina, Dischetto, la risposta dopo la prenotazione in Mercato, Giramondo e Figurina, Formazione, la prova dell'Asta.
   - **Non** vale dove non c'è niente da scrivere: le quattro opzioni del Tiro Secco, il tastierino della Maglia, l'attesa della prenotazione, e quando un conduttore giudica le risposte a voce.
   - Nel motore: allo scadere di un timer di quei tipi nasce un nuovo timer `grace` (`Timer.grace`), con evento `grace`; il vecchio timer non può più scattare.
 - **Timer OFF**: nessun conto alla rovescia. Restano solo le pause dello spettacolo («PRONTI…», l'esito dopo una risposta).
-  - **Mercato e Giramondo**: gli indizi non escono da soli; un pulsante **PROSSIMO INDIZIO ▶** li scopre a mano (e i punti scendono). Con tutti gli indizi scoperti diventa **NESSUNO LO SA ▶** e chiude il profilo. Sulle pulsantiere lo può premere chi è ancora in gioco.
+  - **Mercato, Giramondo e Figurina**: gli indizi non escono da soli; un pulsante **PROSSIMO INDIZIO ▶** li scopre a mano (e i punti scendono). Con tutti gli indizi scoperti diventa **NESSUNO LO SA ▶** e chiude il profilo. Sulle pulsantiere lo può premere chi è ancora in gioco.
   - Chi deve rispondere può rinunciare: **PASSO** (Decina), **NON TIRO** (Dischetto), **NON LO SO** (dopo la prenotazione). Conta come il tempo scaduto. Formazione e Asta hanno già «HO FINITO» e «MI ARRENDO».
   - Nel motore: `MatchConfig.timer === false`; intento `SKIP` (solo del giocatore di turno, solo senza timer).
 - L'interruttore è nella Home (§0.7) e vale per schermo singolo, stanze e torneo. La pagina di setup ricorda com'è impostato.
@@ -626,10 +636,31 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
   - **SILHOUETTE** (`silhouette`): la sagoma piena calcolata dal **canale alfa vero** (angoli trasparenti, sagoma tra il 20% e il 95% del quadrato), mai dal bordo del file; esclusi dischi e rettangoli semplici, che non dicono nulla;
   - **SOLO I COLORI** (`colors`): i colori caratteristici (riduzione a 6 colori dei pixel opachi, colori vicini uniti, quelli sotto il 7% scartati, da 2 a 4) disegnati dall'app come **bande in pixel** dentro uno scudo a gradini. Nessuna immagine derivata.
 - **Risposte sbagliate**: squadre dello stesso campionato (l'ultimo dei cinque in cui ha giocato, altrimenti il campionato nazionale per le squadre viste nelle coppe) con il peso più vicino. Per la silhouette, nessuna con una sagoma quasi uguale (sovrapposizione > 0,8); per i colori, solo squadre dai colori noti e **diversi** (distanza di palette > 55 in entrambe le direzioni), altrimenti la domanda avrebbe due risposte.
-- **Filtri**: tag `comp:` del campionato; per le squadre fuori dai cinque campionati, il torneo europeo in cui sono nel dataset (sempre incluso, §3.4). Il filtro anno non si applica.
+- **Filtri**: tag `comp:` del campionato della squadra (l'ultimo dei cinque in cui ha giocato, altrimenti il suo campionato nel dataset Transfermarkt, es. `comp:NL1`). Gli altri campionati non sono tra quelli che si accendono e spengono (§3.4), quindi le loro squadre sono sempre incluse. Il filtro anno non si applica.
 - **Soluzioni**: fino alla rivelazione Schermo e pulsantiere ricevono solo l'immagine trasformata (o i colori) e le quattro squadre; stemma originale, squadra, attribuzione (che nomina il file) e risposta arrivano solo alla rivelazione. I nomi dei file sono hash e non nominano la squadra.
 - **Quali file valgono come stemma**: solo disegni (SVG o PNG). I 5 JPEG sulla proprietà del logo sono foto (una partita, una strada, un emblema scolpito) e restano fuori; restano fuori anche 4 file che non sono uno stemma, controllati a occhio sull'intero insieme (`NOT_A_CREST` in `asset_build.py`): la sola scritta di Roma e Liverpool (la scritta direbbe la risposta) e le bandiere di Sampdoria e Braunschweig. La variante dei colori vale solo per gli stemmi con trasparenza vera: senza, lo sfondo bianco diventerebbe un «colore». Sul tabellone lo stemma sta su una scacchiera chiara, perché quelli blu notte o neri si vedano.
-- **Perimetro reale** (2026-11-23): **108 stemmi** pubblicati su 347 squadre del dataset (i cinque campionati e le coppe europee): 93 pubblico dominio, 10 CC BY-SA, 4 CC0, 1 CC BY. Domande: **163** (90 sfocati, 50 colori, 23 silhouette, 0 senza scritte); le altre combinazioni non hanno tre squadre rivali valide. Senza scritte: 0, perché gli SVG originali scaricati finora hanno le lettere già convertite in tracciati e gli altri sono ancora da scaricare (limiti di Wikimedia); la pipeline li prende quando li trova.
+- **Perimetro reale** (2026-11-27): **504 stemmi** di **23 campionati**: 486 loghi di football-logos (§0.8) e 18 stemmi di Commons per le squadre che il repository non ha. Domande: **991** (493 sfocati, 452 colori, 46 silhouette, 0 senza scritte: i loghi del repository sono PNG, senza testo da togliere). **Silhouette senza scritte**: molti loghi hanno il nome scritto intorno o sotto, e la silhouette lo lascerebbe leggere; restano solo le parti grandi della sagoma (almeno l'8% della figura), e se le scritte sono più del 15% o più di 6 pezzi la silhouette non si fa. Restano fuori anche 10 loghi che sono le iniziali della squadra o hanno la scritta attaccata alla sagoma (`MONOGRAM` in `asset_build.py`, controllati a occhio sull'intero insieme). La sfocatura invece rende illeggibili le scritte. Per campionato: Liga 62, Bundesliga 59, Süper Lig 59, Premier League 58, Premier League ucraina 55, Serie A 54, Primeira Liga 53, Ligue 1 50, Eredivisie 49 e via fino al campionato croato (21). Le risposte sbagliate restano squadre dello stesso campionato.
+- **Prima dei loghi di football-logos** (2026-11-23): **108 stemmi** pubblicati su 347 squadre del dataset (i cinque campionati e le coppe europee): 93 pubblico dominio, 10 CC BY-SA, 4 CC0, 1 CC BY. Domande: **163** (90 sfocati, 50 colori, 23 silhouette, 0 senza scritte); le altre combinazioni non hanno tre squadre rivali valide. Senza scritte: 0, perché gli SVG originali scaricati finora hanno le lettere già convertite in tracciati e gli altri sono ancora da scaricare (limiti di Wikimedia); la pipeline li prende quando li trova.
+
+### 4.16 `figurina` — Indovina la Figurina (v16)
+- **2 figurine**, coperte. È la figurina del calciatore (§14.3) ma senza nome: a sinistra la **foto a quadrettoni**, a destra **cinque righe** ancora vuote. Ci si prenota col pulsante e si scrive il nome, con le stesse regole del Giramondo (un tentativo per giocatore per figurina, chi sbaglia è fuori; un indizio ogni 8 s, dopo un errore a comando; con il timer spento «PROSSIMO INDIZIO ▶»).
+- **Indizi**, ognuno riempie una riga e rende la foto più nitida. La foto parte da **3×4 quadrettoni** (solo i colori: pelle, maglia, sfondo) e arriva a 30×40, mai al ritratto vero:
+
+  | Passo | Riga della figurina | Foto | Punti |
+  |---|---|---|---|
+  | 1 | Ruolo | 3×4 | 12 |
+  | 2 | Nazionalità, con la bandiera | 6×8 | 9 |
+  | 3 | Stagione della figurina: competizione, presenze, gol, assist | 9×12 | 6 |
+  | 4 | Squadra in quella stagione | 15×20 | 3 |
+  | 5 | Anno di nascita | 30×40 | 1 |
+
+  Anche i giocatori più famosi così non si riconoscono al primo colpo: chi li riconosce presto prende di più. Alla rivelazione compare la **figurina vera**, con nome, foto 60×80, stile (classica, speciale, leggendaria) e attribuzione della foto.
+- **Quali giocatori**: solo quelli con una **foto con licenza** (§0.8, abbinata per ID Transfermarkt) e una figurina (§14.3), notevoli (§0.4), con tutti e cinque gli indizi. Uno per giocatore: mai la stessa foto due volte. Soglia propria dei giochi visivi: **300** (`MIN_ITEMS_VISUAL`).
+- **Immagini**: i cinque quadrettoni li calcola `assets build` dalla stessa foto (media dei colori di ogni blocco, poi pochi colori) e sono file separati con nomi a hash (`photos/`), che non nominano il giocatore. L'app li ingrandisce `pixelated`.
+- **Filtri**: tag `comp:` del campionato della stagione sulla figurina; filtro anno come Il Giramondo (§3.3).
+- **Soluzioni**: fino alla rivelazione Schermo e pulsantiere ricevono solo i quadrettoni e le righe già scoperti (la bandiera dal secondo indizio); figurina, nome, ritratto 60×80 e attribuzione (che nomina il file) arrivano solo alla rivelazione. Lo Schermo scarica un quadrettone alla volta; i telefoni nessuna immagine.
+- Sorteggio: è un gioco «chi è?» a indizi, come Mercato e Giramondo: al massimo uno dei tre per partita (§5.2).
+- **Perimetro reale** (2026-11-26): **434 figurine** giocabili (Premier League 147, Serie A 83, Liga 76, Bundesliga 73, Ligue 1 55; 206 classiche, 112 speciali, 116 leggendarie). Crescono con le foto: 945 giocatori hanno una foto con licenza utilizzabile, 437 scaricate finora (limiti di Wikimedia).
 
 ---
 
@@ -650,17 +681,26 @@ I nomi dei giochi sono **provvisori** (§19) e stanno in un solo file (`apps/web
 | testa_a_testa | 7 | 4 confronti giusti + 3 del duello; in pratica 3–6 |
 | bandiere | 4 | 2 formazioni × 2 |
 | stemma | 4 | 2 stemmi × 2 |
+| figurina | 24 | 2 figurine × 12 |
 
 ### 5.2 Regole di sorteggio (5 giochi)
 
-- Pool: gli 11 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
+- Pool: i 12 giochi, dal catalogo (`GAME_IDS`). Un gioco senza abbastanza domande per i filtri attivi esce dal sorteggio da solo.
 - Vincoli:
-  - al massimo 1 tra {`mercato`, `giramondo`} (pulsante a indizi progressivi);
+  - al massimo 1 tra {`mercato`, `giramondo`, `figurina`} (pulsante a indizi progressivi);
   - al massimo **2** tra {`decina`, `dischetto`, `asta`} (elenchi), e **mai Decina e Asta insieme**, perché si giocano sullo stesso tipo di insieme. Con 8 giochi il vecchio limite di 1 avrebbe dato sempre gli stessi cinque;
   - il primo gioco è pescato tra i rapidi {`tiro_secco`, `maglia`};
   - un gioco è escluso se non ha abbastanza istanze ammissibili con il filtro corrente.
 - Le domande di ogni gioco sono pescate **alternando i tipi di domanda** (un generatore alla volta).
 - Sorteggio deterministico dal seme della partita (riproducibile nei test).
+
+### 5.4 Giochi scelti dai giocatori: a scelta e draft (v16)
+
+Nella preparazione della Partita Classica (schermo singolo e sala d'attesa delle stanze) si sceglie come arrivano i 5 giochi:
+- **CASUALI** (predefinito): il sorteggio di §5.2, con i suoi vincoli.
+- **A SCELTA**: i giocatori scelgono insieme 5 giochi tra i 12; si giocano **nell'ordine in cui sono stati toccati**. Nessun vincolo di §5.2 (anche Mercato, Giramondo e Figurina insieme); toccare di nuovo un gioco lo toglie. Chi inizia lo dice la moneta, come sempre.
+- **DRAFT**: quando si sceglie il draft l'app **sorteggia chi sceglie per primo**; poi si sceglie **uno a testa, a turno** (primo, secondo, primo, secondo, primo). Un gioco preso non si riprende. La partita la **inizia l'altro giocatore**, quello che ha scelto per secondo: al posto della moneta il sorteggio mostra «PRIMA SCELTA: … · INIZIA …» e su ogni gioco chi l'ha scelto. «RIFAI IL DRAFT» ricomincia con un nuovo sorteggio.
+- In entrambi i casi un gioco senza abbastanza domande per i filtri attivi fa fallire la partita con un messaggio che lo nomina; ogni gioco si sceglie una volta sola. Il motore riceve i giochi in `forcedGames`, con `pick` («manual» o «draft»), `pickedBy` e, nel draft, `starter`.
 
 ### 5.3 Scelta delle domande e persone già viste (v10)
 - Dentro un gioco le domande alternano i generatori (`sampleVaried`), poi:
@@ -890,7 +930,7 @@ NFKD + rimozione diacritici; mappe speciali (ø→o, ł→l, ß→ss, đ→d, æ
 - Si apre da sola quando tocca scrivere. Una tastiera fisica collegata continua a funzionare; su PC non cambia niente. Il tastierino dei numeri della Maglia era già del gioco.
 - I moduli (nomi dei giocatori, anno, codice stanza) usano ancora la tastiera del sistema: lì non ci sono suggerimenti da coprire e servono tutti i caratteri.
 - La tastiera sta dentro le aree sicure (§12.6).
-- **Esito sulla tastiera (v10)**: sul telefono in orizzontale si vedono solo i tasti e la riga di scrittura, quindi la tastiera stessa dice com'è andato il nome appena inviato: una striscia **verde «✓ GIUSTO»** o **rossa «✗ SBAGLIATO»** con il testo inviato, per 1,6 secondi, in cima alla striscia (in orizzontale) o sopra i tasti (agganciata). Vale per tutti i giochi a risposta scritta (Formazione, Decina, Dischetto, Asta, Mercato, Giramondo), sullo schermo singolo e sulle pulsantiere, dove si vede solo l'esito delle proprie risposte. È la stessa informazione che lo Schermo mostra subito dopo (§3.6), quindi non anticipa nessuna soluzione.
+- **Esito sulla tastiera (v10)**: sul telefono in orizzontale si vedono solo i tasti e la riga di scrittura, quindi la tastiera stessa dice com'è andato il nome appena inviato: una striscia **verde «✓ GIUSTO»** o **rossa «✗ SBAGLIATO»** con il testo inviato, per 1,6 secondi, in cima alla striscia (in orizzontale) o sopra i tasti (agganciata). Vale per tutti i giochi a risposta scritta (Formazione, Decina, Dischetto, Asta, Mercato, Giramondo, Figurina), sullo schermo singolo e sulle pulsantiere, dove si vede solo l'esito delle proprie risposte. È la stessa informazione che lo Schermo mostra subito dopo (§3.6), quindi non anticipa nessuna soluzione.
 
 ### 10.5 Modalità A
 
@@ -1025,16 +1065,13 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 ### 14.3 Figurine dei giocatori (v16)
 
 - Componente originale `PlayerCard` (`apps/web/src/components/PlayerCard.tsx`), ispirato alle figurine ma disegnato in pixel art: cornice spessa a pixel, angoli quadrati, foto ridotta a 60×80 pixel e mostrata `pixelated` su una scacchiera scura, nessuna scansione o grafica di terzi.
-- **Campi**, tutti dai dati: foto con licenza (§0.8) o **segnaposto** 8-bit (la faccina dell'app), nome, bandiera (SVG di `flag-icons`) e nazionalità, squadra, ruolo, competizione e stagione, **presenze, gol, assist** di quella stagione. La stagione è la **migliore stagione di campionato** del giocatore nel dataset (più gol + assist, almeno 10 presenze con una sola squadra, stagione con le righe di presenza complete). Nessun «overall» o voto inventato. Sotto, l'attribuzione della foto o «Dati Transfermarkt · solo campionato».
+- **Campi**, tutti dai dati: foto con licenza (§0.8), nome, bandiera (SVG di `flag-icons`) e nazionalità, squadra, ruolo, competizione e stagione, **presenze, gol, assist** di quella stagione. La stagione è la **migliore stagione di campionato** del giocatore nel dataset (più gol + assist, almeno 10 presenze con una sola squadra, stagione con le righe di presenza complete). Nessun «overall» o voto inventato. Sotto, l'attribuzione della foto.
 - **Tre stili**, solo estetici e da criteri oggettivi:
   - **Leggendaria**: almeno 100 gol o 400 presenze nelle competizioni principali del dataset (campionati top, Champions, Mondiali, Europei); cornice magenta con un riflesso che scorre (solo `transform`);
   - **Speciale**: la stagione della figurina è memorabile, con la stessa regola di «Di chi è questa stagione?» (§4.1); cornice oro;
   - **Classica**: tutte le altre; cornice argento.
-- **Dove compare**:
-  - nella **rivelazione** delle domande su un solo calciatore: Il Mercato, Il Giramondo, La Maglia, «Di chi è questa stagione?» del Tiro Secco (formato largo, foto a sinistra). Se il giocatore non ha figurina resta la rivelazione di prima;
-  - a **fine partita**, «LA FIGURINA DELLA PARTITA»: tra i giocatori delle domande della partita, quello con lo stile più raro e poi più gol + assist. È solo un premio visivo: nessuna collezione, moneta, scambio o mercato.
-- **Perimetro reale** (2026-11-26): **2534 figurine** (2070 classiche, 319 speciali, 145 leggendarie). Foto: 950 dei 1000 giocatori più noti hanno un'immagine su Wikidata; 945 con licenza utilizzabile (5 escluse: licenza non verificabile), ma solo **437** scaricate finora (433 figurine con foto) per i limiti di Wikimedia. Le altre figurine mostrano il segnaposto; `assets fetch` riprende il lotto da dove si è fermato.
-- **Dati**: `data/trivela_data/gen_cards.py` (dentro `pnpm data:generate`, o da solo con `uv run python -m trivela_data.gen_cards` sui pacchetti pubblicati) scrive 16 file `apps/web/public/data/cards/<id % 16>.json`. Li scarica solo lo Schermo, solo a rivelazione avvenuta o a fine partita; mai i telefoni.
+- **Dove compare**: **solo in Indovina la Figurina** (§4.16), coperta durante il gioco e intera alla rivelazione. Non compare nelle rivelazioni degli altri giochi né a fine partita (decisione dell'utente, v16). Nessuna collezione, moneta, scambio o mercato.
+- **Dati**: `data/trivela_data/gen_cards.py` calcola la figurina; `gen_figurina.py` la mette dentro le domande del gioco (`apps/web/public/data/games/figurina.json`), che si scaricano come ogni altro pacchetto: solo lo Schermo, solo se il gioco è sorteggiato.
 
 ---
 
@@ -1084,7 +1121,7 @@ trivela/
 ## 17. Licenze e attribuzioni
 
 - Wikidata: CC0. Wikipedia: CC BY-SA — salvare solo brevi citazioni + URL; pagina "Crediti" con attribuzioni.
-- Stemmi e foto (v16, §0.8): solo file di Wikimedia Commons con licenza CC0, pubblico dominio, CC BY o CC BY-SA; ogni file è elencato con autore, licenza e pagina in `apps/web/public/data/assets-manifest.json` e nella pagina «Fonti dei dati» (sezione «Autori e licenze di stemmi e foto», caricata a richiesta). L'attribuzione compare anche alla rivelazione dello stemma e sotto la foto della figurina. Le versioni trasformate restano sotto la licenza dell'originale.
+- Stemmi e foto (v16, §0.8): solo file di Wikimedia Commons con licenza CC0, pubblico dominio, CC BY o CC BY-SA; ogni file è elencato con autore, licenza e pagina in `apps/web/public/data/assets-manifest.json` e nella pagina «Fonti dei dati» (sezione «Autori e licenze di stemmi e foto», caricata a richiesta). L'attribuzione compare anche alla rivelazione dello stemma e della figurina. Le versioni trasformate restano sotto la licenza dell'originale.
 - StatsBomb Open Data: attribuzione secondo i loro termini.
 - Dataset di terzi e API di livello B: usare solo secondo licenza; documentare la licenza di ogni connettore in `data/ingest/<fonte>/LICENSE.md`.
 - Font e campioni audio: solo licenze aperte (OFL, CC0) o produzione propria.

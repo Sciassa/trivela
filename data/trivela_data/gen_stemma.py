@@ -1,6 +1,7 @@
 """Indovina lo Stemma (SPEC §4.15, v16): a club crest, transformed offline, and four clubs of the same league.
 
-Reads data/static/crests.json (written by `assets build` from the licensed Commons files only). One question per crest
+Reads data/static/crests.json (written by `assets build`: the football-logos logos, user's decision of SPEC §0.8, and
+the licensed Commons files for the other clubs). One question per crest
 and per variant that exists for it:
 - notext: the SVG crest without its text elements (only when the SVG has real text and the result is clean);
 - blur: the crest blurred, shapes and colours still there;
@@ -20,6 +21,12 @@ from .tm_core import COMP_IT, L5, SRC_DATASET, TM, base, opts4
 
 CRESTS = ROOT / "static" / "crests.json"
 VARIANTS = ("notext", "blur", "silhouette", "colors")
+# the domestic league of the clubs outside the five (Transfermarkt competition id), for the Copione
+LEAGUE_IT = {"A1": "Bundesliga austriaca", "BE1": "Pro League belga", "KR1": "campionato croato", "TS1": "campionato ceco",
+             "DK1": "Superliga danese", "GR1": "Super League greca", "NL1": "Eredivisie", "NO1": "Eliteserien norvegese",
+             "PL1": "Ekstraklasa polacca", "PO1": "Primeira Liga", "RO1": "Liga I rumena", "RU1": "Premier League russa",
+             "SC1": "Premiership scozzese", "SER1": "Superliga serba", "SE1": "Allsvenskan svedese", "C1": "Super League svizzera",
+             "TR1": "Süper Lig turca", "UKR1": "Premier League ucraina"}
 LABEL = {"notext": "senza scritte", "blur": "sfocato", "silhouette": "in silhouette", "colors": "nei suoi colori"}
 
 
@@ -53,7 +60,6 @@ def generate(t: TM) -> dict[str, list[dict]]:
     for c, lg in league.items():
         if lg and not t.is_nation(c) and (c in last or c in crests or t.cl_weight.get(c)):
             members[lg].append(c)
-    cups = {int(c): comp for c, comp in t.q("select club, min(comp) from pres join gm using(gid) where comp in ('CL', 'EL', 'UCOL') group by 1")}
     out = []
     for club, rec in sorted(crests.items()):
         lg = league.get(club)
@@ -61,8 +67,9 @@ def generate(t: TM) -> dict[str, list[dict]]:
             continue
         w = t.club_weight(club)
         rivals = sorted((c for c in members[lg] if c != club), key=lambda c: (abs(t.club_weight(c) - w), c))
-        tag = f"comp:{lg}" if lg in L5 else f"comp:{cups.get(club, 'CL')}"
-        where = COMP_IT.get(lg) or "coppe europee"
+        # the league of the club: one of the five (the league filter, SPEC §3.4) or another one, always included
+        tag = f"comp:{lg}"
+        where = COMP_IT.get(lg) or LEAGUE_IT.get(lg) or "campionato estero"
         for var in VARIANTS:
             val = rec["variants"].get(var)
             if not val:
@@ -83,10 +90,10 @@ def generate(t: TM) -> dict[str, list[dict]]:
             o = opts4(t.club(club), names[:3], f"stemma-{club}-{var}")
             if not o:
                 continue
+            src = ({"family": "football-logos", "label": rec["attribution"], "url": rec["page"]} if rec["source"] == "football-logos"
+                   else {"family": "wikimedia", "label": f"Wikimedia Commons: {rec['attribution']}", "url": rec["page"]})
             it = base(f"stemma_{var}", (club, var), year=2025, fame=min(100, 40 + w // 8),
-                      entities=[tag, t.cid(club)],
-                      sources=[{"family": "wikimedia", "label": f"Wikimedia Commons: {rec['attribution']}",
-                                "url": f"https://www.wikidata.org/wiki/{rec['qid']}"}, SRC_DATASET],
+                      entities=[tag, t.cid(club)], sources=[src, SRC_DATASET],
                       script=f"Lo stemma {t.di(club)} ({where}), {LABEL[var]}. {rec['attribution']}.")
             it.update({"question": "Di quale squadra è questo stemma?", "variant": var,
                        "image": val if isinstance(val, str) else None, "colors": val if var == "colors" else None,
