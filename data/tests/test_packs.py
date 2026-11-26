@@ -349,17 +349,27 @@ def test_visual_games_have_their_own_floor_and_no_copies():
 
 
 def test_assets_are_all_licensed_and_credited():
-    """SPEC §0.8: every crest and photo on the site is in the manifest, with a free licence, author and source page."""
+    """SPEC §0.8: every crest and photo on the site is in the manifest, with its source page and author; a free licence for
+    every Commons file, the user's decision for the football-logos club logos."""
     m = json.loads((DATA / "assets-manifest.json").read_text(encoding="utf-8"))
     listed = set()
+    logos = json.loads((DATA.parents[3] / "data" / "static" / "logos_map.json").read_text(encoding="utf-8"))
+    by_club = {f"tm:c:{r['tm']}": r for r in logos["logos"]}
+    assert len(by_club) == len(logos["logos"])  # one logo per club
     for a in m["assets"]:
-        assert a["licence_class"] in FREE, a
-        assert a["page"].startswith("https://commons.wikimedia.org/") and a["wikidata"].startswith("Q")
         assert a["author"] and a["attribution"] and a["licence"]
-        assert a["status"].startswith("verificato")
         for f in a["files"].values():
             assert (PUBLIC / f).exists(), f
             listed.add(f)
+        if a["source"].startswith("luukhopman/football-logos"):
+            # the user's decision (SPEC §0.8, v16): no licence declared; only club logos, each one in the reviewed table
+            assert a["kind"] == "stemma" and a["licence_class"] == "none" and a["subject"] in by_club, a
+            assert a["page"].startswith("https://github.com/luukhopman/football-logos/blob/" + logos["commit"])
+            assert a["status"].startswith("decisione dell'utente")
+            continue
+        assert a["licence_class"] in FREE, a
+        assert a["page"].startswith("https://commons.wikimedia.org/") and a["wikidata"].startswith("Q")
+        assert a["status"].startswith("verificato")
         if a["kind"] == "foto" or len(a["files"]) > 1:
             assert a["modifiable"], a  # a transformed file only from a licence that allows it
     on_disk = {f"{d}/{p.name}" for d in ("crests", "photos") for p in (PUBLIC / d).glob("*")}

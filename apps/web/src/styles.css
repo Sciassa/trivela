@@ -1043,3 +1043,27 @@ canvas.voxel { display: block; image-rendering: pixelated; }
 .fig-label { font-family: var(--pixel); font-size: 11px; color: #b9a8e6; }
 .fig-value { display: flex; align-items: center; gap: 10px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) { .fig-photo img, .fig-line.shown { animation: none; } }
+
+/* The five games of a classic match: drawn, chosen together or drafted (SPEC §5.4) */
+.games-choice .game-pick.choose { grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); }
+.game-pick.choose button { position: relative; min-height: 72px; }
+.game-pick.choose button.on { background: #22220e; padding-right: 52px; }
+.game-pick.choose button.by-p1 { box-shadow: inset 0 0 0 4px var(--p1); }
+.game-pick.choose button.by-p2 { box-shadow: inset 0 0 0 4px var(--p2); }
+.game-pick.choose button:disabled { opacity: .35; }
+.game-pick.choose .pick-n { position: absolute; top: 6px; right: 8px; font-family: var(--pixel); font-size: 16px; color: var(--bg); background: var(--game); padding: 6px 8px; }
+.game-pick.choose button.by-p1 .pick-n { background: var(--p1); }
+.game-pick.choose button.by-p2 .pick-n { background: var(--p2); }
+.game-pick .picked-by, .draw-card .picked-by { display: block; font-family: var(--pixel); font-size: 11px; color: var(--dim); overflow-wrap: anywhere; }
+.game-pick.choose button.by-p1 .picked-by { color: var(--p1); }
+.game-pick.choose button.by-p2 .picked-by { color: var(--p2); }
+.game-pick.choose button.nope { animation: nope .3s ease-in-out; }
+@keyframes nope { 0%, 100% { transform: none; } 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.draft-banner { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; font-family: var(--pixel); font-size: 13px; line-height: 1.6; background: var(--panel); border: 3px solid var(--accent); }
+.draft-banner.p1 { border-color: var(--p1); }
+.draft-banner.p2 { border-color: var(--p2); }
+.draft-banner .draft-draw { color: var(--dim); }
+.draw-card .picked-by { font-size: 12px; }
+.draw-card:has(.picked-by) { gap: 10px; }
+.draft-start { display: flex; align-items: center; justify-content: center; min-height: 196px; font-size: 22px; line-height: 1.6; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .game-pick.choose button.nope { animation: none; } }

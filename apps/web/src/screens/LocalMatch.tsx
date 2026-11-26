@@ -236,7 +236,15 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
   return (
     <div className="splash enter">
       <div className="px c-accent" style={{ fontSize: 34 }}>
-        {state.config.solo ? "ALLENAMENTO" : state.config.rounds !== undefined ? `SFIDA RAPIDA · ${state.config.rounds} ROUND A TESTA` : "IL SORTEGGIO"}
+        {state.config.solo
+          ? "ALLENAMENTO"
+          : state.config.rounds !== undefined
+            ? `SFIDA RAPIDA · ${state.config.rounds} ROUND A TESTA`
+            : state.config.pick === "draft"
+              ? "IL DRAFT"
+              : state.config.pick === "manual"
+                ? "I GIOCHI SCELTI"
+                : "IL SORTEGGIO"}
       </div>
       <div className="draw-grid">
         {state.order.map((g, k) =>
@@ -245,6 +253,9 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
               <span className="n">{state.config.rounds !== undefined && state.order.length > 1 ? `ROUND ${k + 1}` : `GIOCO ${k + 1}`}</span>
               <GameIcon game={g} size={96} />
               {GAME_NAMES[g]}
+              {state.config.pickedBy?.[k] !== undefined && (
+                <span className={`picked-by ${state.config.pickedBy[k] === 0 ? "c-p1" : "c-p2"}`}>{state.config.players[state.config.pickedBy[k]!]}</span>
+              )}
             </div>
           ) : (
             <div key={`${g}${k}`} className="draw-card closed">
@@ -254,7 +265,19 @@ function Draw({ state, onStart }: { state: MatchState; onStart: () => void }) {
         )}
       </div>
       {state.config.yearFrom !== null && <div className="dim">Domande dal {state.config.yearFrom} in poi (elenchi e classifiche usano tutte le stagioni).</div>}
-      {!state.config.solo && (done ? <CoinToss players={state.config.players} coin={state.coin} /> : <div className="coin-toss" aria-hidden />)}
+      {!state.config.solo &&
+        (!done ? (
+          <div className="coin-toss" aria-hidden />
+        ) : state.config.pick === "draft" ? (
+          <div className="draft-start px">
+            <span>
+              PRIMA SCELTA: <span className={state.coin === 0 ? "c-p2" : "c-p1"}>{state.config.players[1 - state.coin]}</span> · INIZIA{" "}
+              <span className={state.coin === 0 ? "c-p1" : "c-p2"}>{state.config.players[state.coin]}</span>
+            </span>
+          </div>
+        ) : (
+          <CoinToss players={state.config.players} coin={state.coin} />
+        ))}
       <div className={state.config.solo ? "" : "after-coin"} style={{ visibility: done ? "visible" : "hidden" }}>
         <NextButton label="SI PARTE ▶" onClick={onStart} />
       </div>

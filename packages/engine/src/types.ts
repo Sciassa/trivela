@@ -30,8 +30,15 @@ export interface MatchConfig {
    * so that the same player does not come back match after match.
    */
   avoidPeople?: string[];
-  /** Force the 4 drawn games (tests, debug). */
+  /**
+   * The five games of a classic match, in play order, when the players chose them (SPEC §5.4): `pick` says how
+   * («manual»: chosen together; «draft»: one each, in turn), `pickedBy` who chose each one in a draft. Absent: drawn.
+   */
   forcedGames?: PoolGameId[];
+  pick?: "draw" | "manual" | "draft";
+  pickedBy?: PlayerIdx[];
+  /** Who starts the match instead of the coin toss: in a draft, the player who chose second (SPEC §5.4). */
+  starter?: PlayerIdx;
 }
 
 export interface EngineCtx {

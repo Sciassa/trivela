@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LEAGUES } from "@trivela/protocol";
 import { DRAW_LINE, GAME_NAMES } from "../rules";
+import { choiceConfig, choiceReady, emptyChoice, GamesChoice } from "./GamesChoice";
 import type { Format } from "./GamePicker";
 import type { EngineCtx, MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
@@ -16,6 +17,7 @@ export interface SetupResult {
 
 /** A game that cannot be drawn with the current filters is not a bug: say what to loosen. */
 export function friendlyReason(reason: string, yearFrom: number | null): string {
+  reason = reason.replace(/ per (\w+)\.$/, (m, g: string) => (g in GAME_NAMES ? ` per ${GAME_NAMES[g as keyof typeof GAME_NAMES]}.` : m));
   if (/insufficienti/i.test(reason)) return `${reason} Con questi filtri non ci sono abbastanza domande: ${yearFrom ? "prova con un anno precedente o " : "prova "}ad attivare altri campionati.`;
   return reason;
 }
@@ -107,6 +109,8 @@ export function Setup({
   const [tableMode, setTableMode] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [choice, setChoice] = useState(emptyChoice);
+  const names: [string, string] = [p1.trim() || "GIOCATORE 1", p2.trim() || "GIOCATORE 2"];
 
   const start = async () => {
     audio.play("select");
@@ -125,6 +129,7 @@ export function Setup({
       seed: newSeed(),
       excludeIds,
       forcedGames: format ? [format.game] : forcedGamesFromUrl(),
+      ...(format ? {} : choiceConfig(choice)),
       ...(format?.kind === "quick" ? { rounds: 3 } : {}),
       ...(training ? { solo: true } : {}),
     });
@@ -149,6 +154,7 @@ export function Setup({
         <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} locked={!!presetPlayers} />
       )}
       <YearField year={year} setYear={setYear} locked={presetYear !== undefined} />
+      {!format && !presetPlayers && <GamesChoice value={choice} onChange={setChoice} players={names} />}
       </div>
       <div className="form-col">
       <LeaguesField value={leagues} onChange={setLeagues} locked={presetLeagues !== undefined} />
@@ -170,7 +176,7 @@ export function Setup({
       </div>
       <div className="panel note">
         {!format
-          ? `${DRAW_LINE} · al massimo 2 domande a testa per gioco · vince chi fa più punti.`
+          ? `${choice.mode === "draw" ? DRAW_LINE : choice.mode === "manual" ? "5 giochi scelti da voi" : "5 giochi scelti a turno nel draft"} · al massimo 2 domande a testa per gioco · vince chi fa più punti.`
           : format.kind === "quick"
             ? `${GAME_NAMES[format.game]}: solo questo gioco, 3 round a testa · vince chi fa più punti.`
             : `${GAME_NAMES[format.game]}: da solo, senza turni né avversari. Nessuna classifica: serve per allenarsi.`}
@@ -179,8 +185,8 @@ export function Setup({
         TIMER {timerOn() ? "ACCESO: allo scadere del tempo restano 10 secondi per finire di scrivere." : "SPENTO: nessun conto alla rovescia, gli indizi si scoprono a mano."} Si cambia dalla schermata iniziale.
       </div>
       {error && <div className="err">{error}</div>}
-      <button className="btn big" onClick={() => void start()} disabled={loading}>
-        {loading ? "CARICO I GIOCHI…" : "GIOCA ▶"}
+      <button className="btn big" onClick={() => void start()} disabled={loading || (!format && !choiceReady(choice))}>
+        {loading ? "CARICO I GIOCHI…" : !format && !choiceReady(choice) ? `SCEGLIETE I GIOCHI (${choice.picks.length}/5)` : "GIOCA ▶"}
       </button>
     </Page>
   );

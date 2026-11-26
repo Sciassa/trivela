@@ -638,7 +638,7 @@ try {
     check((await active.locator(PAD_OPT).count()) === 4, "the player on turn picks the club among four on the phone");
     await active.locator(PAD_OPT).first().click();
     await screen.locator(".crest-img.original").waitFor({ timeout: 8000 });
-    check(/Wikimedia Commons/.test(await screen.locator(".crest-credit").innerText()), "at the reveal the real crest comes with the credit of its file");
+    check(/Wikimedia Commons|football-logos/.test(await screen.locator(".crest-credit").innerText()), "at the reveal the real crest comes with the credit of its file");
     // the phones may fetch the names index (the speller), never a pack, a crest or a photo
     const phoneFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => /\/data\/games\/|assets-manifest/.test(u)).concat(p1.assetRequests, p2.assetRequests);
     check(phoneFiles.length === 0, `the phones download no pack, crest or photo (${phoneFiles.join(", ") || "none"})`);
@@ -688,6 +688,47 @@ try {
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();
+  }
+  // ---------------- Classic match with games chosen by hand and drafted (SPEC §5.4)
+  {
+    const q = await open();
+    await q.goto(`${BASE}/`);
+    await q.getByText("PREMI START").click();
+    await q.getByText("PARTITA CLASSICA").click();
+    await q.getByPlaceholder("Nome").first().fill("Anna");
+    await q.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await q.getByRole("button", { name: "A SCELTA" }).click();
+    const pick = (g) => q.locator(".game-pick.choose button", { hasText: g }).click();
+    for (const g of ["LE BANDIERE", "LA MAGLIA", "INDOVINA LO STEMMA", "TIRO SECCO"]) await pick(g);
+    check(await q.getByRole("button", { name: /SCEGLIETE I GIOCHI \(4\/5\)/ }).isDisabled(), "a classic match with chosen games waits for all five");
+    await pick("LA DECINA");
+    await q.getByText("GIOCA ▶").click();
+    await q.getByText("SI PARTE ▶").waitFor({ timeout: 15000 });
+    const manual = (await q.locator(".draw-card.open .n").count()) && (await q.locator(".draw-card.open").allInnerTexts()).map((t) => t.split("\n")[1]);
+    check(JSON.stringify(manual) === JSON.stringify(["LE BANDIERE", "LA MAGLIA", "INDOVINA LO STEMMA", "TIRO SECCO", "LA DECINA"]), `games chosen by hand are played in the order they were picked (${manual})`);
+    check((await q.locator(".coin-toss").count()) === 1, "... and the coin still says who starts");
+    await q.goto(`${BASE}/`);
+    await q.getByText("PREMI START").click();
+    await q.getByText("PARTITA CLASSICA").click();
+    await q.getByPlaceholder("Nome").first().fill("Anna");
+    await q.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await q.getByRole("button", { name: "DRAFT" }).click();
+    const first = /SCEGLIE PER PRIMO\s+Anna/.test(await q.locator(".draft-banner").innerText()) ? "Anna" : "Bruno";
+    const second = first === "Anna" ? "Bruno" : "Anna";
+    const turns = [];
+    for (const g of ["INDOVINA LA FIGURINA", "LA FORMAZIONE", "IL GIRAMONDO", "TESTA A TESTA", "L'ASTA"]) {
+      turns.push((await q.locator(".draft-banner").innerText()).match(/SCEGLIE\s+(Anna|Bruno)\s+·/)[1]);
+      await pick(g);
+    }
+    check(JSON.stringify(turns) === JSON.stringify([first, second, first, second, first]), `draft: the drawn player picks first, then one each (${turns.join(", ")})`);
+    await q.getByText("GIOCA ▶").click();
+    await q.getByText("SI PARTE ▶").waitFor({ timeout: 15000 });
+    const start = await q.locator(".draft-start").innerText();
+    check(new RegExp(`PRIMA SCELTA:\\s*${first}.*INIZIA\\s*${second}`).test(start.replace(/\n/g, " ")), `... and the other player starts the match (${start.replace(/\n/g, " ")})`);
+    const by = await q.locator(".draw-card.open .picked-by").allInnerTexts();
+    check(JSON.stringify(by) === JSON.stringify([first, second, first, second, first]), "the draw shows who chose each game");
+    await q.screenshot({ path: "test-results/draft-draw.png" });
+    await q.context().close();
   }
   {
     // the PWA never precaches crests, photos or question packs (SPEC §0.8)

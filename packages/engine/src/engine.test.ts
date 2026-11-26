@@ -649,6 +649,35 @@ describe("indovina lo stemma (SPEC §4.15)", () => {
   });
 });
 
+describe("games chosen by the players (SPEC §5.4)", () => {
+  const five: GameId[] = ["stemma", "maglia", "figurina", "decina", "tiro_secco"];
+  it("chosen by hand: those five games, in that order; the coin still says who starts", () => {
+    const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: five, pick: "manual" }, packs);
+    if (!r.ok) throw new Error(r.reason);
+    expect(r.state.order).toEqual(five);
+  });
+  it("draft: the player who chose second starts the match, whatever the seed", () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      for (const starter of [0, 1] as const) {
+        const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed, forcedGames: five, pick: "draft", pickedBy: [1 - starter, starter, 1 - starter, starter, 1 - starter] as (0 | 1)[], starter }, packs);
+        if (!r.ok) throw new Error(r.reason);
+        let s = reduce(r.state, { type: "START" }, ctx);
+        s = reduce(s, { type: "BEGIN_GAME" }, ctx);
+        expect(s.coin).toBe(starter);
+        expect(s.starters[0]).toBe(starter);
+      }
+    }
+  });
+  it("a chosen game is played once, and only if it has questions for the filters", () => {
+    const twice = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: ["maglia", "maglia", "decina", "stemma", "tiro_secco"], pick: "manual" }, packs);
+    expect(twice.ok).toBe(false);
+    const empty = makePacks();
+    empty.items.stemma = [];
+    const none = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed: 3, forcedGames: five, pick: "draft", starter: 1 }, empty);
+    expect(none.ok === false && none.reason).toMatch(/stemma/);
+  });
+});
+
 describe("indovina la figurina (SPEC §4.16)", () => {
   it("the photo sharpens one frame per clue; name, real photo and credit only at the reveal", () => {
     let s = start(first("figurina"));

@@ -8,10 +8,11 @@ import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
 import { emptyCtx, forcedGamesFromUrl, leaguesForMatch, loadNamesIndex, newSeed, prepareFreshMatch, rememberSeen, savedLeagues } from "../runtime/packs";
 import { MatchShell } from "./LocalMatch";
 import { friendlyReason, LeaguesField, parseYear, PlayersFields, YearField } from "./Setup";
+import { choiceConfig, choiceReady, emptyChoice, GamesChoice } from "./GamesChoice";
 import { AnswerBox, ConfirmModal, Page, PlayCtx, StateTimer, TimerClockCtx, useTimeLeft, useVerdict, useWakeLock, VerdictCtx, VotesCtx } from "../components/ui";
 import { GameView, isBuzzerGame } from "../games/GameView";
 import { Buzz3D, VoxelBall } from "../components/Voxel3D";
-import { CATALOG_GAMES, DRAW_LINE, GAME_NAMES, GAME_SHORT } from "../rules";
+import { CATALOG_GAMES, GAME_NAMES, GAME_SHORT } from "../rules";
 import { savedYear } from "../runtime/settings";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 import { GAME_COLORS, GameIcon } from "../components/sprites";
@@ -45,6 +46,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
   const [leagues, setLeagues] = useState(savedLeagues);
   const [quickGame, setQuickGame] = useState<GameId | null>(null); // null: classic five-game match
   const [formatKind, setFormatKind] = useState<"classic" | "quick">("classic");
+  const [choice, setChoice] = useState(emptyChoice);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [matchCtx, setMatchCtx] = useState(ctx);
@@ -94,7 +96,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
       leagues: leaguesForMatch(leagues),
       seed: newSeed(),
       forcedGames: formatKind === "quick" && quickGame ? [quickGame] : forcedGamesFromUrl(),
-      ...(formatKind === "quick" && quickGame ? { rounds: 3 } : {}),
+      ...(formatKind === "quick" && quickGame ? { rounds: 3 } : choiceConfig(choice)),
     });
     setLoading(false);
     if (!r.ok) {
@@ -150,7 +152,7 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
             SFIDA RAPIDA
           </button>
         </div>
-        <span className="note">{formatKind === "classic" ? `${DRAW_LINE}.` : "Un solo gioco a scelta, 3 round a testa."}</span>
+        {formatKind === "quick" && <span className="note">Un solo gioco a scelta, 3 round a testa.</span>}
         {formatKind === "quick" && (
           <div className="game-pick">
             {CATALOG_GAMES.map((g) => (
@@ -165,11 +167,12 @@ export function RoomScreen({ ctx, onBack }: { ctx: EngineCtx; onBack: () => void
         )}
       </div>
       <PlayersFields p1={p1} p2={p2} setP1={setP1} setP2={setP2} />
+      {formatKind === "classic" && <GamesChoice value={choice} onChange={setChoice} players={[p1.trim() || "GIOCATORE 1", p2.trim() || "GIOCATORE 2"]} />}
       <YearField year={year} setYear={setYear} />
       <LeaguesField value={leagues} onChange={setLeagues} />
       {error && <div className="err">{error}</div>}
-      <button className="btn big" disabled={loading || !ready || (formatKind === "quick" && !quickGame)} onClick={() => void start()}>
-        {loading ? "CARICO I GIOCHI…" : formatKind === "quick" && !quickGame ? "SCEGLI IL GIOCO" : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
+      <button className="btn big" disabled={loading || !ready || (formatKind === "quick" && !quickGame) || (formatKind === "classic" && !choiceReady(choice))} onClick={() => void start()}>
+        {loading ? "CARICO I GIOCHI…" : formatKind === "quick" && !quickGame ? "SCEGLI IL GIOCO" : formatKind === "classic" && !choiceReady(choice) ? `SCEGLIETE I GIOCHI (${choice.picks.length}/5)` : ready ? "INIZIA LA PARTITA ▶" : mode === "host" ? "IN ATTESA DELLA REGIA…" : `IN ATTESA DEI TELEFONI (${Number(roster.p1) + Number(roster.p2)}/2)…`}
       </button>
     </Page>
   );

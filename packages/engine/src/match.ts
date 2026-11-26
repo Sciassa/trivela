@@ -228,6 +228,11 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
   } else {
     const available = POOL.filter((g) => eligibleItems(g, packs, config).length >= itemsNeeded(g));
     order = config.forcedGames ?? drawGames(rng, available);
+    // games chosen by the players (SPEC §5.4): each one once, and only games with enough questions for the filters
+    const lacking = config.forcedGames?.find((g) => !available.includes(g));
+    if (config.pick && config.pick !== "draw" && (new Set(order).size !== order.length || lacking)) {
+      return { ok: false, reason: lacking ? `Contenuti insufficienti per ${lacking}.` : "Ogni gioco si sceglie una volta sola." };
+    }
     if (order.length < GAMES_PER_MATCH && !config.forcedGames) {
       return { ok: false, reason: `Contenuti insufficienti per sorteggiare ${GAMES_PER_MATCH} giochi.` };
     }
@@ -259,7 +264,7 @@ export function createMatch(config: MatchConfig, packs: Packs, _ctx?: EngineCtx)
     timer: null,
     timerSeq: 0,
     events: [],
-    coin: config.solo ? 0 : (rng.int(2) as PlayerIdx),
+    coin: config.solo ? 0 : config.starter ?? (rng.int(2) as PlayerIdx),
   };
   return { ok: true, state };
 }

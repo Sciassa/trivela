@@ -4,6 +4,7 @@
         network: identities and licences of the N most famous players' photos and of the crests; files downloaded
         (crests, then the first M photos by fame), cached and idempotent: run it again to continue a batch;
         identities and licences are looked up again only with --refresh
+    uv run python -m trivela_data.assets logos                network: the club logos of luukhopman/football-logos
     uv run python -m trivela_data.assets build                offline: licence filter, pixel-art variants, manifest
 
 Identity: a club is matched ONLY through its Transfermarkt team ID on Wikidata (P7223), a player ONLY through his
@@ -15,6 +16,10 @@ Wikimedia Commons, whose machine-readable licence (imageinfo + extmetadata) deci
   derivative stays CC BY-SA);
 - CC BY-ND (no derivatives): never modified, so never used by a transforming game; NC licences, GFDL-only, non-free,
   unknown or missing licences: not published at all.
+
+Exception decided by the user (SPEC §0.8, v16): the club logos of the GitHub repository luukhopman/football-logos, which
+declares no licence, are used on the user's responsibility and replace the Commons crest of the same club. Each file is
+matched to its Transfermarkt club id by hand in data/static/logos_map.json (reviewed table), never by name at build time.
 
 Rejected sources (SPEC §0.8): API-Football media and TheSportsDB artwork carry no per-file licence that can be checked.
 Commons is rate-limited: one batched API call at a time, `Retry-After` honoured, standard thumbnail widths only.
@@ -250,11 +255,31 @@ def fetch(photos: int, download: int, refresh: bool) -> None:
     download_files(crests, photos_, {p: n for n, p in enumerate(top)}, download)
 
 
+LOGO_REPO = "https://github.com/luukhopman/football-logos"
+LOGO_CACHE = ASSET_CACHE / "football-logos"
+LOGOS_MAP = ROOT / "static" / "logos_map.json"  # the reviewed table logo file -> Transfermarkt club id, versioned
+
+
+def fetch_logos() -> None:
+    """The club logos of luukhopman/football-logos (SPEC §0.8, user's decision of v16): a public GitHub repository with no
+    licence declared, used on the user's responsibility. A shallow clone in the cache (not versioned); `build` reads the
+    files named in LOGOS_MAP, matched to the Transfermarkt ids by hand, never by name at build time."""
+    if (LOGO_CACHE / ".git").exists():
+        subprocess.run(["git", "-C", str(LOGO_CACHE), "pull", "--ff-only", "--depth", "1", "-q"], check=True)
+    else:
+        LOGO_CACHE.parent.mkdir(parents=True, exist_ok=True)
+        subprocess.run(["git", "clone", "-q", "--depth", "1", LOGO_REPO + ".git", str(LOGO_CACHE)], check=True)
+    head = subprocess.run(["git", "-C", str(LOGO_CACHE), "rev-parse", "HEAD"], capture_output=True, text=True, check=True).stdout.strip()
+    print(f"football-logos {head}: {sum(1 for _ in LOGO_CACHE.rglob('*.png'))} file")
+
+
 if __name__ == "__main__":
     args = sys.argv[1:]
     if args[:1] == ["fetch"]:
         n = int(args[args.index("--photos") + 1]) if "--photos" in args else 1000
         fetch(n, int(args[args.index("--download") + 1]) if "--download" in args else n, "--refresh" in args)
+    elif args[:1] == ["logos"]:
+        fetch_logos()
     elif args[:1] == ["build"]:
         from .asset_build import build
 
