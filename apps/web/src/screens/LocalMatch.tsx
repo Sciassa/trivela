@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
-import { usedIds, usedPeople, viewFor, type EngineCtx, type Intent, type MatchState } from "@trivela/engine";
+import { usedIds, viewFor, type EngineCtx, type Intent, type MatchState } from "@trivela/engine";
 import { audio } from "@trivela/audio";
 import { VoxelTrophy } from "../components/Voxel3D";
-import { MatchPrize } from "../components/PlayerCard";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 import { useLocalMatch } from "../runtime/useMatch";
 import { rememberSeen } from "../runtime/packs";
@@ -327,7 +326,6 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
     <>
       <Confetti rain count={60} />
       <Fit center>
-        <div className="match-over-row">
         <div className="splash enter">
           {winner === null ? <Sprite name="trophy" size={150} className="blink-slow" /> : <VoxelTrophy size={230} />}
           <div className="px c-accent" style={{ fontSize: 34 }}>
@@ -360,8 +358,6 @@ function MatchOver({ state, onExit, onAgain }: { state: MatchState; onExit: () =
             )}
             <NextButton always label="TORNA ALLA HOME" onClick={onExit} />
           </div>
-        </div>
-        <MatchPrize people={usedPeople(state)} />
         </div>
       </Fit>
     </>

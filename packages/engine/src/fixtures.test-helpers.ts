@@ -37,6 +37,14 @@ export function makePacks(): Packs {
   for (let k = 0; k < 6; k++) {
     items.mercato.push({ ...meta(), clues: ["10 mln €", "Estate 2015", "Attaccante", "Italia", "Dal Cedro FC", "Alla Juventus"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
     items.giramondo.push({ ...meta({ activeYears: [2020] }), clues: ["c1", "c2", "c3", "c4", "c5"], answer: { kind: "entity", ids: [P(k).id], display: P(k).name } });
+    items.figurina.push({
+      ...meta({ activeYears: [2021], entities: ["comp:IT1", `tm:p:${k}`], sources: [{ family: "transfermarkt", label: `Transfermarkt: ${P(k).name}`, url: "https://a.example" }] }),
+      clues: ["Ruolo: Attaccante", "Nazionalità: Italia", "Stagione: Serie A 2015/16 · 30 presenze, 20 gol, 5 assist", "Squadra in quella stagione: Juventus", "Anno di nascita: 1990"],
+      frames: [0, 1, 2, 3, 4].map((f) => `photos/f${k}${f}.png`),
+      flag: "it",
+      answer: { kind: "entity", ids: [P(k).id], display: P(k).name },
+      card: { id: P(k).id, name: P(k).name, nat: "Italia", flag: "it", club: "Juventus", role: "Attaccante", season: "2015/16", competition: "Serie A", stats: { presenze: 30, gol: 20, assist: 5 }, style: "classica", photo: `photos/r${k}.png`, credit: "Foto: autore · CC BY-SA 4.0" },
+    });
     for (const variant of ["notext", "blur", "silhouette", "colors"] as const)
       items.stemma.push({
         ...meta({ generator: `stemma_${variant}`, entities: ["comp:IT1", `tm:c:${k}`] }),

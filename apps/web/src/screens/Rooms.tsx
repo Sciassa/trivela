@@ -277,7 +277,8 @@ function solutionOf(g: GameStateAny): string[] {
       return [it.question, `Risposta: ${"ABCD"[it.correct]}) ${it.options[it.correct]}`];
     }
     case "mercato":
-    case "giramondo": {
+    case "giramondo":
+    case "figurina": {
       const it = g.items[g.i] as { answer: { display: string }; clues: string[] };
       return [`Risposta: ${it.answer.display}`, ...it.clues.map((c, k) => `${k + 1}. ${c}`)];
     }
@@ -417,6 +418,7 @@ export function HostRoom({ code }: { code: string }) {
           break;
         case "mercato":
         case "giramondo":
+        case "figurina":
           controls =
             g.stage === "answering" ? (
               okKo

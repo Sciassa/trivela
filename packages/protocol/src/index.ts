@@ -15,6 +15,7 @@ export const GAME_IDS = [
   "testa_a_testa",
   "bandiere",
   "stemma",
+  "figurina",
 ] as const;
 
 export type GameId = (typeof GAME_IDS)[number];
@@ -236,6 +237,20 @@ export interface PlayerCardData {
   credit: string | null;
 }
 
+/**
+ * Indovina la Figurina (SPEC §4.16): a player card covered up, uncovered one line per clue while the photo sharpens.
+ * `clues[k]` reads «Label: value» (role, nationality, best season and its numbers, club, year of birth); `frames[k]` is
+ * the photo pixelated for step k (under `photos/`, hashed names). The Screen and the phones get the frames and clues
+ * shown so far, the flag from the nationality clue on, and `card` (name, real photo, credit) only at the reveal.
+ */
+export interface FigurinaItem extends InstanceMeta {
+  clues: string[];
+  frames: string[];
+  flag: string | null;
+  answer: AnswerKey;
+  card: PlayerCardData | null;
+}
+
 export interface BandiereItem extends InstanceMeta {
   title: string;
   date: string;
@@ -263,6 +278,7 @@ export interface PackItems {
   testa_a_testa: TestaItem[];
   bandiere: BandiereItem[];
   stemma: StemmaItem[];
+  figurina: FigurinaItem[];
 }
 
 export interface PackManifest {
@@ -280,5 +296,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], bandiere: [], stemma: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], bandiere: [], stemma: [], figurina: [] };
 }

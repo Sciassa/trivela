@@ -29,6 +29,8 @@ const MAPS = {
   bandiere: ["w...........", "wbbbbbbbbb..", "wbbbbbbbbb..", "wbbbbbbbbb..", "wwwwwwwwww..", "wrrrrrrrrr..", "wrrrrrrrrr..", "wrrrrrrrrr..", "w...........", "w...........", "w...........", "ww.........."],
   // a shield with a band and a star
   stemma: ["............", ".wwwwwwwwww.", ".wbbbyybbbw.", ".wbbyyyybbw.", ".wbbbyybbbw.", ".wrrrrrrrrw.", ".wrrrrrrrrw.", ".wbbbbbbbbw.", "..wbbbbbbw..", "...wbbbbw...", "....wwww....", "............"],
+  // a covered card: a question mark and an empty name plate
+  figurina: [".yyyyyyyyyy.", ".ykkkkkkkky.", ".ykkkwwkkky.", ".ykkwkkwkky.", ".ykkkkkwkky.", ".ykkkkwkkky.", ".ykkkwkkkky.", ".ykkkkkkkky.", ".ykkkwkkkky.", ".yyyyyyyyyy.", ".ywwwwwwwwy.", ".yyyyyyyyyy."],
   clock: ["....wwww....", "..wwkkkkww..", ".wkkkykkkkw.", ".wkkkykkkkw.", "wkkkkykkkkkw", "wkkkkykkkkkw", "wkkkkyyyykkw", "wkkkkkkkkkkw", ".wkkkkkkkkw.", ".wkkkkkkkkw.", "..wwkkkkww..", "....wwww...."],
   asta: ["..oooo......", ".oooooo.....", "oooooooo....", ".oooooooo...", "..oooooo.o..", "...oooo.ooo.", "....oo...ooo", "..........oo", "............", ".yyyyyyyy...", "yyyyyyyyyy..", "............"],
   maglia: ["..cc....cc..", ".cccwwwwccc.", "cccccwwccccc", "cccccccccccc", "cc.cccccc.cc", "...cccccc...", "...cwwwwc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc...", "...cccccc..."],

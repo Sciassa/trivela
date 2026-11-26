@@ -39,7 +39,7 @@ describe("match flow", () => {
       expect(a.state.order).toHaveLength(GAMES_PER_MATCH);
       expect(new Set(a.state.order).size).toBe(5);
     }
-    expect(POOL).toHaveLength(11);
+    expect(POOL).toHaveLength(12);
   });
 
   it("limits the rounds: at most two per player, one list per game", () => {
@@ -51,7 +51,7 @@ describe("match flow", () => {
     expect(itemsNeeded("decina")).toBe(1);
     expect(itemsNeeded("dischetto")).toBe(1);
     expect(itemsNeeded("formazione")).toBe(1);
-    expect(Object.keys(MODULES)).toHaveLength(11);
+    expect(Object.keys(MODULES)).toHaveLength(12);
   });
 
   it("lets the trailing player start the next game", () => {
@@ -160,7 +160,7 @@ describe("year filter and sampling", () => {
     for (let seed = 1; seed < 200; seed++) seen.add([...drawGames(new Rng(seed), POOL)].sort().join());
     expect(seen.size).toBeGreaterThan(6);
     const all = new Set(Array.from({ length: 200 }, (_, k) => drawGames(new Rng(k + 1), POOL)).flat());
-    expect(all.size).toBe(11); // every game comes out sooner or later
+    expect(all.size).toBe(12); // every game comes out sooner or later
   });
 });
 
@@ -645,6 +645,57 @@ describe("indovina lo stemma (SPEC §4.15)", () => {
       const items = s.game!.items as { entities: string[]; variant: string }[];
       expect(new Set(items.map((x) => x.entities.find((e) => e.startsWith("tm:c:")))).size).toBe(4);
       expect(new Set(items.map((x) => x.variant)).size).toBe(4);
+    }
+  });
+});
+
+describe("indovina la figurina (SPEC §4.16)", () => {
+  it("the photo sharpens one frame per clue; name, real photo and credit only at the reveal", () => {
+    let s = start(first("figurina"));
+    expect(s.game!.items).toHaveLength(2);
+    s = timeout(s); // PRONTI… -> first clue
+    for (const role of ["screen", "p1", "p2"] as const) {
+      const it = viewFor(s, role).game!.items[0];
+      expect(it.clues).toHaveLength(1);
+      expect(it.frames).toHaveLength(1);
+      expect(it.flag).toBeNull(); // the flag comes with the nationality clue
+      expect(it.card).toBeNull();
+      expect(it.answer.display).toBe("");
+      expect(it.sources).toEqual([]);
+      expect(it.entities).toEqual([]);
+      expect(JSON.stringify(viewFor(s, role).game)).not.toContain("Mario");
+      expect(viewFor(s, role).game!.items[1]).toBeNull();
+    }
+    s = timeout(s);
+    const two = viewFor(s, "screen").game!.items[0];
+    expect(two.frames).toEqual(s.game!.items[0].frames.slice(0, 2));
+    expect(two.flag).toBe("it");
+    const target = s.game!.items[0].answer.display as string;
+    s = run(s, { type: "BUZZ", player: 1 }, { type: "ANSWER", player: 1, payload: { text: target } });
+    expect(s.scores).toEqual([0, 9]); // second clue: 9 points
+    const shown = viewFor(s, "p1").game!.items[0];
+    expect(shown.card.name).toBe(target);
+    expect(shown.card.photo).toMatch(/^photos\//);
+  });
+  it("a «who is it?» buzzer game at most once per match", () => {
+    for (let seed = 1; seed <= 60; seed++) {
+      const r = createMatch({ judging: "auto", players: ["A", "B"], yearFrom: null, seed }, packs);
+      if (!r.ok) throw new Error(r.reason);
+      expect(r.state.order.filter((g) => ["mercato", "giramondo", "figurina"].includes(g)).length).toBeLessThanOrEqual(1);
+    }
+  });
+});
+
+describe("no answer through the references (invariant 5)", () => {
+  it("sources and entities reach the Screen and the phones only with the reveal", () => {
+    for (const g of ["tiro_secco", "mercato", "giramondo", "maglia", "stemma", "figurina"] as GameId[]) {
+      let s = start(first(g));
+      if (s.game!.stage === "ready") s = timeout(s);
+      for (const role of ["screen", "p1", "p2"] as const) {
+        const it = viewFor(s, role).game!.items.find((x: unknown) => x !== null);
+        expect(it.sources, g).toEqual([]);
+        expect(it.entities, g).toEqual([]);
+      }
     }
   });
 });

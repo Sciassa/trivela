@@ -1,4 +1,4 @@
-// Copies the flags used by Le Bandiere (SPEC §4.14) and by the player cards (SPEC §14.3) from the `flag-icons` package
+// Copies the flags used by Le Bandiere (SPEC §4.14) and Indovina la Figurina (SPEC §4.16) from the `flag-icons` package
 // (MIT) into apps/web/public/flags/. Run after `pnpm data:generate`: node tools/flags.mjs. Only the flags in use are
 // copied; the files are committed.
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync } from "node:fs";
@@ -7,9 +7,9 @@ import { dirname, join } from "node:path";
 
 const root = new URL("..", import.meta.url).pathname;
 const pack = JSON.parse(readFileSync(join(root, "apps/web/public/data/games/bandiere.json"), "utf8"));
-const cardsDir = join(root, "apps/web/public/data/cards");
-const cards = existsSync(cardsDir) ? readdirSync(cardsDir).flatMap((f) => Object.values(JSON.parse(readFileSync(join(cardsDir, f), "utf8")))) : [];
-const codes = [...new Set([...pack.flatMap((it) => it.players.map((p) => p.flag)), ...cards.map((c) => c.flag).filter(Boolean)])].sort();
+const figPath = join(root, "apps/web/public/data/games/figurina.json");
+const figurine = existsSync(figPath) ? JSON.parse(readFileSync(figPath, "utf8")) : [];
+const codes = [...new Set([...pack.flatMap((it) => it.players.map((p) => p.flag)), ...figurine.map((it) => it.flag).filter(Boolean)])].sort();
 const req = createRequire(join(root, "apps/web/package.json"));
 const src = join(dirname(req.resolve("flag-icons/package.json")), "flags", "4x3");
 const out = join(root, "apps/web/public/flags");

@@ -1,6 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
 import type { PlayerCardData } from "@trivela/protocol";
-import { loadCard } from "../runtime/cards";
 import { Sprite } from "./sprites";
 
 const BADGE: Record<PlayerCardData["style"], string> = { classica: "", speciale: "★ SPECIALE", leggendaria: "♛ LEGGENDARIA" };
@@ -8,7 +6,8 @@ const BADGE: Record<PlayerCardData["style"], string> = { classica: "", speciale:
 /**
  * An original pixel-art player card (SPEC §14.3): licensed pixel photo or an 8-bit placeholder, name, flag and
  * nationality, club, role, the season and its real numbers. Three looks (classica, speciale, leggendaria) chosen from
- * objective facts by the data pipeline; there is no rating. `wide` is the reveal version, the tall one the match prize.
+ * objective facts by the data pipeline; there is no rating. It is the answer of Indovina la Figurina (SPEC §4.16), shown
+ * only at the reveal; `wide` is that version.
  */
 export function PlayerCard({ card, wide = false }: { card: PlayerCardData; wide?: boolean }) {
   return (
@@ -45,51 +44,6 @@ export function PlayerCard({ card, wide = false }: { card: PlayerCardData; wide?
         </div>
         <div className="pc-credit">{card.photo ? card.credit : "Dati Transfermarkt · solo campionato"}</div>
       </div>
-    </div>
-  );
-}
-
-/** The card of a player once the answer is out; until it arrives, or when there is none, the fallback. */
-export function CardReveal({ entity, fallback, wide = true }: { entity: string | null | undefined; fallback: ReactNode; wide?: boolean }) {
-  const [card, setCard] = useState<PlayerCardData | null>(null);
-  useEffect(() => {
-    let live = true;
-    setCard(null);
-    void loadCard(entity).then((c) => live && setCard(c));
-    return () => {
-      live = false;
-    };
-  }, [entity]);
-  return card ? <PlayerCard card={card} wide={wide} /> : <>{fallback}</>;
-}
-
-const RANK: Record<PlayerCardData["style"], number> = { leggendaria: 2, speciale: 1, classica: 0 };
-
-/**
- * «La figurina della partita»: a visual prize at the end of a match, the card of a player the match's questions were
- * about (the rarest look first, then the most goals plus assists). No collection, no currency, no market.
- */
-export function MatchPrize({ people }: { people: string[] }) {
-  const [card, setCard] = useState<PlayerCardData | null>(null);
-  const key = people.join(",");
-  useEffect(() => {
-    let live = true;
-    void Promise.all(people.slice(0, 60).map((p) => loadCard(p))).then((cards) => {
-      const best = cards
-        .filter((c): c is PlayerCardData => c !== null)
-        .sort((a, b) => RANK[b.style] - RANK[a.style] || b.stats.gol + b.stats.assist - (a.stats.gol + a.stats.assist) || a.id.localeCompare(b.id))[0];
-      if (live) setCard(best ?? null);
-    });
-    return () => {
-      live = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
-  if (!card) return null;
-  return (
-    <div className="match-prize">
-      <span className="px">LA FIGURINA DELLA PARTITA</span>
-      <PlayerCard card={card} />
     </div>
   );
 }

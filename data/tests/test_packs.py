@@ -6,6 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from PIL import Image
 
 from trivela_data.postprocess import is_show_case
 from trivela_data.tm_core import articled, clean_club, fee_label, season_label
@@ -13,7 +14,7 @@ from trivela_data.tm_core import articled, clean_club, fee_label, season_label
 DATA = Path(__file__).resolve().parents[2] / "apps" / "web" / "public" / "data"
 GAMES = ["tiro_secco", "mercato", "decina", "dischetto", "formazione", "giramondo", "asta", "maglia", "testa_a_testa", "bandiere"]
 # visual games (SPEC §0.8): as many questions as the licensed assets allow, with a floor of their own
-VISUAL = {"stemma": 150}
+VISUAL = {"stemma": 150, "figurina": 300}
 PUBLIC = DATA.parent
 FREE = {"cc0", "pd", "cc-by", "cc-by-sa"}
 pytestmark = pytest.mark.skipif(not (DATA / "manifest.json").exists(), reason="packs not generated")
@@ -342,8 +343,9 @@ def test_visual_games_have_their_own_floor_and_no_copies():
         items = load(game)
         assert len(items) >= floor, (game, len(items))
         assert len({it["id"] for it in items}) == len(items)
-        # one question per crest and variant: never the same picture twice to reach a number
-        assert len({(it["original"], it["variant"]) for it in items}) == len(items)
+        # one question per crest and variant, one profile per player: never the same picture twice to reach a number
+        key = (lambda it: (it["original"], it["variant"])) if game == "stemma" else (lambda it: it["card"]["photo"])
+        assert len({key(it) for it in items}) == len(items)
 
 
 def test_assets_are_all_licensed_and_credited():
@@ -386,19 +388,27 @@ def test_stemma_questions():
     assert per["blur"] and per["silhouette"] and per["colors"], per
 
 
-def test_player_cards():
-    """SPEC §14.3: real numbers only, no rating; the style from objective thresholds; a photo only if licensed."""
-    photos = {f"photos/{p.name}" for p in (PUBLIC / "photos").glob("*.png")}
-    cards = {}
-    for k in range(16):
-        cards |= json.loads((DATA / "cards" / f"{k}.json").read_text(encoding="utf-8"))
-    assert len(cards) >= 1000
-    for pid, c in cards.items():
-        assert int(pid) % 16 == int(pid) % 16 and c["id"] == f"tm:p:{pid}"
+def test_figurina():
+    """SPEC §4.16 and §14.3: a covered card of a notable player with a licensed photo; five clues, five frames from coarse to
+    sharp, real numbers only, no rating; the style from objective thresholds; the answer is the player on the card."""
+    m = json.loads((DATA / "assets-manifest.json").read_text(encoding="utf-8"))
+    photo_files = {a["subject"]: set(a["files"].values()) for a in m["assets"] if a["kind"] == "foto"}
+    items = load("figurina")
+    labels = ("Ruolo", "Nazionalità", "Stagione", "Squadra in quella stagione", "Anno di nascita")
+    for it in items:
+        c, pid = it["card"], it["answer"]["ids"][0]
+        assert c["id"] == pid and c["name"] == it["answer"]["display"] and it["entities"].count(pid) == 1
         assert set(c) == {"id", "name", "nat", "flag", "club", "role", "season", "competition", "stats", "style", "photo", "credit"}
         assert c["stats"]["presenze"] >= 10 and c["style"] in ("classica", "speciale", "leggendaria")
-        assert re.fullmatch(r"\d{4}/\d{2}", c["season"])
-        assert c["photo"] is None or (c["photo"] in photos and c["credit"])
-        assert c["flag"] is None or (PUBLIC / "flags" / f"{c['flag']}.svg").exists(), c["flag"]
-    styles = Counter(c["style"] for c in cards.values())
-    assert styles["classica"] > styles["speciale"] > 0 and styles["leggendaria"] > 0, styles
+        assert re.fullmatch(r"\d{4}/\d{2}", c["season"]) and c["credit"]
+        assert [x.split(": ")[0] for x in it["clues"]] == list(labels)
+        # every picture is a licensed photo of this very player (matched by Transfermarkt id), never named after him
+        assert len(it["frames"]) == 5 and set(it["frames"]) | {c["photo"]} <= photo_files[pid]
+        surname = it["answer"]["display"].split()[-1].lower()
+        assert len(surname) < 5 or not any(surname in f for f in it["frames"] + [c["photo"]])
+        assert it["flag"] == c["flag"] and (c["flag"] is None or (PUBLIC / "flags" / f"{c['flag']}.svg").exists())
+        assert sum(1 for e in it["entities"] if e.startswith("comp:")) == 1 and it["activeYears"]
+    sizes = [Image.open(PUBLIC / f).size for f in items[0]["frames"]]
+    assert sizes == sorted(sizes) and sizes[0][0] <= 4 and sizes[-1][0] < 60  # never the sharp portrait before the reveal
+    styles = Counter(it["card"]["style"] for it in items)
+    assert styles["classica"] > 0 and styles["speciale"] > 0 and styles["leggendaria"] > 0, styles

@@ -1,10 +1,9 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import { CardReveal } from "../components/PlayerCard";
-import { playerOf } from "../runtime/cards";
-import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, StemmaItem, TestaItem, TiroSeccoItem } from "@trivela/protocol";
+import type { BandiereItem, DischettoItem, FigurinaItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, StemmaItem, TestaItem, TiroSeccoItem } from "@trivela/protocol";
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
+import { PlayerCard } from "../components/PlayerCard";
 import { HAPTIC, vibrate } from "../runtime/haptics";
 
 export interface GameProps {
@@ -109,11 +108,7 @@ function TiroSecco({ state, g, dispatch, start }: GameProps) {
       {item.tag === "vf" && item.transfer ? (
         <TransferCard key={g.i} t={item.transfer} />
       ) : item.tag === "scheda" && item.card ? (
-        g.stage === "reveal" ? (
-          <CardReveal key={`c${g.i}`} entity={playerOf(item.entities)} fallback={<SeasonCard c={item.card} />} />
-        ) : (
-          <SeasonCard key={g.i} c={item.card} />
-        )
+        <SeasonCard key={g.i} c={item.card} />
       ) : (
         <div className="q-card" key={g.i}>
           {item.tag && TAG_LABEL[item.tag] && <div className={`q-tag ${item.tag}`}>{TAG_LABEL[item.tag]}</div>}
@@ -314,6 +309,44 @@ function Bandiere({ state, g, dispatch, start }: GameProps) {
 
 /* ------------------------------------------------------------ Buzzer games */
 
+/**
+ * Indovina la Figurina (SPEC §4.16): the covered card. The photo is the last frame the clues have uncovered (a few big
+ * pixels first, a portrait at the end); every clue fills one line of the card. The name plate stays «? ? ?».
+ */
+function MysteryCard({ item, shown, total, points, current }: { item: FigurinaItem; shown: number; total: number; points: number[]; current: boolean }) {
+  const frame = item.frames[Math.min(shown, item.frames.length) - 1];
+  return (
+    <div className="fig-card">
+      <div className="fig-photo">
+        {frame ? <img key={frame} src={`./${frame}`} alt="" /> : <span className="px">?</span>}
+      </div>
+      <div className="fig-lines">
+        <div className="fig-name px">? ? ?</div>
+        {Array.from({ length: total }, (_, k) => {
+          const text = k < shown ? item.clues[k] : undefined;
+          const [label, value] = text ? [text.slice(0, text.indexOf(": ")), text.slice(text.indexOf(": ") + 2)] : ["", ""];
+          return (
+            <div key={k} className={`fig-line ${text ? "shown" : "hidden"} ${current && k === shown - 1 ? "current" : ""}`}>
+              <span className="pts">{points[k]} PT</span>
+              {text ? (
+                <span className="fig-text">
+                  <span className="fig-label">{label}</span>
+                  <span className="fig-value">
+                    {k === 1 && item.flag && <img className="pc-flag" src={`./flags/${item.flag}.svg`} alt="" />}
+                    {value}
+                  </span>
+                </span>
+              ) : (
+                <span>? ? ?</span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /** A clue is plain text, or career steps "2018 Club; 2019 Club": each step becomes a badge with the year. */
 function ClueText({ text }: { text: string }) {
   const steps = text.split("; ").map((x) => x.match(/^(\d{4}) (.+)$/));
@@ -332,7 +365,7 @@ function ClueText({ text }: { text: string }) {
 
 export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GameProps) {
   const { readonly } = usePlay();
-  const item = g.items[g.i] as { clues: string[]; answer: { display: string; ids?: string[] }; sources: SourceRef[] };
+  const item = g.items[g.i] as { clues: string[]; answer: { display: string }; sources: SourceRef[] };
   const points: number[] = g.points;
   const total = points.length;
   const canBuzz = (p: PlayerIdx) => (g.stage === "clues" || g.stage === "ready") && !g.out[p];
@@ -382,7 +415,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           <div className="turnbar">
             <span className="who c-accent">
               <span>
-                {g.game === "mercato" ? "TRASFERIMENTO" : "CARRIERA"} {g.i + 1}/{g.items.length}
+                {g.game === "mercato" ? "TRASFERIMENTO" : g.game === "figurina" ? "FIGURINA" : "CARRIERA"} {g.i + 1}/{g.items.length}
               </span>
             </span>
             <span className="grow" />
@@ -396,6 +429,13 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           </div>
           <StateTimer state={state} start={start} />
           {g.game === "giramondo" && <div className="sub">Le squadre in ordine di primo arrivo, con l'anno.</div>}
+          {g.game === "figurina" ? (
+            g.stage === "reveal" && (item as FigurinaItem).card ? (
+              <PlayerCard key={`r${g.i}`} card={(item as FigurinaItem).card!} wide />
+            ) : (
+              <MysteryCard key={g.i} item={item as FigurinaItem} shown={g.revealed} total={total} points={points} current={g.stage !== "reveal"} />
+            )
+          ) : (
           <div className="clues" key={g.i}>
             {Array.from({ length: total }, (_, k) => (
               <div key={k} className={`clue ${k < g.revealed ? "shown" : "hidden"} ${k === g.revealed - 1 && g.stage !== "reveal" ? "current" : ""}`}>
@@ -404,6 +444,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
               </div>
             ))}
           </div>
+          )}
           {g.stage === "clues" && g.last && !g.last.ok && (
             <WrongSaid text={g.last.said} who={namesOf(state)[g.last.player as PlayerIdx]} />
           )}
@@ -416,7 +457,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           )}
           {g.stage === "reveal" && (
             <>
-              <CardReveal entity={item.answer.ids?.[0]} fallback={<div className="big-answer">{item.answer.display}</div>} />
+              {g.game !== "figurina" && <div className="big-answer">{item.answer.display}</div>}
               <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />
             </>
           )}
@@ -896,20 +937,9 @@ function Maglia({ state, g, dispatch, start }: GameProps) {
       <div className="side">
         <TurnBar state={state} p={g.turn} info={`MAGLIA ${g.i + 1}/${g.items.length}`} />
         <StateTimer state={state} start={start} />
-        {reveal ? (
-          <CardReveal
-            entity={playerOf(item.entities)}
-            fallback={
-              <div className="q-card">
-                <div className="q small">{item.question}</div>
-              </div>
-            }
-          />
-        ) : (
-          <div className="q-card">
-            <div className="q small">{item.question}</div>
-          </div>
-        )}
+        <div className="q-card">
+          <div className="q small">{item.question}</div>
+        </div>
         {!reveal && (readonly ? <PhoneHint /> : <NumberPad key={g.i} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
         {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} solution={<>NUMERO {item.answer.display}</>} />}
       </div>
@@ -944,4 +974,4 @@ export function GameView(props: GameProps) {
   }
 }
 
-export const isBuzzerGame = (g: string) => g === "mercato" || g === "giramondo";
+export const isBuzzerGame = (g: string) => g === "mercato" || g === "giramondo" || g === "figurina";

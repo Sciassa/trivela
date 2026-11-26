@@ -1,5 +1,6 @@
 import type {
   DischettoItem,
+  FigurinaItem,
   FormazioneItem,
   GameId,
   GiramondoItem,
@@ -41,6 +42,12 @@ export const TIMERS = {
 } as const;
 
 const clone = <T>(x: T): T => structuredClone(x);
+
+/**
+ * Before the reveal an instance travels without its references: the sources name the answer («Transfermarkt: <player>»)
+ * and the entities are its ids, which the name index turns into names (invariant 5).
+ */
+const hideRefs = <T>(it: T): T => (it && typeof it === "object" ? { ...it, sources: [], entities: [] } : it);
 
 function playerOf(intent: Intent, s: GameStateAny): PlayerIdx | null {
   if ("player" in intent && intent.player !== undefined) return intent.player;
@@ -157,7 +164,7 @@ function turnQuiz<I extends { script: string }>(def: QuizDef<I>): GameModule {
           ? s.i > 0 && owner === s.starter && !current
           : idx < s.i;
         if (past) return it;
-        if (current) return s.stage === "reveal" ? it : def.mask(it);
+        if (current) return s.stage === "reveal" ? it : def.mask(hideRefs(it));
         return null;
       });
       return r;
@@ -285,7 +292,7 @@ export const bandiere: GameModule = {
       if (idx > s.i) return null;
       const hidden = { title: "", date: "", competition: "", formation: null, team: "", script: "", correct: -1, sources: [] };
       const players = it.players.map((p) => ({ id: "", name: "", nat: "", flag: s.stage === "memo" ? p.flag : "", x: p.x, y: p.y }));
-      return { ...it, ...hidden, players, options: s.stage === "memo" ? [] : it.options };
+      return { ...hideRefs(it), ...hidden, players, options: s.stage === "memo" ? [] : it.options };
     });
     return r;
   },
@@ -299,6 +306,8 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
   id: GameId,
   count: number,
   points: number[],
+  /** What else of the current profile stays hidden before the reveal, given the clues shown so far. */
+  mask: (it: I, revealed: number) => I = (it) => it,
 ): GameModule {
   const startItem = (s: GameStateAny, env: Env) => {
     s.stage = "ready";
@@ -427,7 +436,7 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
         if (idx < s.i) return it;
         if (idx > s.i) return null;
         if (s.stage === "reveal") return it;
-        return { ...it, clues: it.clues.slice(0, s.revealed), answer: { kind: "text", accepted: [], display: "" }, script: "" };
+        return { ...mask(hideRefs(it), s.revealed), clues: it.clues.slice(0, s.revealed), answer: { kind: "text", accepted: [], display: "" }, script: "" };
       });
       return r;
     },
@@ -436,6 +445,18 @@ function clueBuzzer<I extends { clues: string[]; answer: MercatoItem["answer"]; 
 
 export const mercato = clueBuzzer<MercatoItem>("mercato", 2, [20, 15, 10, 5, 3, 2]);
 export const giramondo = clueBuzzer<GiramondoItem>("giramondo", 2, [12, 9, 6, 3, 1]);
+
+/**
+ * Indovina la Figurina (SPEC §4.16): a player card covered up. Each clue fills one line of the card and sharpens the
+ * photo, from a few big pixels to a recognisable portrait; buzz in and write the name. Until the reveal the Screen and
+ * the phones get only the frames and the clues shown so far: never the card itself (name, real photo, credit).
+ */
+export const figurina = clueBuzzer<FigurinaItem>("figurina", 2, [12, 9, 6, 3, 1], (it, revealed) => ({
+  ...it,
+  frames: it.frames.slice(0, revealed),
+  flag: revealed >= 2 ? it.flag : null,
+  card: null,
+}));
 
 /* ------------------------------------------------------------------ */
 /* Testa a Testa                                                        */
@@ -527,7 +548,7 @@ export const testaATesta: GameModule = {
     // values not compared yet are the solutions: the players already compared, the name of the next one, nothing else
     const shown = s.stage === "feedback" ? s.k + 1 : s.k;
     r.items = r.items.map((it: TestaItem) => ({
-      ...it,
+      ...hideRefs(it),
       script: "",
       chain: it.chain.map((c, j) => (j < shown ? c : j === shown ? { ...c, value: null, label: null } : { id: "", name: "", value: null, label: null })),
     }));
@@ -616,7 +637,7 @@ export const decina: GameModule = {
   redact(s, role) {
     if (role === "host" || s.stage === "final" || s.stage === "done") return s;
     const r = clone(s);
-    r.item = { ...r.item, members: [], script: "" };
+    r.item = { ...hideRefs(r.item), members: [], script: "" };
     r.items = [];
     return r;
   },
@@ -704,7 +725,7 @@ export const dischetto: GameModule = {
     const r = clone(s);
     const said = new Set((s.said as { id: string }[]).map((x) => x.id));
     r.item = {
-      ...r.item,
+      ...hideRefs(r.item),
       ranking: (r.item as DischettoItem).ranking.map((e) =>
         said.has(e.id) || e.rank === 1 || e.rank === 10 ? { ...e, ...(said.has(e.id) ? {} : { id: "", name: "" }) } : { ...e, id: "", name: "", value: -1, label: undefined },
       ),
@@ -823,6 +844,8 @@ export const formazione: GameModule = {
       );
     });
     item.script = "";
+    item.sources = [];
+    item.entities = [];
     r.items = [];
     return r;
   },
@@ -936,7 +959,7 @@ export const asta: GameModule = {
   redact(s, role) {
     if (role === "host" || s.stage === "reveal" || s.stage === "done") return s;
     const r = clone(s);
-    r.item = { ...r.item, members: [], script: "" };
+    r.item = { ...hideRefs(r.item), members: [], script: "" };
     r.items = [];
     return r;
   },
@@ -958,6 +981,7 @@ export const MODULES: Record<GameId, GameModule> = {
   testa_a_testa: testaATesta,
   bandiere,
   stemma,
+  figurina,
 };
 
 export function redactGame(s: GameStateAny, role: Role): GameStateAny {

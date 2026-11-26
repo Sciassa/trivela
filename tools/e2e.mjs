@@ -639,20 +639,62 @@ try {
     await active.locator(PAD_OPT).first().click();
     await screen.locator(".crest-img.original").waitFor({ timeout: 8000 });
     check(/Wikimedia Commons/.test(await screen.locator(".crest-credit").innerText()), "at the reveal the real crest comes with the credit of its file");
-    // the phones may fetch the names index (the speller), never a pack, a card, a crest or a photo
-    const phoneFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => /\/data\/(games|cards)\/|assets-manifest/.test(u)).concat(p1.assetRequests, p2.assetRequests);
-    check(phoneFiles.length === 0, `the phones download no pack, crest or card (${phoneFiles.join(", ") || "none"})`);
+    // the phones may fetch the names index (the speller), never a pack, a crest or a photo
+    const phoneFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => /\/data\/games\/|assets-manifest/.test(u)).concat(p1.assetRequests, p2.assetRequests);
+    check(phoneFiles.length === 0, `the phones download no pack, crest or photo (${phoneFiles.join(", ") || "none"})`);
     await screen.screenshot({ path: "test-results/room-stemma-reveal.png" });
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();
   }
+  // ---------------- Indovina la Figurina in a room: the photo in big pixels, sharper at each clue; the card only at the end
   {
-    // the PWA never precaches crests, photos or cards (SPEC §0.8)
+    const { screen, code } = await lobby();
+    const p1 = await join(code, "p1");
+    const p2 = await join(code, "p2");
+    await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
+    await screen.getByRole("button", { name: "SFIDA RAPIDA" }).click();
+    await screen.locator(".game-pick button", { hasText: "INDOVINA LA FIGURINA" }).click();
+    await screen.getByPlaceholder("Nome").first().fill("Anna");
+    await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.evaluate(() => localStorage.setItem("trivela.timer", "off"));
+    await screen.getByText("INIZIA LA PARTITA ▶").click();
+    await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
+    await screen.locator(".fig-photo img").waitFor({ timeout: 15000 });
+    await screen.waitForTimeout(600);
+    const size = async () => screen.locator(".fig-photo img").evaluate((i) => [i.naturalWidth, i.naturalHeight].join("x"));
+    check((await size()) === "3x4" && (await screen.locator(".fig-line.shown").count()) === 1, `Indovina la Figurina: first clue, the photo in 3x4 big pixels (${await size()})`);
+    check((await screen.locator(".pcard").count()) === 0 && (await screen.locator(".fig-name").innerText()).includes("?"), "... no card and no name on the Screen before the answer");
+    check(screen.assetRequests.length === 1, `... and the Screen has fetched only that frame (${screen.assetRequests.length})`);
+    await p1.getByText("PROSSIMO INDIZIO ▶").click({ timeout: 8000 });
+    await p2.getByText(/PROSSIMO INDIZIO ▶/).click();
+    await screen.waitForFunction(() => document.querySelectorAll(".fig-line.shown").length === 2, null, { timeout: 5000 });
+    await screen.waitForTimeout(400);
+    check((await size()) === "6x8" && (await screen.locator(".fig-line .pc-flag").count()) === 1, `the next clue sharpens the photo (${await size()}) and brings the flag`);
+    await p2.locator(".buzz3d:not(:disabled)").waitFor({ timeout: 8000 });
+    await p2.locator(".buzz3d").dispatchEvent("pointerdown");
+    await p2.getByText("NON LO SO").click({ timeout: 8000 });
+    await p1.locator(".buzz3d:not(:disabled)").waitFor({ timeout: 8000 });
+    await p1.locator(".buzz3d").dispatchEvent("pointerdown");
+    await p1.getByText("NON LO SO").click({ timeout: 8000 });
+    await screen.locator(".pcard").waitFor({ timeout: 8000 });
+    check((await screen.locator(".pcard .pc-name").innerText()).length > 3 && /Wikimedia Commons/.test(await screen.locator(".pcard .pc-credit").innerText()), "at the reveal the whole card: name, real photo and its credit");
+    const phoneFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => /\/data\/games\/|assets-manifest/.test(u)).concat(p1.assetRequests, p2.assetRequests);
+    check(phoneFiles.length === 0, `the phones download no pack and no photo (${phoneFiles.join(", ") || "none"})`);
+    await screen.screenshot({ path: "test-results/room-figurina-reveal.png" });
+    await screen.context().close();
+    await p1.context().close();
+    await p2.context().close();
+  }
+  {
+    // the PWA never precaches crests, photos or question packs (SPEC §0.8)
     const sw = (await import("node:fs")).readFileSync(new URL("../apps/web/dist/sw.js", import.meta.url), "utf8");
     const precached = [...sw.matchAll(/url:"([^"]+)"/g)].map((m) => m[1]);
     const heavy = precached.filter((u) => /^(crests|photos|flags|data)\//.test(u));
-    check(precached.length > 0 && heavy.length === 0, `crests, photos, cards and question packs stay out of the precache (${precached.length} files precached)`);
+    check(precached.length > 0 && heavy.length === 0, `crests, photos and question packs stay out of the precache (${precached.length} files precached)`);
   }
   {
     const v = await open();

@@ -13,7 +13,8 @@
     "maglia": 1500,
     "testa_a_testa": 1200,
     "bandiere": 1336,
-    "stemma": 163
+    "stemma": 163,
+    "figurina": 434
   },
   "generators": {
     "tiro_secco": 101,
@@ -26,7 +27,8 @@
     "maglia": 6,
     "testa_a_testa": 12,
     "bandiere": 2,
-    "stemma": 3
+    "stemma": 3,
+    "figurina": 1
   },
   "sources": [
     {

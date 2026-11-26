@@ -148,17 +148,34 @@ def no_text(svg_path: Path) -> Image.Image | None:
     return b
 
 
-def photo(path: Path) -> Image.Image:
-    """A 60x80 pixel portrait: a 3:4 crop from the upper part of the photo (where the face is), 32 colours."""
+def portrait(path: Path) -> Image.Image:
+    """A 3:4 crop from the upper part of the photo, where the face is."""
     img = Image.open(path).convert("RGB")
     w, h = img.size
     if w / h > 0.75:
         cw = int(h * 0.75)
-        img = img.crop(((w - cw) // 2, 0, (w - cw) // 2 + cw, h))
-    else:
-        img = img.crop((0, 0, w, int(w / 0.75)))
-    img = img.resize((60, 80), Image.Resampling.LANCZOS)
+        return img.crop(((w - cw) // 2, 0, (w - cw) // 2 + cw, h))
+    return img.crop((0, 0, w, int(w / 0.75)))
+
+
+def photo(path: Path) -> Image.Image:
+    """A 60x80 pixel portrait, 32 colours."""
+    img = portrait(path).resize((60, 80), Image.Resampling.LANCZOS)
     return img.quantize(colors=32, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
+
+
+# Indovina la Figurina (SPEC §4.16): the photo in big pixels, sharper at each clue. The app scales them up `pixelated`.
+FRAMES = ((3, 4), (6, 8), (9, 12), (15, 20), (30, 40))
+
+
+def frames(path: Path) -> list[Image.Image]:
+    """Each frame is the average colour of its blocks (a box filter), so it shows tones and shapes, never a detail."""
+    img = portrait(path)
+    out = []
+    for w, h in FRAMES:
+        f = img.resize((w, h), Image.Resampling.BOX)
+        out.append(f.quantize(colors=min(32, w * h), method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB"))
+    return out
 
 
 def attribution(c: dict) -> str:
@@ -248,16 +265,18 @@ def build() -> None:
             excluded["foto: non ancora scaricata"] += 1
             continue
         try:
-            img = photo(p)
+            img, steps = photo(p), frames(p)
         except Exception:  # noqa: BLE001 - an unreadable file is skipped, never guessed
             excluded["foto: file illeggibile"] += 1
             continue
         rel = publish(img, "photos", key(r["qid"], c["sha1"]))
-        photos[tm] = {"file": rel, "credit": f"Foto: {strip_html(c['author'])} · {c['licence']} · Wikimedia Commons (rielaborata)"}
-        assets.append(manifest_entry("foto", f"tm:p:{tm}", r, c, {"ritratto": rel}))
+        mosaic = [publish(f, "photos", key(r["qid"], c["sha1"], "frame", k)) for k, f in enumerate(steps)]
+        photos[tm] = {"file": rel, "frames": mosaic, "page": c["page"],
+                      "credit": f"Foto: {strip_html(c['author'])} · {c['licence']} · Wikimedia Commons (rielaborata)"}
+        assets.append(manifest_entry("foto", f"tm:p:{tm}", r, c, {"ritratto": rel, **{f"mosaico {k + 1}": m for k, m in enumerate(mosaic)}}))
     manifest = {
         "about": "Stemmi e foto pubblicati da TRIVELA: fonte, licenza e autore di ogni file (SPEC §0.8). Le versioni trasformate "
-                 "(sfocato, silhouette, senza scritte, ritratto in pixel) sono opere derivate: restano sotto la licenza "
+                 "(sfocato, silhouette, senza scritte, ritratto e mosaici in pixel) sono opere derivate: restano sotto la licenza "
                  "dell'originale. I marchi restano dei rispettivi titolari e sono usati solo per indicare la squadra.",
         "sources": [{"label": "Wikidata", "url": "https://www.wikidata.org", "use": "ID Transfermarkt (P7223, P2446), stemma (P154), immagine (P18)",
                      "licence": "CC0"},

@@ -12,7 +12,7 @@ export const GAMES_PER_MATCH = 5;
 /* ------------------------------------------------------------------ */
 
 const EVENT_GAMES: GameId[] = ["tiro_secco", "mercato", "formazione", "maglia", "bandiere"];
-const PERSON_GAMES: GameId[] = ["giramondo"];
+const PERSON_GAMES: GameId[] = ["giramondo", "figurina"];
 
 export function passesYearFilter(game: GameId, item: InstanceMeta, yearFrom: number | null): boolean {
   if (yearFrom === null) return true;
@@ -49,7 +49,7 @@ export function itemsNeeded(game: GameId): number {
 const LIST_GAMES: GameId[] = ["decina", "dischetto", "formazione", "testa_a_testa"];
 
 /** Questions of a solo session (Allenamento) when the game is made of questions or profiles. */
-const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, asta: 3 };
+const SOLO_ITEMS: Partial<Record<GameId, number>> = { mercato: 4, giramondo: 4, figurina: 4, asta: 3 };
 
 /**
  * Slots of a single-game format: which game is played, how many times, with how many instances each time.
@@ -67,7 +67,8 @@ const isSingleGame = (c: Pick<MatchConfig, "rounds" | "solo">) => c.rounds !== u
 /* Draw                                                                 */
 /* ------------------------------------------------------------------ */
 
-const BUZZER_GROUP: GameId[] = ["mercato", "giramondo"];
+/** «Who is it?» games with clues and a buzzer: at most one per match. */
+const BUZZER_GROUP: GameId[] = ["mercato", "giramondo", "figurina"];
 const LIST_GROUP: GameId[] = ["decina", "dischetto", "asta"];
 const OPENERS: GameId[] = ["tiro_secco", "maglia"];
 /** Decina and Asta are played on the same kind of set: never both in one match. */
@@ -322,6 +323,7 @@ const GRACE_KINDS: Partial<Record<GameId, string[]>> = {
   dischetto: ["ask"],
   mercato: ["answer"],
   giramondo: ["answer"],
+  figurina: ["answer"],
   formazione: ["play"],
   asta: ["prove"],
 };
