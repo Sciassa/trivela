@@ -1033,7 +1033,7 @@ Effetti aggiunti senza toccare le animazioni esistenti; tutti spenti con `prefer
 - **Dove compare**:
   - nella **rivelazione** delle domande su un solo calciatore: Il Mercato, Il Giramondo, La Maglia, «Di chi è questa stagione?» del Tiro Secco (formato largo, foto a sinistra). Se il giocatore non ha figurina resta la rivelazione di prima;
   - a **fine partita**, «LA FIGURINA DELLA PARTITA»: tra i giocatori delle domande della partita, quello con lo stile più raro e poi più gol + assist. È solo un premio visivo: nessuna collezione, moneta, scambio o mercato.
-- **Perimetro reale** (2026-11-23): **2534 figurine** (2070 classiche, 319 speciali, 145 leggendarie). Foto: 950 dei 1000 giocatori più noti hanno un'immagine su Wikidata; 945 con licenza utilizzabile (5 escluse: licenza non verificabile), ma solo **210** scaricate finora per i limiti di Wikimedia. Le altre figurine mostrano il segnaposto; `assets fetch` riprende il lotto da dove si è fermato.
+- **Perimetro reale** (2026-11-26): **2534 figurine** (2070 classiche, 319 speciali, 145 leggendarie). Foto: 950 dei 1000 giocatori più noti hanno un'immagine su Wikidata; 945 con licenza utilizzabile (5 escluse: licenza non verificabile), ma solo **437** scaricate finora (433 figurine con foto) per i limiti di Wikimedia. Le altre figurine mostrano il segnaposto; `assets fetch` riprende il lotto da dove si è fermato.
 - **Dati**: `data/trivela_data/gen_cards.py` (dentro `pnpm data:generate`, o da solo con `uv run python -m trivela_data.gen_cards` sui pacchetti pubblicati) scrive 16 file `apps/web/public/data/cards/<id % 16>.json`. Li scarica solo lo Schermo, solo a rivelazione avvenuta o a fine partita; mai i telefoni.
 
 ---
