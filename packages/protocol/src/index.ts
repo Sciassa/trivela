@@ -14,6 +14,7 @@ export const GAME_IDS = [
   "maglia",
   "testa_a_testa",
   "bandiere",
+  "stemma",
 ] as const;
 
 export type GameId = (typeof GAME_IDS)[number];
@@ -193,6 +194,48 @@ export interface TestaItem extends InstanceMeta {
 }
 
 /** Le Bandiere (SPEC §4.14): the eleven starters of one side of a real game, as flags; the answer is the team. */
+/**
+ * Indovina lo Stemma (SPEC §4.15): a club crest transformed offline (or its colours as pixel bands); which club is it?
+ * `original`, `team`, `credit` and `correct` reach the Screen and the phones only at the reveal: the credit names the
+ * file, and the file names the club.
+ */
+export interface StemmaItem extends InstanceMeta {
+  question: string;
+  variant: "notext" | "blur" | "silhouette" | "colors";
+  /** The transformed crest (a path under `crests/`); null for the colour bands. */
+  image: string | null;
+  /** The characteristic colours with their share of the crest, for the "colors" variant. */
+  colors: [string, number][] | null;
+  original: string;
+  team: string;
+  /** Attribution of the Commons file (author, licence): shown with the original at the reveal and in the credits. */
+  credit: string;
+  options: string[];
+  correct: number;
+}
+
+/**
+ * A player card (SPEC §14.3): real data only, never a made-up rating. The season is the player's best league season in
+ * the dataset (most goals plus assists); the style follows objective thresholds.
+ */
+export interface PlayerCardData {
+  id: string;
+  name: string;
+  /** Nationality in Italian and the code of its flag under `flags/` (null when there is no flag for it). */
+  nat: string | null;
+  flag: string | null;
+  club: string;
+  role: string;
+  season: string;
+  competition: string;
+  stats: { presenze: number; gol: number; assist: number };
+  /** "classica" | "speciale" (a memorable season) | "leggendaria" (a whole career at the top, see SPEC §14.3). */
+  style: "classica" | "speciale" | "leggendaria";
+  /** Pixel portrait under `photos/` and its credit, or null: the card then shows the 8-bit placeholder. */
+  photo: string | null;
+  credit: string | null;
+}
+
 export interface BandiereItem extends InstanceMeta {
   title: string;
   date: string;
@@ -219,6 +262,7 @@ export interface PackItems {
   maglia: MagliaItem[];
   testa_a_testa: TestaItem[];
   bandiere: BandiereItem[];
+  stemma: StemmaItem[];
 }
 
 export interface PackManifest {
@@ -236,5 +280,5 @@ export interface Packs {
 }
 
 export function emptyPackItems(): PackItems {
-  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], bandiere: [] };
+  return { tiro_secco: [], mercato: [], decina: [], dischetto: [], formazione: [], giramondo: [], asta: [], maglia: [], testa_a_testa: [], bandiere: [], stemma: [] };
 }

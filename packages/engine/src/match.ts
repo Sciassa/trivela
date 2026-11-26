@@ -115,6 +115,8 @@ export const GENERATOR_WEIGHTS: Record<string, number> = {
  */
 export const FAMILY_OF: Partial<Record<GameId, (item: InstanceMeta) => string>> = {
   tiro_secco: (item) => (item as InstanceMeta & { tag?: string }).tag ?? "curiosita",
+  // Indovina lo Stemma: the four crests of a match in as many different variants as there are
+  stemma: (item) => (item as InstanceMeta & { variant?: string }).variant ?? "",
 };
 const weightOf = (generator: string): number | null => GENERATOR_WEIGHTS[generator.split("@")[0]!] ?? null;
 
@@ -123,6 +125,8 @@ const weightOf = (generator: string): number | null => GENERATOR_WEIGHTS[generat
  * names many people and is not "about" any of them).
  */
 export function subjectsOf(item: InstanceMeta): string[] {
+  // a crest is about its club: the same club never comes back twice in a match (Indovina lo Stemma, SPEC §4.15)
+  if (item.generator.startsWith("stemma_")) return item.entities.filter((e) => e.startsWith("tm:c:"));
   const people = item.entities.filter((e) => e.startsWith("tm:p:"));
   return people.length <= 2 ? people : [];
 }

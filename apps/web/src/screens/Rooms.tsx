@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import QRCode from "qrcode";
 import { isTimed, usedIds, type EngineCtx, type GameStateAny, type MatchState } from "@trivela/engine";
-import { type BandiereItem, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type TestaItem, type TiroSeccoItem } from "@trivela/protocol";
+import { type BandiereItem, type DischettoItem, type FormazioneItem, type GameId, type MagliaItem, type PlayerIdx, type SetItem, type StemmaItem, type TestaItem, type TiroSeccoItem } from "@trivela/protocol";
 import { audio } from "@trivela/audio";
 import { joinUrl, useHostedRoom, useRoom, type ClientRole, type RoomClient } from "../runtime/room";
 import { CODE_LENGTH, isRoomCode } from "../runtime/roomCore";
@@ -296,6 +296,10 @@ function solutionOf(g: GameStateAny): string[] {
       const it = g.items[g.i] as MagliaItem;
       return [it.question, `Risposta: numero ${it.answer.display}`];
     }
+    case "stemma": {
+      const it = g.items[g.i] as StemmaItem;
+      return [`Risposta: ${"ABCD"[it.correct]}) ${it.team}`, `Variante: ${{ notext: "senza scritte", blur: "sfocato", silhouette: "silhouette", colors: "solo i colori" }[it.variant]}`];
+    }
     case "bandiere": {
       const it = g.items[g.i] as BandiereItem;
       return [`Risposta: ${"ABCD"[it.correct]}) ${it.team}`, `${it.title} · ${it.competition}`, g.stage === "memo" ? "Bandiere in campo per 5 secondi…" : ""];
@@ -395,6 +399,7 @@ export function HostRoom({ code }: { code: string }) {
     else
       switch (g.game) {
         case "bandiere":
+        case "stemma":
         case "tiro_secco": {
           if (g.stage === "memo") break; // Le Bandiere: the 5 seconds of the flags, nothing to press
           const it = g.items[g.i] as TiroSeccoItem;
@@ -731,7 +736,7 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       </PhoneFrame>
     );
   }
-  if (turn && s.config.judging !== "host" && (g.game === "tiro_secco" || (g.game === "bandiere" && g.stage === "ask"))) {
+  if (turn && s.config.judging !== "host" && (g.game === "tiro_secco" || g.game === "stemma" || (g.game === "bandiere" && g.stage === "ask"))) {
     // four options (two for VERO / FALSO): the question scrolls, the answers stay under the thumb
     const raw = g.items[g.i] as TiroSeccoItem & { team?: string };
     const it = {
@@ -739,6 +744,8 @@ export function PadRoom({ code, role }: { code: string; role: "p1" | "p2" }) {
       question:
         g.game === "bandiere"
           ? "Quale squadra era in campo? Le bandiere sono sullo schermo."
+          : g.game === "stemma"
+            ? "Di quale squadra è lo stemma sullo schermo?"
           : raw.transfer
             ? `${raw.transfer.player}: da ${raw.transfer.from} a ${raw.transfer.to}, stagione ${raw.transfer.season}. Vero o falso?`
             : raw.card

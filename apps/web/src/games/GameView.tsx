@@ -1,5 +1,7 @@
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
-import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, TestaItem, TiroSeccoItem } from "@trivela/protocol";
+import { CardReveal } from "../components/PlayerCard";
+import { playerOf } from "../runtime/cards";
+import type { BandiereItem, DischettoItem, FormazioneItem, MagliaItem, PlayerIdx, SetItem, SourceRef, StemmaItem, TestaItem, TiroSeccoItem } from "@trivela/protocol";
 import { isTimed, type EngineCtx, type GameStateAny, type Intent, type MatchState } from "@trivela/engine";
 import { AnswerBox, Copione, Fit, NextButton, NumberPad, PhoneHint, Result, StateTimer, usePlay, VoteBadge, WrongSaid } from "../components/ui";
 import { Sprite } from "../components/sprites";
@@ -107,7 +109,11 @@ function TiroSecco({ state, g, dispatch, start }: GameProps) {
       {item.tag === "vf" && item.transfer ? (
         <TransferCard key={g.i} t={item.transfer} />
       ) : item.tag === "scheda" && item.card ? (
-        <SeasonCard key={g.i} c={item.card} />
+        g.stage === "reveal" ? (
+          <CardReveal key={`c${g.i}`} entity={playerOf(item.entities)} fallback={<SeasonCard c={item.card} />} />
+        ) : (
+          <SeasonCard key={g.i} c={item.card} />
+        )
       ) : (
         <div className="q-card" key={g.i}>
           {item.tag && TAG_LABEL[item.tag] && <div className={`q-tag ${item.tag}`}>{TAG_LABEL[item.tag]}</div>}
@@ -188,6 +194,71 @@ function TransferCard({ t }: { t: NonNullable<TiroSeccoItem["transfer"]> }) {
   );
 }
 
+/* ------------------------------------------------------------ Indovina lo Stemma */
+
+const VARIANT_LABEL: Record<StemmaItem["variant"], string> = {
+  notext: "✂ SENZA SCRITTE",
+  blur: "◌ SFOCATO",
+  silhouette: "■ SILHOUETTE",
+  colors: "▤ SOLO I COLORI",
+};
+
+/**
+ * Indovina lo Stemma (SPEC §4.15): the crest transformed offline on a pixel board, four clubs on the side. At the
+ * reveal the real crest pops in, with the credit of its Commons file. Images are drawn `pixelated`.
+ */
+function Stemma({ state, g, dispatch, start }: GameProps) {
+  const item = g.items[g.i] as StemmaItem;
+  const reveal = g.stage === "reveal" && !!item.original;
+  return (
+    <>
+      <TurnBar state={state} p={g.turn} info={`STEMMA ${g.i + 1}/${g.items.length}`} />
+      <StateTimer state={state} start={start} />
+      <div className="crest-layout" key={g.i}>
+        <div className={`crest-board ${reveal ? "revealed" : ""}`}>
+          <div className={`q-tag crest-tag ${item.variant}`}>{VARIANT_LABEL[item.variant]}</div>
+          <div className="crest-stage">
+            {reveal ? (
+              <img className="crest-img original" src={`./${item.original}`} alt={`Stemma: ${item.team}`} />
+            ) : item.image ? (
+              <img className={`crest-img ${item.variant}`} src={`./${item.image}`} alt="Stemma trasformato" />
+            ) : (
+              <ColorBands colors={item.colors ?? []} />
+            )}
+          </div>
+          {reveal && <div className="crest-team">{item.team}</div>}
+        </div>
+        <div className="crest-side">
+          <div className="q">{item.question}</div>
+          <FourOptions key={`o${g.i}`} item={item} g={g} dispatch={dispatch} />
+        </div>
+      </div>
+      {reveal && <div className="crest-credit">Stemma: {item.credit}</div>}
+      {g.stage === "reveal" && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />}
+    </>
+  );
+}
+
+/** The colours of a crest as pixel bands, widest first, on a small shield: drawn here, no image is needed. */
+function ColorBands({ colors }: { colors: [string, number][] }) {
+  // 12 columns of pixels shared out by the colours' weight: every band at least one column
+  const cols: string[] = [];
+  const total = colors.reduce((t, [, w]) => t + w, 0) || 1;
+  colors.forEach(([c, w], k) => {
+    const n = k === colors.length - 1 ? 12 - cols.length : Math.max(1, Math.round((12 * w) / total));
+    for (let j = 0; j < n && cols.length < 12; j++) cols.push(c);
+  });
+  return (
+    <div className="color-shield">
+      <div className="color-bands" aria-label="I colori dello stemma">
+        {cols.map((c, k) => (
+          <i key={k} style={{ background: c }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------ Le Bandiere */
 
 /**
@@ -261,7 +332,7 @@ function ClueText({ text }: { text: string }) {
 
 export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GameProps) {
   const { readonly } = usePlay();
-  const item = g.items[g.i] as { clues: string[]; answer: { display: string }; sources: SourceRef[] };
+  const item = g.items[g.i] as { clues: string[]; answer: { display: string; ids?: string[] }; sources: SourceRef[] };
   const points: number[] = g.points;
   const total = points.length;
   const canBuzz = (p: PlayerIdx) => (g.stage === "clues" || g.stage === "ready") && !g.out[p];
@@ -345,7 +416,7 @@ export function ClueBuzzer({ state, g, dispatch, ctx, start, tableMode }: GamePr
           )}
           {g.stage === "reveal" && (
             <>
-              <div className="big-answer">{item.answer.display}</div>
+              <CardReveal entity={item.answer.ids?.[0]} fallback={<div className="big-answer">{item.answer.display}</div>} />
               <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} />
             </>
           )}
@@ -825,9 +896,20 @@ function Maglia({ state, g, dispatch, start }: GameProps) {
       <div className="side">
         <TurnBar state={state} p={g.turn} info={`MAGLIA ${g.i + 1}/${g.items.length}`} />
         <StateTimer state={state} start={start} />
-        <div className="q-card">
-          <div className="q small">{item.question}</div>
-        </div>
+        {reveal ? (
+          <CardReveal
+            entity={playerOf(item.entities)}
+            fallback={
+              <div className="q-card">
+                <div className="q small">{item.question}</div>
+              </div>
+            }
+          />
+        ) : (
+          <div className="q-card">
+            <div className="q small">{item.question}</div>
+          </div>
+        )}
         {!reveal && (readonly ? <PhoneHint /> : <NumberPad key={g.i} onSubmit={(text) => dispatch({ type: "ANSWER", payload: { text } })} />)}
         {reveal && <RevealFooter g={g} state={state} dispatch={dispatch} sources={item.sources} solution={<>NUMERO {item.answer.display}</>} />}
       </div>
@@ -853,6 +935,8 @@ export function GameView(props: GameProps) {
       return <Maglia {...props} />;
     case "testa_a_testa":
       return <TestaATesta {...props} />;
+    case "stemma":
+      return <Stemma {...props} />;
     case "bandiere":
       return <Bandiere {...props} />;
     default:

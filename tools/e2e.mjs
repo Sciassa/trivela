@@ -45,6 +45,8 @@ const open = async (ctxOpts = {}) => {
   p.on("console", (m) => m.type() === "error" && !m.text().includes("Failed to load resource") && errors.push(m.text()));
   p.dataRequests = [];
   p.on("request", (r) => r.url().includes("/data/") && p.dataRequests.push(r.url()));
+  p.assetRequests = [];
+  p.on("request", (r) => /\/(crests|photos)\//.test(r.url()) && p.assetRequests.push(r.url()));
   return p;
 };
 // the answers of a controller are the buttons pinned to the bottom of the phone
@@ -610,6 +612,47 @@ try {
     await screen.context().close();
     await p1.context().close();
     await p2.context().close();
+  }
+  // ---------------- Indovina lo Stemma in a room: the transformed crest on the Screen, four clubs on the phone
+  {
+    const { screen, code } = await lobby();
+    const p1 = await join(code, "p1");
+    const p2 = await join(code, "p2");
+    await screen.locator('.qr-card.joined[data-role="p2"]').waitFor();
+    await screen.getByRole("button", { name: "SFIDA RAPIDA" }).click();
+    await screen.locator(".game-pick button", { hasText: "INDOVINA LO STEMMA" }).click();
+    await screen.getByPlaceholder("Nome").first().fill("Anna");
+    await screen.getByPlaceholder("Nome").nth(1).fill("Bruno");
+    await screen.getByText("INIZIA LA PARTITA ▶").click();
+    await p1.getByText("SI PARTE ▶").click({ timeout: 15000 });
+    await p2.getByText(/SI PARTE ▶/).click();
+    await p1.getByText("VIA! ▶").click({ timeout: 15000 });
+    await p2.getByText(/VIA! ▶/).click();
+    await screen.locator(".crest-board").waitFor({ timeout: 15000 });
+    await screen.waitForTimeout(600);
+    const shownBefore = (await screen.locator(".crest-img:not(.original)").count()) + (await screen.locator(".color-bands").count());
+    check(shownBefore === 1 && (await screen.locator(".crest-img.original").count()) === 0, "Indovina lo Stemma: the transformed crest on the Screen, never the original before the answer");
+    check(screen.assetRequests.length <= 1, `... and the Screen has fetched only that picture (${screen.assetRequests.length})`);
+    await Promise.race([p1.locator(PAD_OPT).first().waitFor({ timeout: 9000 }), p2.locator(PAD_OPT).first().waitFor({ timeout: 9000 })]);
+    const active = (await p1.locator(PAD_OPT).count()) ? p1 : p2;
+    check((await active.locator(PAD_OPT).count()) === 4, "the player on turn picks the club among four on the phone");
+    await active.locator(PAD_OPT).first().click();
+    await screen.locator(".crest-img.original").waitFor({ timeout: 8000 });
+    check(/Wikimedia Commons/.test(await screen.locator(".crest-credit").innerText()), "at the reveal the real crest comes with the credit of its file");
+    // the phones may fetch the names index (the speller), never a pack, a card, a crest or a photo
+    const phoneFiles = [...p1.dataRequests, ...p2.dataRequests].filter((u) => /\/data\/(games|cards)\/|assets-manifest/.test(u)).concat(p1.assetRequests, p2.assetRequests);
+    check(phoneFiles.length === 0, `the phones download no pack, crest or card (${phoneFiles.join(", ") || "none"})`);
+    await screen.screenshot({ path: "test-results/room-stemma-reveal.png" });
+    await screen.context().close();
+    await p1.context().close();
+    await p2.context().close();
+  }
+  {
+    // the PWA never precaches crests, photos or cards (SPEC §0.8)
+    const sw = (await import("node:fs")).readFileSync(new URL("../apps/web/dist/sw.js", import.meta.url), "utf8");
+    const precached = [...sw.matchAll(/url:"([^"]+)"/g)].map((m) => m[1]);
+    const heavy = precached.filter((u) => /^(crests|photos|flags|data)\//.test(u));
+    check(precached.length > 0 && heavy.length === 0, `crests, photos, cards and question packs stay out of the precache (${precached.length} files precached)`);
   }
   {
     const v = await open();

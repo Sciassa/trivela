@@ -256,10 +256,62 @@ export function App() {
               </div>
             ))}
           </div>
+          <AssetCredits />
           <div className="note">Dati aggiornati al {packs.manifest.snapshot} · pacchetto {packs.manifest.version}</div>
         </Page>
       );
   }
+}
+
+interface AssetEntry {
+  kind: string;
+  subject: string;
+  page: string;
+  attribution: string;
+  licence: string;
+  trademark: boolean;
+}
+
+/**
+ * Who made each crest and photo, and under which licence (SPEC §0.8): the assets manifest, fetched only when asked
+ * for, since it lists every file.
+ */
+function AssetCredits() {
+  const [m, setM] = useState<{ about: string; counts: Record<string, number>; assets: AssetEntry[] } | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!m)
+    return (
+      <button
+        className="btn ghost"
+        disabled={busy}
+        onClick={() => {
+          setBusy(true);
+          void fetch("./data/assets-manifest.json")
+            .then((r) => r.json())
+            .then(setM)
+            .catch(() => setBusy(false));
+        }}
+      >
+        {busy ? "CARICO…" : "AUTORI E LICENZE DI STEMMI E FOTO ▶"}
+      </button>
+    );
+  return (
+    <div className="panel col asset-credits" style={{ gap: 8 }}>
+      <span className="label c-accent">
+        STEMMI E FOTO · {m.counts.stemmi ?? 0} stemmi, {m.counts.foto ?? 0} foto
+      </span>
+      <span className="note">{m.about}</span>
+      {m.assets.map((a) => (
+        <span key={`${a.kind}${a.subject}`} className="note">
+          {a.kind === "stemma" ? "Stemma" : "Foto"}:{" "}
+          <a href={a.page} target="_blank" rel="noreferrer">
+            {a.attribution}
+          </a>
+          {a.trademark ? " · marchio registrato" : ""}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function AudioSettings({ onBack }: { onBack: () => void }) {
